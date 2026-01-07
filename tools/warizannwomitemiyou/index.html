@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<title>わりざん たのしく みてみよう！</title>
+<style>
+  body {
+    font-family: 'Rounded Mplus 1c', 'Hiragino Maru Gothic ProN', 'Yu Gothic', sans-serif;
+    padding: 24px;
+    line-height:1.8;
+    background:#fffdf7;
+  }
+  h2 { margin-bottom: 6px; color:#444; }
+  h3 { margin-top: 20px; }
+  .row { margin-bottom: 14px; }
+  label { margin-right: 16px; font-weight: 700; }
+  button {
+    padding: 10px 16px;
+    font-size: 16px;
+    margin-right: 8px;
+    border-radius: 12px;
+    border: none;
+    background: #7dd3fc;
+    color:#033;
+    cursor: pointer;
+  }
+  button:hover { background:#38bdf8; }
+
+  .circle-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 12px 0 20px;
+  }
+  .circle {
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    background: #e0f2fe;
+    display: flex; justify-content: center; align-items: center;
+    font-size: 17px;
+    border: 3px solid #60a5fa;
+  }
+  .circle.rem {
+    background:#ffe4e6;
+    border-color:#fb7185;
+  }
+
+  .group-box {
+    border: 3px dashed #38bdf8;
+    border-radius: 16px;
+    padding: 10px;
+    margin: 12px 0;
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    background: #f0f9ff;
+    animation: fadeIn 0.6s ease forwards;
+    opacity: 0;
+  }
+
+  @keyframes fadeIn { to { opacity: 1; } }
+
+  #groupsA, #groupsB { margin-top: 10px; }
+  .title-small { font-size: 18px; margin-top: 26px; font-weight: 700; }
+</style>
+</head>
+<body>
+<h2>わりざん を たのしく みてみよう！</h2>
+
+<div class="row">
+  <label>わられる かず <input id="dividend" type="number" value="12" min="1"></label>
+  <label>わる かず <input id="divisor" type="number" value="3" min="1"></label>
+</div>
+
+<div class="row">
+  <button onclick="startA()">A：ほうがん（おなじ かず ずつ）</button>
+  <button onclick="startB()">B：とうぶん（じゅんばんに わける）</button>
+</div>
+
+<h3 class="title-small">① ぜんぶの かず</h3>
+<div id="all" class="circle-container"></div>
+
+<h3 class="title-small">② A：ほうがん（おなじ かず ずつ）</h3>
+<div id="groupsA"></div>
+
+<h3 class="title-small">③ B：とうぶん（ひとつずつ くばる）</h3>
+<div id="groupsB"></div>
+
+<script>
+function drawAll(dividend){
+  const all = document.getElementById('all');
+  all.innerHTML = '';
+  for(let i=1;i<=dividend;i++){
+    const c=document.createElement('div');
+    c.className='circle';
+    c.textContent=i;
+    all.appendChild(c);
+  }
+}
+
+// ---- A：ほうがん ----
+function startA(){
+  const dividendVal = Number(document.getElementById('dividend').value);
+  const divisorVal = Number(document.getElementById('divisor').value);
+  if(!Number.isFinite(dividendVal) || dividendVal < 1 || !Number.isFinite(divisorVal) || divisorVal < 1){
+    alert('すうじを いれてね（1いじょう）');
+    return;
+  }
+  drawAll(dividendVal);
+  const boxArea=document.getElementById('groupsA');
+  boxArea.innerHTML='';
+
+  let index=1;
+  function makeBox(){
+    if(index>dividendVal) return;
+    const box=document.createElement('div');
+    box.className='group-box';
+
+    for(let j=0;j<divisorVal && index<=dividendVal;j++){
+      const c=document.createElement('div');
+      c.className='circle';
+      c.textContent=index;
+      if(index > Math.floor(dividendVal/divisorVal)*divisorVal) c.classList.add('rem');
+      box.appendChild(c);
+      index++;
+    }
+    boxArea.appendChild(box);
+    setTimeout(makeBox,1200);
+  }
+  makeBox();
+}
+
+// ---- B：とうぶん ----
+function startB(){
+  const dividendNum = Number(document.getElementById('dividend').value);
+  const divisorNum = Number(document.getElementById('divisor').value);
+  if(!Number.isFinite(dividendNum) || dividendNum < 1 || !Number.isFinite(divisorNum) || divisorNum < 1){
+    alert('すうじを いれてね（1いじょう）');
+    return;
+  }
+  drawAll(dividendNum);
+
+  const boxArea=document.getElementById('groupsB');
+  boxArea.innerHTML='';
+
+  const buckets=[];
+  for(let i=0;i<divisorNum;i++){
+    const b=document.createElement('div');
+    b.className='group-box';
+    b.innerHTML=`<strong style="width:100%;font-size:14px;">${i+1} ばん</strong>`;
+    boxArea.appendChild(b);
+    buckets.push(b);
+  }
+
+  const remainderBox=document.createElement('div');
+  remainderBox.className='group-box';
+  remainderBox.innerHTML='<strong style="width:100%;font-size:14px;color:#e11d48;">あまり</strong>';
+  boxArea.appendChild(remainderBox);
+
+  let current=1;
+  function placeOne(){
+    if(current>dividendNum) return;
+    const c=document.createElement('div');
+    c.className='circle';
+    c.textContent=current;
+
+    if(current > Math.floor(dividendNum/divisorNum)*divisorNum){
+      c.classList.add('rem');
+      remainderBox.appendChild(c);
+    } else {
+      const bIndex=(current-1)%divisorNum;
+      buckets[bIndex].appendChild(c);
+    }
+    current++;
+    setTimeout(placeOne,1200);
+  }
+  placeOne();
+}
+</script>
+</body>
+</html>
