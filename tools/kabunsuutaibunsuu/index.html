@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>等しい仮分数と帯分数</title>
+
+<style>
+body {
+  font-family: Arial, sans-serif;
+  text-align: center;
+  padding: 20px;
+}
+
+.input-area {
+  border: 2px solid #666;
+  padding: 12px;
+  display: inline-block;
+  margin-bottom: 20px;
+}
+
+.input-row {
+  display: none;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+}
+
+.input-row input {
+  width: 50px;
+  font-size: 18px;
+  text-align: center;
+}
+
+.fraction-input-vertical {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.fraction-bar {
+  width: 30px;
+  border-top: 2px solid black;
+}
+
+.container {
+  display: flex;
+  justify-content: center;
+  gap: 40px;
+}
+
+.left-container,
+.right-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.square {
+  width: 100px;
+  height: 120px;
+  margin: 8px;
+  border: 2px solid #555;
+  position: relative;
+}
+
+.divider {
+  position: absolute;
+  width: 100%;
+  height: 2px;
+  background: #666;
+}
+
+.water {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  opacity: 0.7;
+}
+
+.left-container .water { background: #7ecbff; }
+.right-container .water { background: #9be7c4; }
+
+.left-number,
+.right-number {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  font-weight: bold;
+}
+
+.left-number { left: -38px; }
+.right-number { right: -38px; }
+
+.fraction-vertical {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.fraction-line {
+  width: 26px;
+  border-top: 2px solid black;
+  margin: 2px 0;
+}
+
+.result {
+  margin-top: 25px;
+  display: flex;
+  justify-content: center;
+  gap: 40px;
+  font-size: 18px;
+  font-weight: bold;
+}
+</style>
+</head>
+
+<body>
+
+<h1>等しい仮分数と帯分数</h1>
+
+<div class="input-area">
+  <label>
+    <input type="radio" name="mode" value="improper" checked onchange="switchMode()"> 仮分数
+  </label>
+  　
+  <label>
+    <input type="radio" name="mode" value="mixed" onchange="switchMode()"> 帯分数
+  </label>
+
+  <!-- 仮分数入力 -->
+  <div class="input-row" id="improper-row" style="display:flex;">
+    分子 <input id="num" type="text">
+    分母 <input id="den" type="text">
+  </div>
+
+  <!-- 帯分数入力（分数部分を縦並び） -->
+  <div class="input-row" id="mixed-row">
+    <input id="intPart" type="text"> と
+    <div class="fraction-input-vertical">
+      <input id="mixNum" type="text">
+      <div class="fraction-bar"></div>
+      <input id="mixDen" type="text">
+    </div>
+  </div>
+
+  <div style="margin-top:8px;">
+    <button onclick="draw()">表示</button>
+  </div>
+</div>
+
+<div class="container">
+  <div class="left-container" id="left-container">
+    <h2>仮分数</h2>
+  </div>
+  <div class="right-container" id="right-container">
+    <h2>帯分数</h2>
+  </div>
+</div>
+
+<div class="result">
+  <div id="res-left"></div>
+  <div id="res-right"></div>
+</div>
+
+<script>
+/* 全角 → 半角 */
+function toHalfWidth(str) {
+  return str.replace(/[０-９]/g, s =>
+    String.fromCharCode(s.charCodeAt(0) - 0xFEE0)
+  );
+}
+
+function switchMode() {
+  const mode = document.querySelector('input[name="mode"]:checked').value;
+  document.getElementById("improper-row").style.display =
+    mode === "improper" ? "flex" : "none";
+  document.getElementById("mixed-row").style.display =
+    mode === "mixed" ? "flex" : "none";
+}
+
+function draw() {
+  let n, d;
+  const mode = document.querySelector('input[name="mode"]:checked').value;
+
+  if (mode === "improper") {
+    n = Number(toHalfWidth(document.getElementById("num").value));
+    d = Number(toHalfWidth(document.getElementById("den").value));
+  } else {
+    const i  = Number(toHalfWidth(document.getElementById("intPart").value));
+    const mn = Number(toHalfWidth(document.getElementById("mixNum").value));
+    d = Number(toHalfWidth(document.getElementById("mixDen").value));
+    n = i * d + mn;
+  }
+
+  if (!Number.isInteger(n) || !Number.isInteger(d) || d <= 0) {
+    document.getElementById("left-container").innerHTML = "<h2>仮分数</h2>";
+    document.getElementById("right-container").innerHTML = "<h2>帯分数</h2>";
+    document.getElementById("res-left").textContent = "";
+    document.getElementById("res-right").textContent = "";
+    return;
+  }
+
+  const left = document.getElementById("left-container");
+  const right = document.getElementById("right-container");
+  const resLeft = document.getElementById("res-left");
+  const resRight = document.getElementById("res-right");
+
+  left.innerHTML = "<h2>仮分数</h2>";
+  right.innerHTML = "<h2>帯分数</h2>";
+
+  const q = Math.floor(n / d);
+  const r = n % d;
+
+  for (let i = 0; i < q; i++) addSquare(left, d, d);
+  if (r > 0) addSquare(left, r, d);
+
+  for (let i = 0; i < q; i++) addSquare(right, 1, 1);
+  if (r > 0) addSquare(right, r, d);
+
+  resLeft.innerHTML = `
+    仮分数<br>
+    <div class="fraction-vertical">
+      <div>${n}</div>
+      <div class="fraction-line"></div>
+      <div>${d}</div>
+    </div>
+  `;
+
+  resRight.innerHTML = r === 0
+    ? `帯分数<br>${q}`
+    : `
+      帯分数<br>
+      <div style="display:flex; align-items:center; justify-content:center; gap:6px;">
+        <span>${q} と</span>
+        <div class="fraction-vertical">
+          <div>${r}</div>
+          <div class="fraction-line"></div>
+          <div>${d}</div>
+        </div>
+      </div>
+    `;
+}
+
+function addSquare(parent, fill, total) {
+  const s = document.createElement("div");
+  s.className = "square";
+
+  for (let i = 1; i < total; i++) {
+    const line = document.createElement("div");
+    line.className = "divider";
+    line.style.top = `${100 / total * i}%`;
+    s.appendChild(line);
+  }
+
+  const w = document.createElement("div");
+  w.className = "water";
+  w.style.height = `${fill / total * 100}%`;
+  s.appendChild(w);
+
+  const label = document.createElement("div");
+  label.className =
+    parent.id === "left-container" ? "left-number" : "right-number";
+
+  if (total === 1) {
+    label.textContent = "1";
+  } else {
+    label.innerHTML = `
+      <div class="fraction-vertical">
+        <div>${fill}</div>
+        <div class="fraction-line"></div>
+        <div>${total}</div>
+      </div>`;
+  }
+
+  s.appendChild(label);
+  parent.appendChild(s);
+}
+</script>
+
+</body>
+</html>
+
+
