@@ -6,48 +6,102 @@
 <title>等しい仮分数と帯分数</title>
 
 <style>
+/* 全体のデザイン調整 */
 body {
-  font-family: Arial, sans-serif;
+  font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", sans-serif;
   text-align: center;
   padding: 20px;
+  background-color: #f8f9fa;
+  color: #333;
 }
 
+h1 {
+  font-size: 24px;
+  color: #2c3e50;
+  margin-bottom: 30px;
+}
+
+/* 入力エリアのカード風デザイン */
 .input-area {
-  border: 2px solid #666;
-  padding: 12px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  padding: 24px;
   display: inline-block;
-  margin-bottom: 20px;
+  margin-bottom: 30px;
+  min-width: 320px;
 }
 
+.mode-selector {
+  margin-bottom: 20px;
+  font-weight: bold;
+}
+
+.mode-selector label {
+  cursor: pointer;
+  padding: 8px 16px;
+}
+
+/* 入力行のスタイル */
 .input-row {
   display: none;
   justify-content: center;
   align-items: center;
-  gap: 8px;
+  gap: 15px;
+  margin-bottom: 20px;
+  font-size: 18px;
 }
 
 .input-row input {
   width: 50px;
-  font-size: 18px;
+  height: 40px;
+  font-size: 20px;
   text-align: center;
+  border: 2px solid #ddd;
+  border-radius: 6px;
+  outline: none;
+  transition: border-color 0.2s;
 }
 
+.input-row input:focus {
+  border-color: #3498db;
+}
+
+/* 分数の縦並び入力スタイル */
 .fraction-input-vertical {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
+  gap: 5px;
 }
 
 .fraction-bar {
-  width: 30px;
-  border-top: 2px solid black;
+  width: 45px;
+  border-top: 3px solid #444;
 }
 
+/* ボタンのデザイン */
+button {
+  background-color: #3498db;
+  color: white;
+  border: none;
+  padding: 10px 30px;
+  font-size: 18px;
+  border-radius: 25px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+button:hover {
+  background-color: #2980b9;
+}
+
+/* 表示エリア（元のロジックを維持） */
 .container {
   display: flex;
   justify-content: center;
   gap: 40px;
+  flex-wrap: wrap;
 }
 
 .left-container,
@@ -63,13 +117,14 @@ body {
   margin: 8px;
   border: 2px solid #555;
   position: relative;
+  background: white;
 }
 
 .divider {
   position: absolute;
   width: 100%;
   height: 2px;
-  background: #666;
+  background: #ccc;
 }
 
 .water {
@@ -90,8 +145,8 @@ body {
   font-weight: bold;
 }
 
-.left-number { left: -38px; }
-.right-number { right: -38px; }
+.left-number { left: -42px; }
+.right-number { right: -42px; }
 
 .fraction-vertical {
   display: flex;
@@ -106,12 +161,13 @@ body {
 }
 
 .result {
-  margin-top: 25px;
+  margin-top: 40px;
   display: flex;
   justify-content: center;
-  gap: 40px;
-  font-size: 18px;
+  gap: 60px;
+  font-size: 20px;
   font-weight: bold;
+  padding-bottom: 50px;
 }
 </style>
 </head>
@@ -121,23 +177,26 @@ body {
 <h1>等しい仮分数と帯分数</h1>
 
 <div class="input-area">
-  <label>
-    <input type="radio" name="mode" value="improper" checked onchange="switchMode()"> 仮分数
-  </label>
-  　
-  <label>
-    <input type="radio" name="mode" value="mixed" onchange="switchMode()"> 帯分数
-  </label>
-
-  <!-- 仮分数入力 -->
-  <div class="input-row" id="improper-row" style="display:flex;">
-    分子 <input id="num" type="text">
-    分母 <input id="den" type="text">
+  <div class="mode-selector">
+    <label>
+      <input type="radio" name="mode" value="improper" checked onchange="switchMode()"> 仮分数
+    </label>
+    <label>
+      <input type="radio" name="mode" value="mixed" onchange="switchMode()"> 帯分数
+    </label>
   </div>
 
-  <!-- 帯分数入力（分数部分を縦並び） -->
+  <div class="input-row" id="improper-row" style="display:flex;">
+    <div class="fraction-input-vertical">
+      <input id="num" type="text">
+      <div class="fraction-bar"></div>
+      <input id="den" type="text">
+    </div>
+  </div>
+
   <div class="input-row" id="mixed-row">
-    <input id="intPart" type="text"> と
+    <input id="intPart" type="text">
+    <span>と</span>
     <div class="fraction-input-vertical">
       <input id="mixNum" type="text">
       <div class="fraction-bar"></div>
@@ -145,8 +204,8 @@ body {
     </div>
   </div>
 
-  <div style="margin-top:8px;">
-    <button onclick="draw()">表示</button>
+  <div style="margin-top:15px;">
+    <button onclick="draw()">表示する</button>
   </div>
 </div>
 
@@ -229,10 +288,10 @@ function draw() {
   `;
 
   resRight.innerHTML = r === 0
-    ? `帯分数<br>${q}`
+    ? `帯分数<br><div style="margin-top:10px">${q}</div>`
     : `
       帯分数<br>
-      <div style="display:flex; align-items:center; justify-content:center; gap:6px;">
+      <div style="display:flex; align-items:center; justify-content:center; gap:6px; margin-top:10px">
         <span>${q} と</span>
         <div class="fraction-vertical">
           <div>${r}</div>
@@ -281,5 +340,3 @@ function addSquare(parent, fill, total) {
 
 </body>
 </html>
-
-
