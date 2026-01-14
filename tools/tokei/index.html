@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>算数時計 - デジタル表示改善版</title>
+    <title>算数時計 - リセット機能付き</title>
     <script src="https://cdn.jsdelivr.net/gh/phi-jp/phina.js@v0.2.3/build/phina.js"></script>
     <style>
         body { margin: 0; background-color: #ffffff; overflow: hidden; display: flex; justify-content: center; align-items: center; height: 100vh; }
@@ -76,12 +76,11 @@ phina.define('MainScene', {
             }).addChildTo(this.clockGroup);
         }
 
-        // --- デジタル表示（針の下に配置） ---
-        // 針が重なっても見えるように、背景を半透明の白にします
+        // デジタル表示
         this.digitalDisplay = DisplayElement().addChildTo(this.clockGroup).setPosition(0, 100);
         this.digitalBg = RectangleShape({
             width: 220, height: 80,
-            fill: 'rgba(255, 255, 255, 0.7)', // 半透明の白
+            fill: 'rgba(255, 255, 255, 0.7)', 
             stroke: '#bdc3c7', strokeWidth: 2,
             cornerRadius: 10
         }).addChildTo(this.digitalDisplay);
@@ -91,16 +90,14 @@ phina.define('MainScene', {
             fontWeight: 'bold'
         }).addChildTo(this.digitalDisplay);
         
-        this.digitalDisplay.visible = true; // 最初から表示
+        this.digitalDisplay.visible = false; 
 
-        // --- 針（デジタル表示の上に重なるように後に作成） ---
-        // 短針（青色）
+        // 針
         this.hourHand = RectangleShape({ 
             width: 18, height: 160, fill: '#3498db', 
             cornerRadius: 9, stroke: 'white', strokeWidth: 2 
         }).addChildTo(this.clockGroup).setOrigin(0.5, 0.85);
 
-        // 長針（赤色）
         this.minuteHand = RectangleShape({ 
             width: 12, height: 240, fill: '#e74c3c', 
             cornerRadius: 6, stroke: 'white', strokeWidth: 2 
@@ -109,7 +106,7 @@ phina.define('MainScene', {
         CircleShape({ radius: 14, fill: '#2c3e50' }).addChildTo(this.clockGroup);
 
         this.createUI();
-        this.updateClockDisplay();
+        this.resetTime(); // 初期化時に12時にセット
     },
 
     createUI: function() {
@@ -133,25 +130,40 @@ phina.define('MainScene', {
 
         const footerY = 125;
         
-        Button({ text: 'デジタルどけい', fill: '#ecf0f1', width: 200, height: 75, ...btnBase })
-            .addChildTo(this.uiGroup).setPosition(-210, footerY)
+        // デジタル切り替えボタン
+        Button({ text: 'デジタル', fill: '#ecf0f1', width: 140, height: 75, ...btnBase })
+            .addChildTo(this.uiGroup).setPosition(-240, footerY)
             .on('push', () => { self.digitalDisplay.visible = !self.digitalDisplay.visible; });
 
-        Button({ text: 'いま', fill: '#ecf0f1', width: 140, height: 75, ...btnBase })
-            .addChildTo(this.uiGroup).setPosition(0, footerY)
+        // いまボタン
+        Button({ text: 'いま', fill: '#ecf0f1', width: 100, height: 75, ...btnBase })
+            .addChildTo(this.uiGroup).setPosition(-105, footerY)
             .on('push', () => { self.setToCurrentTime(); });
 
-        this.hintBtn = Button({ text: 'ヒント：OFF', fill: '#f1c40f', width: 200, height: 75, ...btnBase })
-            .addChildTo(this.uiGroup).setPosition(210, footerY)
+        // ★追加：リセットボタン
+        Button({ text: 'リセット', fill: '#95a5a6', width: 130, height: 75, ...btnBase, fontColor: '#fff' })
+            .addChildTo(this.uiGroup).setPosition(25, footerY)
+            .on('push', () => { self.resetTime(); });
+
+        // ヒントボタン
+        this.hintBtn = Button({ text: 'ヒント:OFF', fill: '#f1c40f', width: 160, height: 75, ...btnBase })
+            .addChildTo(this.uiGroup).setPosition(185, footerY)
             .on('push', () => {
                 self.hintGroup.visible = !self.hintGroup.visible;
-                self.hintBtn.text = self.hintGroup.visible ? "ヒント：ON" : "ヒント：OFF";
+                self.hintBtn.text = self.hintGroup.visible ? "ヒント:ON" : "ヒント:OFF";
             });
     },
 
     addTime: function(min) {
         this.hourHand.rotation += min * 0.5;
         this.minuteHand.rotation += min * 6;
+        this.updateClockDisplay();
+    },
+
+    // ★追加：12時00分に戻す関数
+    resetTime: function() {
+        this.minuteHand.rotation = 0;
+        this.hourHand.rotation = 0;
         this.updateClockDisplay();
     },
 
@@ -169,7 +181,8 @@ phina.define('MainScene', {
         if (m < 0) m += 60;
         if (m === 60) m = 0;
         let h = Math.floor((this.hourHand.rotation % 360) / 30);
-        if (h <= 0) h += 12;
+        if (h < 0) h += 12; // マイナス回転対応
+        if (h === 0) h = 12;
         this.digitalLabel.text = h + ":" + (m < 10 ? "0" + m : m);
     }
 });
