@@ -1,5 +1,3 @@
-足し算、引き算
-
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -26,6 +24,8 @@
     padding: 20px;
     max-width: 420px;
     margin: auto;
+    position: relative;
+    min-height: 400px;
   }
   .question {
     font-size: 2.6em;
@@ -37,6 +37,7 @@
     text-align: center;
     border-radius: 12px;
     border: 2px solid #ccc;
+    margin-bottom: 15px;
   }
   button, select {
     font-size: 1.2em;
@@ -44,50 +45,86 @@
     padding: 10px 18px;
     border-radius: 20px;
     border: none;
+    cursor: pointer;
   }
-  button {
+  /* メインの「こたえる」ボタン */
+  .btn-submit {
     background: #4cafef;
     color: white;
+    width: 80%;
+    font-weight: bold;
+    box-shadow: 0 4px #2a87c5;
+  }
+  .btn-submit:active {
+    box-shadow: none;
+    transform: translateY(4px);
+  }
+  /* スタートボタン（画面中央に大きく表示） */
+  .btn-start {
+    background: #ff7a00;
+    color: white;
+    font-size: 1.5em;
+    padding: 20px 40px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 10;
+    width: 80%;
+    box-shadow: 0 6px #d35400;
+  }
+  /* さいしょからボタン（押し間違えないよう下へ） */
+  .btn-reset {
+    background: #999;
+    color: white;
+    font-size: 0.9em;
+    margin-top: 30px;
+    padding: 8px 15px;
   }
   .result {
     font-size: 1.4em;
     height: 1.6em;
     margin-top: 10px;
+    font-weight: bold;
   }
   .status {
     margin-top: 10px;
     font-size: 1.1em;
   }
   .bear {
-    font-size: 3em;
+    font-size: 3.5em;
     margin: 10px 0;
   }
-  .medal {
-    font-size: 1.5em;
-  }
   .growth {
-    font-size: 0.95em;
+    font-size: 0.85em;
     margin-bottom: 10px;
   }
   .stages span {
-    opacity: 0.4;
+    opacity: 0.3;
     font-weight: bold;
+    margin: 0 2px;
   }
   .stages .active {
     opacity: 1;
+    color: #ff7a00;
+    font-size: 1.2em;
   }
   .bar {
-    background: #ddd;
+    background: #eee;
     border-radius: 10px;
-    height: 12px;
-    margin-top: 6px;
+    height: 16px;
+    margin-top: 8px;
     overflow: hidden;
+    border: 1px solid #ddd;
   }
   .bar-inner {
     height: 100%;
     width: 0%;
-    background: linear-gradient(90deg, #ffcc80, #ff8a65);
-    transition: width 0.3s;
+    background: linear-gradient(90deg, #ffd54f, #ff8a65);
+    transition: width 0.4s ease-out;
+  }
+  .hidden {
+    display: none;
   }
 </style>
 </head>
@@ -97,78 +134,66 @@
 <h1>足し算・引き算 無限チャレンジ</h1>
 
 <div class="card">
-  <div>
-    なんのもんだい？
-    <select id="operation">
-      <option value="add">足し算</option>
-      <option value="sub">引き算</option>
-    </select>
-  </div>
-  
-  <div>
-    学年を選んでください：
-    <select id="grade">
-      <option value="1">1年生</option>
-      <option value="2">2年生</option>
-      <option value="3">3年生</option>
-      <option value="4">4年生</option>
-      <option value="5">5年生</option>
-      <option value="6">6年生</option>
-    </select>
-  </div>
+  <button id="startBtn" class="btn-start">▶ はじめる！</button>
 
-  <div class="bear" id="bear">🥚</div>
-
-  <div class="growth">
-    <div>せいちょう：</div>
-    <div class="stages">
-      <span id="stage1">🥚 0〜4</span> →
-      <span id="stage2">🐣 5〜9</span> →
-      <span id="stage3">🐤 10〜19</span> →
-      <span id="stage4">🐻 20〜29</span> →
-      <span id="stage5">🧸 30〜</span>
+  <div id="gameArea">
+    <div>
+      <select id="operation">
+        <option value="add">足し算</option>
+        <option value="sub">引き算</option>
+      </select>
+      <select id="grade">
+        <option value="1">1年生</option>
+        <option value="2">2年生</option>
+        <option value="3">3年生</option>
+        <option value="4">4年生</option>
+        <option value="5">5年生</option>
+        <option value="6">6年生</option>
+      </select>
     </div>
-    <div class="bar">
-      <div class="bar-inner" id="barInner"></div>
+
+    <div class="bear" id="bear">🥚</div>
+
+    <div class="growth">
+      <div class="stages">
+        <span id="stage1">🥚0~</span>
+        <span id="stage2">🐣10~</span>
+        <span id="stage3">🐤20~</span>
+        <span id="stage4">🐻30~</span>
+        <span id="stage5">🧸40</span>
+      </div>
+      <div class="bar">
+        <div class="bar-inner" id="barInner"></div>
+      </div>
     </div>
+
+    <div class="question" id="question">?</div>
+    <input type="text" id="answer" inputmode="numeric" pattern="[0-9０-９]*" placeholder="?" />
+    <br />
+    <button class="btn-submit" onclick="check()">こたえる</button>
+
+    <div class="result" id="result"></div>
+    <div class="medal" id="medal" style="font-size: 1.3em;"></div>
   </div>
-
-  <div class="question" id="question">?</div>
-  <input type="text" id="answer" inputmode="numeric" pattern="[0-9０-９]*" />
-  <br />
-  <button onclick="check()">こたえる</button>
-  <button id="startBtn">▶ スタート</button>
-
-  <div class="result" id="result"></div>
-  <div class="medal" id="medal"></div>
 </div>
 
 <div class="status">
   せいかい：<span id="correct">0</span> ／ もんだい：<span id="total">0</span>
 </div>
 
+<button id="resetBtn" class="btn-reset" onclick="resetGame()">最初（さいしょ）から やりなおす</button>
+
 <script>
 let a = 1;
 let b = 1;
-let correct = 0;
-let total = 0;
+let correctCount = 0;
+let totalCount = 0;
 let streak = 0;
 
 function getLevel() {
   const grade = Number(document.getElementById("grade").value);
-  if (grade === 1) {
-    return { maxNum: 10, hasCarryOver: false };
-  } else if (grade === 2) {
-    return { maxNum: 20, hasCarryOver: true };
-  } else if (grade === 3) {
-    return { maxNum: 30, hasCarryOver: true };
-  } else if (grade === 4) {
-    return { maxNum: 40, hasCarryOver: true };
-  } else if (grade === 5) {
-    return { maxNum: 50, hasCarryOver: true };
-  } else {
-    return { maxNum: 100, hasCarryOver: true };
-  }
+  const levels = { 1: 10, 2: 20, 3: 30, 4: 40, 5: 50, 6: 100 };
+  return { maxNum: levels[grade] || 10 };
 }
 
 function newQuestion() {
@@ -179,9 +204,10 @@ function newQuestion() {
     a = Math.floor(Math.random() * level.maxNum) + 1;
     b = Math.floor(Math.random() * level.maxNum) + 1;
     document.getElementById("question").innerText = `${a} + ${b} = ?`;
-  } else if (operation === "sub") {
+  } else {
+    // 引き算（答えがマイナスにならないように）
     a = Math.floor(Math.random() * level.maxNum) + 1;
-    b = Math.floor(Math.random() * a) + 1;  // 引き算なのでa > b
+    b = Math.floor(Math.random() * a) + 1;
     document.getElementById("question").innerText = `${a} - ${b} = ?`;
   }
 
@@ -190,9 +216,7 @@ function newQuestion() {
 }
 
 function toHalfWidth(str) {
-  return str.replace(/[０-９]/g, s =>
-    String.fromCharCode(s.charCodeAt(0) - 65248)
-  );
+  return str.replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 65248));
 }
 
 function check() {
@@ -206,26 +230,34 @@ function check() {
     return;
   }
 
-  total++;
-  if (operation === "add" && ans === a + b) {
-    correct++;
+  totalCount++;
+  let isCorrect = (operation === "add") ? (ans === a + b) : (ans === a - b);
+
+  const resDiv = document.getElementById("result");
+  if (isCorrect) {
+    correctCount++;
     streak++;
-    document.getElementById("result").innerText = "⭕ せいかい！";
-  } else if (operation === "sub" && ans === a - b) {
-    correct++;
-    streak++;
-    document.getElementById("result").innerText = "⭕ せいかい！";
+    resDiv.innerText = "⭕ せいかい！";
+    resDiv.style.color = "#ff4500";
   } else {
     streak = 0;
-    document.getElementById("result").innerText = `❌ こたえは ${operation === 'add' ? a + b : a - b}`;
+    resDiv.innerText = `❌ こたえは ${operation === 'add' ? a + b : a - b}`;
+    resDiv.style.color = "#555";
   }
 
-  document.getElementById("correct").innerText = correct;
-  document.getElementById("total").innerText = total;
+  document.getElementById("correct").innerText = correctCount;
+  document.getElementById("total").innerText = totalCount;
 
   updateBear();
-  updateMedal();
-  setTimeout(newQuestion, 600);
+  
+  // 10連勝ごとにメッセージ
+  if (streak > 0 && streak % 10 === 0) {
+    document.getElementById("medal").innerText = `🏅 ${streak}れんぞく せいかい！すごい！`;
+  } else if (streak === 0) {
+    document.getElementById("medal").innerText = "";
+  }
+
+  setTimeout(newQuestion, 800);
 }
 
 function updateBear() {
@@ -233,49 +265,54 @@ function updateBear() {
   const stages = ["stage1", "stage2", "stage3", "stage4", "stage5"];
   stages.forEach(id => document.getElementById(id).classList.remove("active"));
 
-  if (streak < 5) {
-    document.getElementById("bear").innerText = "🥚";
-    document.getElementById("stage1").classList.add("active");
-    bar.style.width = (streak / 5 * 20) + "%";
-  } else if (streak < 10) {
-    document.getElementById("bear").innerText = "🐣";
-    document.getElementById("stage2").classList.add("active");
-    bar.style.width = (20 + (streak - 5) / 5 * 20) + "%";
+  // 40問で100%になる計算 (1問あたり2.5%)
+  let progress = (streak / 40) * 100;
+  if (progress > 100) progress = 100;
+  bar.style.width = progress + "%";
+
+  let bearIcon = "🥚";
+  let activeId = "stage1";
+
+  if (streak < 10) {
+    bearIcon = "🥚";
+    activeId = "stage1";
   } else if (streak < 20) {
-    document.getElementById("bear").innerText = "🐤";
-    document.getElementById("stage3").classList.add("active");
-    bar.style.width = (40 + (streak - 10) / 10 * 20) + "%";
+    bearIcon = "🐣";
+    activeId = "stage2";
   } else if (streak < 30) {
-    document.getElementById("bear").innerText = "🐻";
-    document.getElementById("stage4").classList.add("active");
-    bar.style.width = (60 + (streak - 20) / 10 * 20) + "%";
+    bearIcon = "🐤";
+    activeId = "stage3";
+  } else if (streak < 40) {
+    bearIcon = "🐻";
+    activeId = "stage4";
   } else {
-    document.getElementById("bear").innerText = "🧸";
-    document.getElementById("stage5").classList.add("active");
-    bar.style.width = "100%";
+    bearIcon = "🧸";
+    activeId = "stage5";
   }
+
+  document.getElementById("bear").innerText = bearIcon;
+  document.getElementById(activeId).classList.add("active");
 }
 
-function updateMedal() {
-  const m = document.getElementById("medal");
-  m.innerText = (streak > 0 && streak % 10 === 0) ? "🏅 10れんぞく せいかい！" : "";
-}
-
-document.getElementById("startBtn").onclick = function() {
-  correct = 0;
-  total = 0;
+function resetGame() {
+  correctCount = 0;
+  totalCount = 0;
   streak = 0;
   document.getElementById("correct").innerText = 0;
   document.getElementById("total").innerText = 0;
   document.getElementById("result").innerText = "";
   document.getElementById("medal").innerText = "";
   updateBear();
-  newQuestion();  // スタート時に問題を出す
+  newQuestion();
+}
+
+document.getElementById("startBtn").onclick = function() {
+  this.classList.add("hidden");
+  resetGame();
 };
 
 window.onload = function() {
   updateBear();
-  newQuestion();  // ページが読み込まれたときに最初の問題が出題されます
   document.getElementById("answer").onkeydown = function(e) {
     if (e.key === "Enter") check();
   };
@@ -284,5 +321,3 @@ window.onload = function() {
 
 </body>
 </html>
-
-
