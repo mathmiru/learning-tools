@@ -3,38 +3,71 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>分数計算：成分可視化版</title>
+    <title>分数計算：成分可視化版（ミニ）</title>
     <style>
-        body { font-family: "Hiragino Kaku Gothic ProN", "Meiryo", sans-serif; text-align: center; background-color: #f4f7f9; margin: 0; padding: 30px; }
+        body { font-family: "Hiragino Kaku Gothic ProN", "Meiryo", sans-serif; text-align: center; background-color: #f4f7f9; margin: 0; padding: 10px; }
         .container { max-width: 1000px; margin: auto; }
+        
+        h3 { font-size: 16px; margin: 10px 0; color: #555; }
+
+        /* コントロールパネルを極限までコンパクトに */
         .control-panel { 
-            background: white; padding: 25px; border-radius: 15px; margin-bottom: 30px;
-            display: inline-flex; justify-content: center; align-items: center; gap: 25px;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+            background: white; padding: 8px 15px; border-radius: 8px; margin-bottom: 10px;
+            display: inline-flex; justify-content: center; align-items: center; gap: 8px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
         }
-        .input-group { text-align: center; }
+
+        .input-group { text-align: center; display: flex; flex-direction: column; align-items: center; }
+        
+        /* 入力欄：さらに小さく */
         .input-group input { 
-            width: 75px; text-align: center; font-size: 24px; font-weight: bold; color: #333;
-            border: 3px solid #eef2f5; border-radius: 10px; padding: 8px;
+            width: 35px; text-align: center; font-size: 16px; font-weight: bold; color: #333;
+            border: 1px solid #ccc; border-radius: 4px; padding: 2px;
+            -moz-appearance: textfield; /* スピナーを消す */
         }
-        .fraction-line { width: 90%; height: 4px; background-color: #333; margin: 10px auto; border-radius: 2px; }
-        .operator-select { font-size: 28px; padding: 5px 15px; border-radius: 10px; border: 3px solid #eef2f5; cursor: pointer; font-weight: bold; }
+        .input-group input::-webkit-outer-spin-button,
+        .input-group input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+        /* 分数の横棒 */
+        .fraction-line { width: 100%; height: 2px; background-color: #555; margin: 2px auto; }
+
+        /* 演算子 */
+        .operator-select { font-size: 16px; padding: 0 4px; border-radius: 4px; border: 1px solid #ccc; cursor: pointer; height: 26px;}
+
+        /* 計算ボタン：ミニサイズ */
         .calc-button { 
-            padding: 15px 35px; cursor: pointer; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; 
-            border: none; border-radius: 50px; font-size: 20px; font-weight: bold; box-shadow: 0 10px 20px rgba(79, 172, 254, 0.3);
+            padding: 4px 12px; cursor: pointer; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; 
+            border: none; border-radius: 20px; font-size: 13px; font-weight: bold; box-shadow: 0 2px 5px rgba(79, 172, 254, 0.3);
+            margin-left: 5px;
         }
+        .calc-button:hover { opacity: 0.9; }
+
         canvas { background: transparent; max-width: 100%; display: block; margin: auto; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>分数の計算（成分の内訳表示）</h1>
+    <h3>分数可視化ツール</h3>
     <div class="control-panel">
-        <div class="input-group"><input type="number" id="n1" value="2"><div class="fraction-line"></div><input type="number" id="d1" value="3"></div>
-        <select id="op" class="operator-select"><option value="+">+</option><option value="-">-</option></select>
-        <div class="input-group"><input type="number" id="n2" value="2"><div class="fraction-line"></div><input type="number" id="d2" value="3"></div>
-        <button class="calc-button" onclick="draw()">計算実行</button>
+        <div class="input-group">
+            <input type="number" id="n1" value="2">
+            <div class="fraction-line"></div>
+            <input type="number" id="d1" value="3">
+        </div>
+        
+        <select id="op" class="operator-select">
+            <option value="+">+</option>
+            <option value="-">-</option>
+        </select>
+        
+        <div class="input-group">
+            <input type="number" id="n2" value="2">
+            <div class="fraction-line"></div>
+            <input type="number" id="d2" value="3">
+        </div>
+        
+        <button class="calc-button" onclick="draw()">計算</button>
     </div>
     <canvas id="canvas" width="1000" height="800"></canvas>
 </div>
@@ -130,11 +163,9 @@
                 
                 ctx.save();
                 if (op === "+") {
-                    // 足し算：n1までは青、それ以降は緑
                     ctx.fillStyle = (currentIdx < n1) ? COLORS.blue.fill : COLORS.green.fill;
                     ctx.globalAlpha = 0.8;
                 } else {
-                    // 引き算：残った分は青、引かれた分(n1-n2以降)は緑のゴースト
                     if (currentIdx < finalN) {
                         ctx.fillStyle = COLORS.blue.fill;
                         ctx.globalAlpha = 0.8;
@@ -200,4 +231,3 @@
 </script>
 </body>
 </html>
-
