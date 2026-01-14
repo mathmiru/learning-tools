@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>分数計算：成分可視化版</title>
+    <style>
+        body { font-family: "Hiragino Kaku Gothic ProN", "Meiryo", sans-serif; text-align: center; background-color: #f4f7f9; margin: 0; padding: 30px; }
+        .container { max-width: 1000px; margin: auto; }
+        .control-panel { 
+            background: white; padding: 25px; border-radius: 15px; margin-bottom: 30px;
+            display: inline-flex; justify-content: center; align-items: center; gap: 25px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+        }
+        .input-group { text-align: center; }
+        .input-group input { 
+            width: 75px; text-align: center; font-size: 24px; font-weight: bold; color: #333;
+            border: 3px solid #eef2f5; border-radius: 10px; padding: 8px;
+        }
+        .fraction-line { width: 90%; height: 4px; background-color: #333; margin: 10px auto; border-radius: 2px; }
+        .operator-select { font-size: 28px; padding: 5px 15px; border-radius: 10px; border: 3px solid #eef2f5; cursor: pointer; font-weight: bold; }
+        .calc-button { 
+            padding: 15px 35px; cursor: pointer; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; 
+            border: none; border-radius: 50px; font-size: 20px; font-weight: bold; box-shadow: 0 10px 20px rgba(79, 172, 254, 0.3);
+        }
+        canvas { background: transparent; max-width: 100%; display: block; margin: auto; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>分数の計算（成分の内訳表示）</h1>
+    <div class="control-panel">
+        <div class="input-group"><input type="number" id="n1" value="2"><div class="fraction-line"></div><input type="number" id="d1" value="3"></div>
+        <select id="op" class="operator-select"><option value="+">+</option><option value="-">-</option></select>
+        <div class="input-group"><input type="number" id="n2" value="2"><div class="fraction-line"></div><input type="number" id="d2" value="3"></div>
+        <button class="calc-button" onclick="draw()">計算実行</button>
+    </div>
+    <canvas id="canvas" width="1000" height="800"></canvas>
+</div>
+
+<script>
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+
+    const RADIUS = 50, CIRCLE_GAP = 110, TEXT_OFFSET = 90, ROW_GAP = 160, TOP_MARGIN = 120, BOTTOM_MARGIN = 100;
+    const COLORS = {
+        blue: { fill: "#4facfe", stroke: "#00f2fe" },
+        green: { fill: "#43e97b", stroke: "#38f9d7" },
+        text: "#333", subText: "#888", arrow: "#ccc"
+    };
+
+    function draw() {
+        const n1 = parseInt(document.getElementById("n1").value);
+        const d1 = parseInt(document.getElementById("d1").value);
+        const n2 = parseInt(document.getElementById("n2").value);
+        const d2 = parseInt(document.getElementById("d2").value);
+        const op = document.getElementById("op").value;
+
+        if (d1 <= 0 || d2 <= 0) return;
+
+        const commonD = (d1 === d2) ? d1 : (d1 * d2) / gcd(d1, d2);
+        const resN1 = n1 * (commonD / d1);
+        const resN2 = n2 * (commonD / d2);
+        const finalN = (op === "+") ? resN1 + resN2 : resN1 - resN2;
+        const needsConversion = (d1 !== d2);
+
+        const s1 = Math.ceil(n1/d1), s2 = Math.ceil(n2/d2);
+        const sRes1 = Math.ceil(resN1/commonD), sRes2 = Math.ceil(resN2/commonD);
+        const sFinalDisplay = (op === "-") ? sRes1 : Math.ceil(Math.abs(finalN)/commonD);
+
+        const row1Max = needsConversion ? Math.max(s1, s2) : Math.max(s1, s2, sFinalDisplay);
+        const row2Max = needsConversion ? Math.max(sRes1, sRes2, sFinalDisplay) : 0;
+
+        canvas.height = TOP_MARGIN + (row1Max * CIRCLE_GAP) + TEXT_OFFSET + (needsConversion ? ROW_GAP + (row2Max * CIRCLE_GAP) + TEXT_OFFSET : 0) + BOTTOM_MARGIN;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        const posX1 = 200, posX2 = 500, posX3 = 800;
+        let baseY = TOP_MARGIN + row1Max * CIRCLE_GAP;
+        const symbolY = baseY - CIRCLE_GAP/2 - RADIUS + 20;
+
+        // 1段目
+        drawFractionGroup(posX1, baseY, n1, d1, COLORS.blue, "分数1");
+        drawText((posX1+posX2)/2, symbolY, op, "bold 50px sans-serif", COLORS.text);
+        drawFractionGroup(posX2, baseY, n2, d2, COLORS.green, "分数2");
+
+        if (!needsConversion) {
+            drawText((posX2+posX3)/2, symbolY, "=", "bold 50px sans-serif", COLORS.text);
+            drawResultHybrid(posX3, baseY, resN1, resN2, commonD, op);
+        } else {
+            // 2段目
+            baseY += TEXT_OFFSET + ROW_GAP + row2Max * CIRCLE_GAP;
+            const symbolY2 = baseY - CIRCLE_GAP/2 - RADIUS + 20;
+            drawArrow(posX1, baseY - row2Max*CIRCLE_GAP - ROW_GAP - TEXT_OFFSET/2);
+            drawArrow(posX2, baseY - row2Max*CIRCLE_GAP - ROW_GAP - TEXT_OFFSET/2);
+
+            drawFractionGroup(posX1, baseY, resN1, commonD, COLORS.blue, `通分 (分母${commonD})`);
+            drawText((posX1+posX2)/2, symbolY2, op, "bold 50px sans-serif", COLORS.subText);
+            drawFractionGroup(posX2, baseY, resN2, commonD, COLORS.green, `通分 (分母${commonD})`);
+            drawText((posX2+posX3)/2, symbolY2, "=", "bold 50px sans-serif", COLORS.text);
+            drawResultHybrid(posX3, baseY, resN1, resN2, commonD, op);
+        }
+    }
+
+    function gcd(a, b) { return b === 0 ? a : gcd(b, a % b); }
+
+    function drawFractionGroup(x, baseY, n, d, color, label) {
+        drawStackedCircles(x, baseY - TEXT_OFFSET, n, d, color.fill, color.stroke);
+        drawFractionText(x, baseY, n, d, label);
+    }
+
+    function drawResultHybrid(x, baseY, n1, n2, d, op) {
+        const bottomY = baseY - TEXT_OFFSET;
+        const totalN = (op === "+") ? n1 + n2 : n1; // 引き算は元の全量をベースにする
+        const finalN = (op === "+") ? n1 + n2 : n1 - n2;
+        let circlesNeeded = Math.max(1, Math.ceil(totalN / d));
+
+        for (let c = 0; c < circlesNeeded; c++) {
+            let y = bottomY - RADIUS - (c * CIRCLE_GAP);
+            ctx.beginPath(); ctx.arc(x, y, RADIUS, 0, Math.PI * 2);
+            ctx.fillStyle = "white"; ctx.fill();
+            ctx.strokeStyle = "rgba(0,0,0,0.08)"; ctx.stroke();
+
+            for (let i = 0; i < d; i++) {
+                let currentIdx = c * d + i;
+                if (currentIdx >= totalN) continue;
+
+                let startAngle = (Math.PI * 2 / d) * i - Math.PI / 2;
+                let endAngle = (Math.PI * 2 / d) * (i + 1) - Math.PI / 2;
+                
+                ctx.save();
+                if (op === "+") {
+                    // 足し算：n1までは青、それ以降は緑
+                    ctx.fillStyle = (currentIdx < n1) ? COLORS.blue.fill : COLORS.green.fill;
+                    ctx.globalAlpha = 0.8;
+                } else {
+                    // 引き算：残った分は青、引かれた分(n1-n2以降)は緑のゴースト
+                    if (currentIdx < finalN) {
+                        ctx.fillStyle = COLORS.blue.fill;
+                        ctx.globalAlpha = 0.8;
+                    } else {
+                        ctx.fillStyle = COLORS.green.fill;
+                        ctx.setLineDash([4, 4]);
+                        ctx.globalAlpha = 0.2;
+                    }
+                }
+                ctx.beginPath(); ctx.moveTo(x, y); ctx.arc(x, y, RADIUS, startAngle, endAngle);
+                ctx.fill();
+                ctx.strokeStyle = "white"; ctx.lineWidth = 2; ctx.stroke();
+                ctx.restore();
+            }
+            ctx.beginPath(); ctx.arc(x, y, RADIUS, 0, Math.PI * 2);
+            ctx.strokeStyle = "#333"; ctx.lineWidth = 2; ctx.stroke();
+        }
+        drawFractionText(x, baseY, finalN, d, "答え");
+    }
+
+    function drawStackedCircles(x, bottomY, num, den, fill, stroke) {
+        let circlesNeeded = Math.max(1, Math.ceil(num / den));
+        for (let c = 0; c < circlesNeeded; c++) {
+            let y = bottomY - RADIUS - (c * CIRCLE_GAP);
+            ctx.beginPath(); ctx.arc(x, y, RADIUS, 0, Math.PI * 2);
+            ctx.fillStyle = "white"; ctx.fill();
+            for (let i = 0; i < den; i++) {
+                if (c * den + i < num) {
+                    let s = (Math.PI * 2 / den) * i - Math.PI / 2;
+                    let e = (Math.PI * 2 / den) * (i + 1) - Math.PI / 2;
+                    ctx.beginPath(); ctx.moveTo(x, y); ctx.arc(x, y, RADIUS, s, e);
+                    ctx.fillStyle = fill; ctx.globalAlpha = 0.8; ctx.fill();
+                    ctx.strokeStyle = "white"; ctx.lineWidth = 2; ctx.stroke();
+                }
+            }
+            ctx.globalAlpha = 1.0;
+            ctx.beginPath(); ctx.arc(x, y, RADIUS, 0, Math.PI * 2);
+            ctx.strokeStyle = stroke; ctx.lineWidth = 3; ctx.stroke();
+        }
+    }
+
+    function drawFractionText(x, y, n, d, label) {
+        ctx.fillStyle = COLORS.subText; ctx.font = "16px sans-serif"; ctx.textAlign = "center";
+        ctx.fillText(label, x, y - 65);
+        ctx.fillStyle = COLORS.text; ctx.font = "bold 28px sans-serif";
+        ctx.fillText(n, x, y - 15);
+        ctx.fillRect(x - 30, y - 5, 60, 4);
+        ctx.fillText(d, x, y + 35);
+    }
+
+    function drawText(x, y, txt, font, color) {
+        ctx.fillStyle = color; ctx.font = font; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+        ctx.fillText(txt, x, y);
+    }
+
+    function drawArrow(x, y) {
+        ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y + 40);
+        ctx.lineTo(x - 10, y + 30); ctx.moveTo(x, y + 40); ctx.lineTo(x + 10, y + 30);
+        ctx.strokeStyle = COLORS.arrow; ctx.lineWidth = 3; ctx.stroke();
+    }
+
+    draw(); 
+</script>
+</body>
+</html>
+
