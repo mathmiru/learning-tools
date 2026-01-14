@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>算数時計 - デジタル表示改善版</title>
+    <script src="https://cdn.jsdelivr.net/gh/phi-jp/phina.js@v0.2.3/build/phina.js"></script>
+    <style>
+        body { margin: 0; background-color: #ffffff; overflow: hidden; display: flex; justify-content: center; align-items: center; height: 100vh; }
+        canvas { max-width: 100%; max-height: 100%; object-fit: contain; }
+    </style>
+</head>
+<body>
+
+<script>
+phina.globalize();
+
+const SCREEN_WIDTH = 640;
+const SCREEN_HEIGHT = 960;
+
+phina.define('MainScene', {
+    superClass: 'DisplayScene',
+
+    init: function() {
+        this.superInit({ width: SCREEN_WIDTH, height: SCREEN_HEIGHT });
+        this.backgroundColor = '#ffffff';
+
+        this.clockGroup = DisplayElement().addChildTo(this).setPosition(320, 300);
+        this.uiGroup = DisplayElement().addChildTo(this).setPosition(320, 730);
+
+        // 盤面
+        CircleShape({ radius: 265, fill: '#fcfcfc', stroke: '#2ecc71', strokeWidth: 10 }).addChildTo(this.clockGroup);
+
+        // 目盛り
+        for (let i = 0; i < 60; i++) {
+            let angle = i * 6;
+            let isFiveMin = (i % 5 === 0);
+            let len = isFiveMin ? 25 : 12;
+            let wid = isFiveMin ? 6 : 3;
+            let tick = RectangleShape({ width: wid, height: len, fill: '#333', strokeWidth: 0 }).addChildTo(this.clockGroup);
+            let rad = Math.degToRad(angle);
+            let dist = 240;
+            tick.x = Math.sin(rad) * (dist - len/2);
+            tick.y = -Math.cos(rad) * (dist - len/2);
+            tick.rotation = angle;
+        }
+
+        // ヒント数字
+        this.hintGroup = DisplayElement().addChildTo(this.clockGroup);
+        for (let i = 1; i <= 12; i++) {
+            let angle = i * 30;
+            let rad = Math.degToRad(angle);
+            let dist = 285; 
+            Label({
+                text: (i * 5).toString(),
+                fontSize: 28,
+                fill: '#e67e22',
+                fontWeight: 'bold',
+                x: Math.sin(rad) * dist,
+                y: -Math.cos(rad) * dist
+            }).addChildTo(this.hintGroup);
+        }
+        this.hintGroup.visible = false;
+
+        // 時刻数字
+        for (let i = 1; i <= 12; i++) {
+            let angle = i * 30;
+            let rad = Math.degToRad(angle);
+            let dist = 190;
+            Label({
+                text: i.toString(),
+                fontSize: 55,
+                fill: '#2c3e50',
+                fontWeight: 'bold',
+                x: Math.sin(rad) * dist,
+                y: -Math.cos(rad) * dist
+            }).addChildTo(this.clockGroup);
+        }
+
+        // --- デジタル表示（針の下に配置） ---
+        // 針が重なっても見えるように、背景を半透明の白にします
+        this.digitalDisplay = DisplayElement().addChildTo(this.clockGroup).setPosition(0, 100);
+        this.digitalBg = RectangleShape({
+            width: 220, height: 80,
+            fill: 'rgba(255, 255, 255, 0.7)', // 半透明の白
+            stroke: '#bdc3c7', strokeWidth: 2,
+            cornerRadius: 10
+        }).addChildTo(this.digitalDisplay);
+
+        this.digitalLabel = Label({
+            text: '12:00', fontSize: 60, fill: '#2c3e50',
+            fontWeight: 'bold'
+        }).addChildTo(this.digitalDisplay);
+        
+        this.digitalDisplay.visible = true; // 最初から表示
+
+        // --- 針（デジタル表示の上に重なるように後に作成） ---
+        // 短針（青色）
+        this.hourHand = RectangleShape({ 
+            width: 18, height: 160, fill: '#3498db', 
+            cornerRadius: 9, stroke: 'white', strokeWidth: 2 
+        }).addChildTo(this.clockGroup).setOrigin(0.5, 0.85);
+
+        // 長針（赤色）
+        this.minuteHand = RectangleShape({ 
+            width: 12, height: 240, fill: '#e74c3c', 
+            cornerRadius: 6, stroke: 'white', strokeWidth: 2 
+        }).addChildTo(this.clockGroup).setOrigin(0.5, 0.9);
+
+        CircleShape({ radius: 14, fill: '#2c3e50' }).addChildTo(this.clockGroup);
+
+        this.createUI();
+        this.updateClockDisplay();
+    },
+
+    createUI: function() {
+        const self = this;
+        const btnBase = { fontSize: 22, cornerRadius: 10, stroke: '#555', strokeWidth: 3, fontColor: '#000' };
+
+        const actions = [
+            { label: '+1じかん', val: 60, x: -200, y: -80, col: '#ffadad' },
+            { label: '+10ぷん',  val: 10, x: 0,    y: -80, col: '#ffd6a5' },
+            { label: '+1ぷん',   val: 1,  x: 200,  y: -80, col: '#caffbf' },
+            { label: '-1じかん', val: -60, x: -200, y: 15,  col: '#a0c4ff' },
+            { label: '-10ぷん',  val: -10, x: 0,    y: 15,  col: '#ffd6a5' },
+            { label: '-1ぷん',   val: -1,  x: 200,  y: 15,  col: '#caffbf' },
+        ];
+
+        actions.forEach(a => {
+            Button({ text: a.label, fill: a.col, width: 160, height: 85, ...btnBase })
+                .addChildTo(this.uiGroup).setPosition(a.x, a.y)
+                .on('push', () => { self.addTime(a.val); });
+        });
+
+        const footerY = 125;
+        
+        Button({ text: 'デジタルどけい', fill: '#ecf0f1', width: 200, height: 75, ...btnBase })
+            .addChildTo(this.uiGroup).setPosition(-210, footerY)
+            .on('push', () => { self.digitalDisplay.visible = !self.digitalDisplay.visible; });
+
+        Button({ text: 'いま', fill: '#ecf0f1', width: 140, height: 75, ...btnBase })
+            .addChildTo(this.uiGroup).setPosition(0, footerY)
+            .on('push', () => { self.setToCurrentTime(); });
+
+        this.hintBtn = Button({ text: 'ヒント：OFF', fill: '#f1c40f', width: 200, height: 75, ...btnBase })
+            .addChildTo(this.uiGroup).setPosition(210, footerY)
+            .on('push', () => {
+                self.hintGroup.visible = !self.hintGroup.visible;
+                self.hintBtn.text = self.hintGroup.visible ? "ヒント：ON" : "ヒント：OFF";
+            });
+    },
+
+    addTime: function(min) {
+        this.hourHand.rotation += min * 0.5;
+        this.minuteHand.rotation += min * 6;
+        this.updateClockDisplay();
+    },
+
+    setToCurrentTime: function() {
+        const now = new Date();
+        const h = now.getHours() % 12;
+        const m = now.getMinutes();
+        this.minuteHand.rotation = m * 6;
+        this.hourHand.rotation = (h * 30) + (m * 0.5);
+        this.updateClockDisplay();
+    },
+
+    updateClockDisplay: function() {
+        let m = Math.round((this.minuteHand.rotation % 360) / 6);
+        if (m < 0) m += 60;
+        if (m === 60) m = 0;
+        let h = Math.floor((this.hourHand.rotation % 360) / 30);
+        if (h <= 0) h += 12;
+        this.digitalLabel.text = h + ":" + (m < 10 ? "0" + m : m);
+    }
+});
+
+phina.main(() => {
+    GameApp({ startLabel: 'main', width: SCREEN_WIDTH, height: SCREEN_HEIGHT }).run();
+});
+</script>
+</body>
+</html>
