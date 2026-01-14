@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
 <title>わり算 無限チャレンジ</title>
 
 <style>
@@ -16,6 +16,7 @@
   h1 {
     color: #4caf50;
     font-size: 1.8em;
+    margin: 10px 0;
   }
   .card {
     background: white;
@@ -24,6 +25,8 @@
     padding: 20px;
     max-width: 420px;
     margin: auto;
+    position: relative;
+    min-height: 420px;
   }
   .question {
     font-size: 2.6em;
@@ -43,49 +46,88 @@
     padding: 10px 18px;
     border-radius: 20px;
     border: none;
+    cursor: pointer;
   }
-  button {
+
+  .btn-submit {
     background: #4caf50;
     color: white;
+    width: 80%;
+    font-weight: bold;
+    box-shadow: 0 4px #388e3c;
+    margin-top: 10px;
+  }
+  .btn-submit:active {
+    box-shadow: none;
+    transform: translateY(4px);
   }
 
-  .growth {
+  .btn-start {
+    background: #ff7a00;
+    color: white;
+    font-size: 1.5em;
+    padding: 20px 40px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 10;
+    width: 80%;
+    box-shadow: 0 6px #d35400;
+  }
+
+  .btn-reset {
+    background: #999;
+    color: white;
+    font-size: 0.9em;
+    margin-top: 30px;
+    padding: 8px 15px;
+  }
+
+  .bear {
+    font-size: 3.5em;
     margin: 10px 0;
   }
-
-  .stages span {
-    opacity: 0.4;
-    font-weight: bold;
+  .growth {
+    font-size: 0.85em;
+    margin-bottom: 10px;
   }
-
+  .stages span {
+    opacity: 0.3;
+    font-weight: bold;
+    margin: 0 2px;
+  }
   .stages .active {
     opacity: 1;
+    color: #4caf50;
+    font-size: 1.2em;
   }
-
   .bar {
-    background: #ddd;
+    background: #eee;
     border-radius: 10px;
-    height: 12px;
-    margin-top: 6px;
+    height: 16px;
+    margin-top: 8px;
     overflow: hidden;
+    border: 1px solid #ddd;
   }
-
   .bar-inner {
     height: 100%;
     width: 0%;
-    background: linear-gradient(90deg, #a5d6a7, #66bb6a);
-    transition: width 0.3s;
+    background: linear-gradient(90deg, #a5d6a7, #4caf50);
+    transition: width 0.4s ease-out;
   }
-
   .result {
     font-size: 1.4em;
     height: 1.6em;
     margin-top: 10px;
+    font-weight: bold;
   }
-
-  .bear {
-    font-size: 3em;
-    margin: 10px 0;
+  .hidden {
+    display: none;
+  }
+  .status {
+    margin-top: 10px;
+    font-size: 1.1em;
   }
 </style>
 </head>
@@ -95,69 +137,77 @@
 <h1>わり算 無限チャレンジ</h1>
 
 <div class="card">
+  <button id="startBtn" class="btn-start" onclick="startGame()">▶ はじめる！</button>
 
-  学年：
-  <select id="grade">
-    <option value="3">3年生</option>
-    <option value="4">4年生</option>
-    <option value="56">5・6年生</option>
-  </select>
+  <div id="gameArea">
+    学年：
+    <select id="grade" onchange="newQuestion()">
+      <option value="3">3年生 (あまりなし)</option>
+      <option value="4">4年生 (あまりあり)</option>
+      <option value="56">5・6年生 (ちょっとむずかしい)</option>
+    </select>
 
-  <div class="bear" id="bear">🥚</div>
+    <div class="bear" id="bear">🥚</div>
 
-  <!-- 成長表示 -->
-  <div class="growth">
-    <div>せいちょう：</div>
-    <div class="stages">
-      <span id="stage1">🥚 0〜4</span> →
-      <span id="stage2">🐣 5〜9</span> →
-      <span id="stage3">🐤 10〜19</span> →
-      <span id="stage4">🐻 20〜29</span> →
-      <span id="stage5">🧸 30〜</span>
+    <div class="growth">
+      <div class="stages">
+        <span id="stage1">🥚0~</span>
+        <span id="stage2">🐣10~</span>
+        <span id="stage3">🐤20~</span>
+        <span id="stage4">🐻30~</span>
+        <span id="stage5">🧸40</span>
+      </div>
+      <div class="bar">
+        <div class="bar-inner" id="barInner"></div>
+      </div>
     </div>
-    <div class="bar">
-      <div class="bar-inner" id="barInner"></div>
+
+    <div class="question" id="question">？</div>
+
+    <div>
+      <input id="ansQ" type="text" inputmode="numeric" placeholder="?">
+      <span id="labelAmari"> あまり </span>
+      <input id="ansR" type="text" inputmode="numeric" placeholder="?">
     </div>
+
+    <button class="btn-submit" onclick="check()">こたえる</button>
+    <div class="result" id="result"></div>
   </div>
-
-  <div class="question" id="question">？</div>
-
-  <div>
-    <input id="ansQ" placeholder="商">
-    あまり
-    <input id="ansR" placeholder="あまり">
-  </div>
-
-  <button onclick="check()">こたえる</button>
-  <button id="startBtn">▶ スタート</button>
-
-  <div class="result" id="result"></div>
-
 </div>
+
+<div class="status">
+  せいかい：<span id="correct">0</span> ／ もんだい：<span id="total">0</span>
+</div>
+
+<button id="resetBtn" class="btn-reset" onclick="resetGame()">最初（さいしょ）から やりなおす</button>
 
 <script>
 let a = 0, b = 0, q = 0, r = 0;
+let correctCount = 0;
+let totalCount = 0;
 let streak = 0;
 
 function getLevel() {
   const g = document.getElementById("grade").value;
   if (g === "3") return { maxB: 9, remainder: false };
   if (g === "4") return { maxB: 9, remainder: true };
-  return { maxB: 12, remainder: true }; // 5・6年
+  return { maxB: 12, remainder: true }; 
 }
 
 function newQuestion() {
   const lv = getLevel();
-  b = Math.floor(Math.random() * (lv.maxB - 1)) + 2;
-
-  if (lv.remainder) {
-    q = Math.floor(Math.random() * 9) + 1;
-    r = Math.floor(Math.random() * b);
+  
+  if (!lv.remainder) {
+    document.getElementById("ansR").classList.add("hidden");
+    document.getElementById("labelAmari").classList.add("hidden");
   } else {
-    q = Math.floor(Math.random() * 9) + 1;
-    r = 0;
+    document.getElementById("ansR").classList.remove("hidden");
+    document.getElementById("labelAmari").classList.remove("hidden");
   }
 
+  b = Math.floor(Math.random() * (lv.maxB - 1)) + 2;
+  q = Math.floor(Math.random() * 9) + 1;
+  r = lv.remainder ? Math.floor(Math.random() * b) : 0;
   a = b * q + r;
 
   document.getElementById("question").innerText = `${a} ÷ ${b} = ?`;
@@ -171,19 +221,28 @@ function toHalf(str) {
 }
 
 function check() {
-  const uq = Number(toHalf(document.getElementById("ansQ").value));
-  const ur = Number(toHalf(document.getElementById("ansR").value || "0"));
+  const uq = Number(toHalf(document.getElementById("ansQ").value.trim()));
+  const ur = Number(toHalf(document.getElementById("ansR").value.trim() || "0"));
+
+  totalCount++;
+  const resDiv = document.getElementById("result");
 
   if (uq === q && ur === r) {
+    correctCount++;
     streak++;
-    document.getElementById("result").innerText = "⭕ せいかい！";
+    resDiv.innerText = "⭕ せいかい！";
+    resDiv.style.color = "#ff4500";
   } else {
     streak = 0;
-    document.getElementById("result").innerText = `❌ こたえ：${q} あまり ${r}`;
+    resDiv.innerText = `❌ こたえ：${q} あまり ${r}`;
+    resDiv.style.color = "#555";
   }
 
+  document.getElementById("correct").innerText = correctCount;
+  document.getElementById("total").innerText = totalCount;
+  
   updateGrowth();
-  setTimeout(newQuestion, 700);
+  setTimeout(newQuestion, 800);
 }
 
 function updateGrowth() {
@@ -191,42 +250,53 @@ function updateGrowth() {
   const stages = ["stage1","stage2","stage3","stage4","stage5"];
   stages.forEach(id => document.getElementById(id).classList.remove("active"));
 
-  if (streak < 5) {
-    document.getElementById("bear").innerText = "🥚";
-    document.getElementById("stage1").classList.add("active");
-    bar.style.width = (streak / 5 * 20) + "%";
-  } else if (streak < 10) {
-    document.getElementById("bear").innerText = "🐣";
-    document.getElementById("stage2").classList.add("active");
-    bar.style.width = (20 + (streak - 5) / 5 * 20) + "%";
+  let progress = (streak / 40) * 100;
+  if (progress > 100) progress = 100;
+  bar.style.width = progress + "%";
+
+  let bearIcon = "🥚";
+  let activeId = "stage1";
+
+  if (streak < 10) {
+    bearIcon = "🥚"; activeId = "stage1";
   } else if (streak < 20) {
-    document.getElementById("bear").innerText = "🐤";
-    document.getElementById("stage3").classList.add("active");
-    bar.style.width = (40 + (streak - 10) / 10 * 20) + "%";
+    bearIcon = "🐣"; activeId = "stage2";
   } else if (streak < 30) {
-    document.getElementById("bear").innerText = "🐻";
-    document.getElementById("stage4").classList.add("active");
-    bar.style.width = (60 + (streak - 20) / 10 * 20) + "%";
+    bearIcon = "🐤"; activeId = "stage3";
+  } else if (streak < 40) {
+    bearIcon = "🐻"; activeId = "stage4";
   } else {
-    document.getElementById("bear").innerText = "🧸";
-    document.getElementById("stage5").classList.add("active");
-    bar.style.width = "100%";
+    bearIcon = "🧸"; activeId = "stage5";
   }
+
+  document.getElementById("bear").innerText = bearIcon;
+  document.getElementById(activeId).classList.add("active");
 }
 
-document.getElementById("startBtn").onclick = () => {
+function resetGame() {
+  correctCount = 0;
+  totalCount = 0;
   streak = 0;
+  document.getElementById("correct").innerText = 0;
+  document.getElementById("total").innerText = 0;
+  document.getElementById("result").innerText = "";
   updateGrowth();
   newQuestion();
-};
+}
 
-window.onload = () => {
+function startGame() {
+  document.getElementById("startBtn").classList.add("hidden");
+  resetGame();
+}
+
+window.onload = function() {
   updateGrowth();
-  newQuestion();
+  const inputs = [document.getElementById("ansQ"), document.getElementById("ansR")];
+  inputs.forEach(el => {
+    el.onkeydown = (e) => { if (e.key === "Enter") check(); };
+  });
 };
 </script>
 
 </body>
 </html>
-
-
