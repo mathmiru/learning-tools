@@ -1,303 +1,93 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>くりさがり(２ケタまで）</title>
-
-<style>
-body {
-  font-family: "Arial Rounded MT Bold", system-ui;
-  background: #f5fbff;
-  text-align: center;
-  padding: 10px;
-}
-
-h1 { font-size: 1.6em; }
-
-input {
-  font-size: 1.3em;
-  width: 60px;
-  text-align: center;
-  border-radius: 8px;
-  border: 2px solid #ccc;
-}
-
-.problem {
-  font-size: 1.8em;
-  margin: 10px 0;
-}
-
-.learn-box {
-  background: #ffffff;
-  border-radius: 18px;
-  padding: 12px;
-  margin: 15px auto;
-  max-width: 520px;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-}
-
-.place-row {
-  display: flex;
-  gap: 20px;
-  justify-content: center;
-}
-
-.place {
-  width: 230px;
-}
-
-.label {
-  font-size: 1.05em;
-  margin-bottom: 5px;
-}
-
-.blocks {
-  min-height: 160px;
-}
-
-.ten {
-  background: #4da6ff;
-  color: white;
-  border-radius: 10px;
-  padding: 12px;
-  margin: 6px auto;
-  width: 80%;
-  cursor: pointer;
-}
-
-.ones-grid {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 4px;
-}
-
-.one {
-  border-radius: 50%;
-  width: 28px;
-  height: 28px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.9em;
-  cursor: pointer;
-}
-
-.one.normal { background: #ffcc66; }
-.one.from-ten { background: #7fc8ff; }
-
-button {
-  margin: 8px;
-  font-size: 1.05em;
-  padding: 6px 14px;
-  border-radius: 10px;
-  border: none;
-  background: #66bb6a;
-  color: white;
-  cursor: pointer;
-}
-
-.progress {
-  margin-top: 14px;
-  font-size: 1.1em;
-}
-
-.bar-wrapper {
-  display: flex;
-  justify-content: center;
-  gap: 8px;
-  margin-top: 6px;
-}
-
-.bar {
-  display: grid;
-  grid-template-columns: repeat(10, 20px);
-  gap: 4px;
-}
-
-.bar div {
-  width: 20px;
-  height: 20px;
-  border-radius: 5px;
-  background: #ddd;
-}
-
-.bar .done { background: #ff9933; }
-
-.scale {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  font-size: 0.8em;
-  color: #bbb;
-  padding-top: 2px;
-}
-
-.notice {
-  font-size: 0.9em;
-  color: #888;
-  height: 1.2em;
-  margin-top: 6px;
-}
-</style>
+    <meta charset="UTF-8">
+    <title>Math Visualizer</title>
+    <style>body{font-family:"Arial Rounded MT Bold",sans-serif;background:#f5fbff;text-align:center;padding:10px}h1{font-size:1.6em}input{font-size:1.3em;width:60px;text-align:center;border-radius:8px;border:2px solid #ccc}.p-area{font-size:1.8em;margin:10px 0}.lb{background:#fff;border-radius:18px;padding:12px;margin:15px auto;max-width:520px;box-shadow:0 4px 8px rgba(0,0,0,.1)}.pr{display:flex;gap:20px;justify-content:center}.pl{width:230px}.la{font-size:1.05em;margin-bottom:5px}.bk{min-height:160px}.ten{background:#4da6ff;color:#fff;border-radius:10px;padding:12px;margin:6px auto;width:80%;cursor:pointer}.og{display:grid;grid-template-columns:repeat(5,1fr);gap:4px}.one{border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:.9em;cursor:pointer}.one.n{background:#ffcc66}.one.f{background:#7fc8ff}button{margin:8px;font-size:1.05em;padding:6px 14px;border-radius:10px;border:none;background:#66bb6a;color:#fff;cursor:pointer}.pg{margin-top:14px;font-size:1.2em;font-weight:700;color:#555}.nt{font-size:1.3em;color:#ff4500;height:1.4em;margin:10px 0;font-weight:700;display:flex;align-items:center;justify-content:center}</style>
 </head>
-
 <body>
+    <h1 id="t_h1"></h1>
+    <div class="p-area">
+        <input id="in_t" type="number" value="15">
+        <span id="x_sym"></span>
+        <input id="in_b" type="number" value="9">
+    </div>
+    <button id="bt_s" onclick="window._s()"></button>
+    
+    <div id="v_n" class="nt"></div>
 
-<h1>くりさがり(２ケタまで）</h1>
-
-<div class="problem">
-  <input id="top" type="number" min="10" max="99" value="15">
-  −
-  <input id="bottom" type="number" min="0" max="99" value="9">
-</div>
-
-<button onclick="start()">スタート</button>
-
-<div class="learn-box">
-  <div class="place-row">
-
-    <!-- 10のかたまり -->
-    <div class="place">
-      <div class="label">10の かたまり（タップで ばらす）</div>
-      <div id="tens" class="blocks"></div>
+    <div class="lb">
+        <div class="pr">
+            <div class="pl">
+                <div class="la" id="t_l1"></div>
+                <div id="v_t" class="bk"></div>
+            </div>
+            <div class="pl">
+                <div class="la" id="t_l2"></div>
+                <div id="v_o" class="bk og"></div>
+                <button id="bt_m" onclick="window._m()"></button>
+            </div>
+        </div>
     </div>
 
-    <!-- 1のかたまり -->
-    <div class="place">
-      <div class="label">1の かたまり（タップで ひく）</div>
-      <div id="ones" class="blocks ones-grid"></div>
-      <button onclick="mergeTen()">10こで 10のかたまりに もどす</button>
+    <div class="pg">
+        <span id="t_pg"></span>：<span id="v_cnt">0</span> / <span id="v_total">0</span>
     </div>
-
-  </div>
-</div>
-
-<div class="progress">
-  いま ひいた かず
-  <div class="bar-wrapper">
-    <div id="bar" class="bar"></div>
-    <div id="scale" class="scale"></div>
-  </div>
-</div>
-
-<div id="notice" class="notice"></div>
-
-<button onclick="reset()">もういちど</button>
+    
+    <button id="bt_r" onclick="window._r_g()"></button>
 
 <script>
-let tens, ones, fromTenOnes;
-let totalSubtract, subtracted;
+(function(){
+    const _d=document,_w=window,_M=Math,gE='\x67\x65\x74\x45\x6c\x65\x6d\x65\x6e\x74\x42\x79\x49\x64',iH='\x69\x6e\x6e\x65\x72\x48\x54\x4d\x4c',tC='\x74\x65\x78\x74\x43\x6f\x6e\x74\x65\x6e\x74';
+    let _ts,_os,_ft,_tt,_sb;
 
-const tensDiv = document.getElementById("tens");
-const onesDiv = document.getElementById("ones");
-const bar = document.getElementById("bar");
-const scale = document.getElementById("scale");
-const notice = document.getElementById("notice");
-const topInput = document.getElementById("top");
-const bottomInput = document.getElementById("bottom");
+    const _u = {
+        h1: '\u304f\u308a\u3055\u304c\u308a\u0028\uff12\u30b1\u30bf\u307e\u3067\uff09',
+        sym: '\uff0d',
+        st: '\u30b9\u30bf\u30fc\u30c8',
+        l1: '\uff11\uff10\u306e\u0020\u304b\u305f\u307e\u308a\uff08\u30bf\u30c3\u30d7\u3067\u0020\u3070\u3089\u3059\uff09',
+        l2: '\uff11\u306e\u0020\u304b\u305f\u307e\u308a\uff08\u30bf\u30c3\u30d7\u3067\u0020\u3072\u304f\uff09',
+        m: '\uff11\uff10\u3053\u3067\u0020\uff11\uff10\u306e\u304b\u305f\u307e\u308a\u306b\u0020\u3082\u3069\u3059',
+        pg: '\u3044\u307e\u0020\u3072\u3044\u305f\u0020\u304b\u305a',
+        rs: '\u3082\u3046\u3044\u3061\u3069',
+        er: '\u3046\u3048\u306e\u0020\u304b\u305a\u3092\u0020\u304a\u304a\u304d\u304f\u0020\u3057\u3088\u3046',
+        ok: '\u0020\u3072\u3044\u305f\u3088\uff01',
+        fi: '\u2728\u0020\u3072\u304d\u304a\u308f\u3063\u305f\u3088\uff01\u0020\u2728'
+    };
 
-function start() {
-  const top = Number(topInput.value);
-  const bottom = Number(bottomInput.value);
+    _d[gE]('t_h1')[tC]=_u.h1;_d[gE]('x_sym')[tC]=_u.sym;_d[gE]('bt_s')[tC]=_u.st;
+    _d[gE]('t_l1')[tC]=_u.l1;_d[gE]('t_l2')[tC]=_u.l2;_d[gE]('bt_m')[tC]=_u.m;
+    _d[gE]('t_pg')[tC]=_u.pg;_d[gE]('bt_r')[tC]=_u.rs;
 
-  if (top < bottom) {
-    alert("うえの かずを おおきく しよう");
-    return;
-  }
+    _w._s = function() {
+        const t=Number(_d[gE]('in_t').value),b=Number(_d[gE]('in_b').value);
+        if(t<b){alert(_u.er);return;}_ts=_M.floor(t/10);_os=t%10;_ft=0;_tt=b;_sb=0;
+        _d[gE]('v_n')[tC]='';_d[gE]('v_total')[tC]=_tt;_rn();
+    };
 
-  tens = Math.floor(top / 10);
-  ones = top % 10;
-  fromTenOnes = 0;
-
-  totalSubtract = bottom;
-  subtracted = 0;
-  notice.textContent = "";
-
-  render();
-}
-
-function render() {
-  tensDiv.innerHTML = "";
-  onesDiv.innerHTML = "";
-  bar.innerHTML = "";
-  scale.innerHTML = "";
-
-  for (let i = 0; i < tens; i++) {
-    const t = document.createElement("div");
-    t.className = "ten";
-    t.textContent = "10";
-    t.onclick = splitTen;
-    tensDiv.appendChild(t);
-  }
-
-  for (let i = 0; i < fromTenOnes; i++) createOne("from-ten");
-  for (let i = 0; i < ones; i++) createOne("normal");
-
-  for (let i = 0; i < totalSubtract; i++) {
-    const b = document.createElement("div");
-    if (i < subtracted) b.className = "done";
-    bar.appendChild(b);
-  }
-
-  const rows = Math.ceil(totalSubtract / 10);
-  for (let i = 1; i <= rows; i++) {
-    const s = document.createElement("div");
-    s.textContent = i * 10;
-    scale.appendChild(s);
-  }
-}
-
-function createOne(type) {
-  const o = document.createElement("div");
-  o.className = "one " + type;
-  o.textContent = "1";
-  o.onclick = removeOne;
-  onesDiv.appendChild(o);
-}
-
-function splitTen() {
-  if (tens > 0) {
-    tens--;
-    fromTenOnes += 10;
-    render();
-  }
-}
-
-function mergeTen() {
-  if (ones + fromTenOnes >= 10) {
-    tens++;
-    let need = 10;
-    if (fromTenOnes >= need) fromTenOnes -= need;
-    else {
-      need -= fromTenOnes;
-      fromTenOnes = 0;
-      ones -= need;
+    function _rn() {
+        const dt=_d[gE]('v_t'),do_=_d[gE]('v_o');
+        dt[iH]=do_[iH]='';
+        for(let i=0;i<_ts;i++){let e=_d.createElement('div');e.className='ten';e[tC]='10';e.onclick=_sp;dt.appendChild(e);}
+        for(let i=0;i<_ft;i++)_c1('f',do_);for(let i=0;i<_os;i++)_c1('n',do_);
+        _d[gE]('v_cnt')[tC]=_sb;
     }
-    render();
-  }
-}
 
-function removeOne() {
-  if (subtracted >= totalSubtract) return;
+    function _c1(c,p){let e=_d.createElement('div');e.className='one '+c;e[tC]='1';e.onclick=_rm;p.appendChild(e);}
 
-  if (fromTenOnes > 0) fromTenOnes--;
-  else if (ones > 0) ones--;
-  else {
-    splitTen();
-    fromTenOnes--;
-  }
+    function _sp(){if(_ts>0){_ts--;_ft+=10;_rn();}}
 
-  subtracted++;
-  notice.textContent = subtracted % 10 === 0 ? `${subtracted} ひいたよ！` : "";
-  render();
-}
+    _w._m=function(){if(_os+_ft>=10){_ts++;let n=10;if(_ft>=n)_ft-=n;else{n-=_ft;_ft=0;_os-=n;}_rn();}};
 
-function reset() { start(); }
-start();
+    function _rm(){
+        if(_sb>=_tt)return;
+        if(_ft>0)_ft--;else if(_os>0)_os--;else{if(_ts>0){_sp();_ft--;}else{return;}}
+        _sb++;const n=_d[gE]('v_n');
+        if(_sb===_tt){n[tC]=_u.fi;}else{n[tC]=(_sb%10===0)?_sb+_u.ok:'';}_rn();
+    }
+
+    _w._r_g=function(){_w._s();};_w._s();
+})();
 </script>
-
 </body>
 </html>
-
-
