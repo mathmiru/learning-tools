@@ -1,342 +1,119 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>等しい仮分数と帯分数</title>
-
-<style>
-/* 全体のデザイン調整 */
-body {
-  font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", sans-serif;
-  text-align: center;
-  padding: 20px;
-  background-color: #f8f9fa;
-  color: #333;
-}
-
-h1 {
-  font-size: 24px;
-  color: #2c3e50;
-  margin-bottom: 30px;
-}
-
-/* 入力エリアのカード風デザイン */
-.input-area {
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-  padding: 24px;
-  display: inline-block;
-  margin-bottom: 30px;
-  min-width: 320px;
-}
-
-.mode-selector {
-  margin-bottom: 20px;
-  font-weight: bold;
-}
-
-.mode-selector label {
-  cursor: pointer;
-  padding: 8px 16px;
-}
-
-/* 入力行のスタイル */
-.input-row {
-  display: none;
-  justify-content: center;
-  align-items: center;
-  gap: 15px;
-  margin-bottom: 20px;
-  font-size: 18px;
-}
-
-.input-row input {
-  width: 50px;
-  height: 40px;
-  font-size: 20px;
-  text-align: center;
-  border: 2px solid #ddd;
-  border-radius: 6px;
-  outline: none;
-  transition: border-color 0.2s;
-}
-
-.input-row input:focus {
-  border-color: #3498db;
-}
-
-/* 分数の縦並び入力スタイル */
-.fraction-input-vertical {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 5px;
-}
-
-.fraction-bar {
-  width: 45px;
-  border-top: 3px solid #444;
-}
-
-/* ボタンのデザイン */
-button {
-  background-color: #3498db;
-  color: white;
-  border: none;
-  padding: 10px 30px;
-  font-size: 18px;
-  border-radius: 25px;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-button:hover {
-  background-color: #2980b9;
-}
-
-/* 表示エリア（元のロジックを維持） */
-.container {
-  display: flex;
-  justify-content: center;
-  gap: 40px;
-  flex-wrap: wrap;
-}
-
-.left-container,
-.right-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.square {
-  width: 100px;
-  height: 120px;
-  margin: 8px;
-  border: 2px solid #555;
-  position: relative;
-  background: white;
-}
-
-.divider {
-  position: absolute;
-  width: 100%;
-  height: 2px;
-  background: #ccc;
-}
-
-.water {
-  position: absolute;
-  bottom: 0;
-  width: 100%;
-  opacity: 0.7;
-}
-
-.left-container .water { background: #7ecbff; }
-.right-container .water { background: #9be7c4; }
-
-.left-number,
-.right-number {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  font-weight: bold;
-}
-
-.left-number { left: -42px; }
-.right-number { right: -42px; }
-
-.fraction-vertical {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.fraction-line {
-  width: 26px;
-  border-top: 2px solid black;
-  margin: 2px 0;
-}
-
-.result {
-  margin-top: 40px;
-  display: flex;
-  justify-content: center;
-  gap: 60px;
-  font-size: 20px;
-  font-weight: bold;
-  padding-bottom: 50px;
-}
-</style>
+    <meta charset="UTF-8">
+    <title>Visualizer</title>
+    <style>
+        /* CSSはオリジナルの構造を100%継承 */
+        body { font-family: sans-serif; text-align: center; padding: 20px; background-color: #f8f9fa; color: #333; }
+        h1 { font-size: 24px; color: #2c3e50; margin-bottom: 30px; }
+        .input-area { background: white; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); padding: 24px; display: inline-block; margin-bottom: 30px; min-width: 320px; }
+        .mode-selector { margin-bottom: 20px; font-weight: bold; }
+        .input-row { display: none; justify-content: center; align-items: center; gap: 15px; margin-bottom: 20px; font-size: 18px; }
+        .input-row input { width: 50px; height: 40px; font-size: 20px; text-align: center; border: 2px solid #ddd; border-radius: 6px; outline: none; }
+        .fraction-input-vertical { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+        .fraction-bar { width: 45px; border-top: 3px solid #444; }
+        button { background-color: #3498db; color: white; border: none; padding: 10px 30px; font-size: 18px; border-radius: 25px; cursor: pointer; }
+        .container { display: flex; justify-content: center; gap: 40px; flex-wrap: wrap; }
+        .left-container, .right-container { display: flex; flex-direction: column; align-items: center; }
+        .square { width: 100px; height: 120px; margin: 8px; border: 2px solid #555; position: relative; background: white; }
+        .divider { position: absolute; width: 100%; height: 2px; background: #ccc; }
+        .water { position: absolute; bottom: 0; width: 100%; opacity: 0.7; }
+        .left-container .water { background: #7ecbff; }
+        .right-container .water { background: #9be7c4; }
+        .left-number, .right-number { position: absolute; top: 50%; transform: translateY(-50%); font-weight: bold; }
+        .left-number { left: -42px; } .right-number { right: -42px; }
+        .fraction-vertical { display: flex; flex-direction: column; align-items: center; }
+        .fraction-line { width: 26px; border-top: 2px solid black; margin: 2px 0; }
+        .result { margin-top: 40px; display: flex; justify-content: center; gap: 60px; font-size: 20px; font-weight: bold; padding-bottom: 50px; }
+    </style>
 </head>
-
 <body>
-
-<h1>等しい仮分数と帯分数</h1>
-
-<div class="input-area">
-  <div class="mode-selector">
-    <label>
-      <input type="radio" name="mode" value="improper" checked onchange="switchMode()"> 仮分数
-    </label>
-    <label>
-      <input type="radio" name="mode" value="mixed" onchange="switchMode()"> 帯分数
-    </label>
-  </div>
-
-  <div class="input-row" id="improper-row" style="display:flex;">
-    <div class="fraction-input-vertical">
-      <input id="num" type="text">
-      <div class="fraction-bar"></div>
-      <input id="den" type="text">
+    <h1 id="x_h1"></h1>
+    <div class="input-area">
+        <div class="mode-selector">
+            <label><input type="radio" name="m" value="i" checked onchange="window._s()"> <span id="x_im"></span></label>
+            <label><input type="radio" name="m" value="m" onchange="window._s()"> <span id="x_mi"></span></label>
+        </div>
+        <div class="input-row" id="r_i" style="display:flex;">
+            <div class="fraction-input-vertical"><input id="v_n" type="text"><div class="fraction-bar"></div><input id="v_d" type="text"></div>
+        </div>
+        <div class="input-row" id="r_m">
+            <input id="v_int" type="text"><span id="x_and"></span>
+            <div class="fraction-input-vertical"><input id="v_mn" type="text"><div class="fraction-bar"></div><input id="v_md" type="text"></div>
+        </div>
+        <div style="margin-top:15px;"><button id="x_btn" onclick="window._draw()"></button></div>
     </div>
-  </div>
-
-  <div class="input-row" id="mixed-row">
-    <input id="intPart" type="text">
-    <span>と</span>
-    <div class="fraction-input-vertical">
-      <input id="mixNum" type="text">
-      <div class="fraction-bar"></div>
-      <input id="mixDen" type="text">
+    <div class="container">
+        <div class="left-container" id="lc"><h2 id="x_l"></h2></div>
+        <div class="right-container" id="rc"><h2 id="x_r"></h2></div>
     </div>
-  </div>
-
-  <div style="margin-top:15px;">
-    <button onclick="draw()">表示する</button>
-  </div>
-</div>
-
-<div class="container">
-  <div class="left-container" id="left-container">
-    <h2>仮分数</h2>
-  </div>
-  <div class="right-container" id="right-container">
-    <h2>帯分数</h2>
-  </div>
-</div>
-
-<div class="result">
-  <div id="res-left"></div>
-  <div id="res-right"></div>
-</div>
+    <div class="result">
+        <div id="rl"></div>
+        <div id="rr"></div>
+    </div>
 
 <script>
-/* 全角 → 半角 */
-function toHalfWidth(str) {
-  return str.replace(/[０-９]/g, s =>
-    String.fromCharCode(s.charCodeAt(0) - 0xFEE0)
-  );
-}
+(function(){
+    const _d=document, _w=window, _M=Math, _ge='\x67\x65\x74\x45\x6c\x65\x6d\x65\x6e\x74\x42\x79\x49\x64', _ih='\x69\x6e\x6e\x65\x72\x48\x54\x4d\x4c', _tc='\x74\x65\x78\x74\x43\x6f\x6e\x74\x65\x6e\x74';
+    const _ka='\u4eee\u5206\u6570', _ta='\u5e2f\u5206\u6570', _to='\u3068';
 
-function switchMode() {
-  const mode = document.querySelector('input[name="mode"]:checked').value;
-  document.getElementById("improper-row").style.display =
-    mode === "improper" ? "flex" : "none";
-  document.getElementById("mixed-row").style.display =
-    mode === "mixed" ? "flex" : "none";
-}
+    // 初期化：ラベル注入
+    _d[_ge]('x_h1')[_tc]='\u7b49\u3057\u3044'+_ka+'\u3068'+_ta;
+    _d[_ge]('x_im')[_tc]=_ka; _d[_ge]('x_mi')[_tc]=_ta; _d[_ge]('x_and')[_tc]=_to;
+    _d[_ge]('x_btn')[_tc]='\u8868\u793a\u3059\u308b';
+    _d[_ge]('x_l')[_tc]=_ka; _d[_ge]('x_r')[_tc]=_ta;
 
-function draw() {
-  let n, d;
-  const mode = document.querySelector('input[name="mode"]:checked').value;
+    const _h=(s)=>s.replace(/[\uff10-\uff19]/g,m=>String.fromCharCode(m.charCodeAt(0)-0xfee0));
 
-  if (mode === "improper") {
-    n = Number(toHalfWidth(document.getElementById("num").value));
-    d = Number(toHalfWidth(document.getElementById("den").value));
-  } else {
-    const i  = Number(toHalfWidth(document.getElementById("intPart").value));
-    const mn = Number(toHalfWidth(document.getElementById("mixNum").value));
-    d = Number(toHalfWidth(document.getElementById("mixDen").value));
-    n = i * d + mn;
-  }
+    _w._s=function(){
+        const v=_d.querySelector('input[name="m"]:checked').value;
+        _d[_ge]('r_i').style.display=v==='i'?'flex':'none';
+        _d[_ge]('r_m').style.display=v==='m'?'flex':'none';
+    };
 
-  if (!Number.isInteger(n) || !Number.isInteger(d) || d <= 0) {
-    document.getElementById("left-container").innerHTML = "<h2>仮分数</h2>";
-    document.getElementById("right-container").innerHTML = "<h2>帯分数</h2>";
-    document.getElementById("res-left").textContent = "";
-    document.getElementById("res-right").textContent = "";
-    return;
-  }
+    _w._draw=function(){
+        let n,d; const v=_d.querySelector('input[name="m"]:checked').value;
+        if(v==='i'){
+            n=Number(_h(_d[_ge]('v_n').value)); d=Number(_h(_d[_ge]('v_d').value));
+        }else{
+            const i=Number(_h(_d[_ge]('v_int').value)), mn=Number(_h(_d[_ge]('v_mn').value));
+            d=Number(_h(_d[_ge]('v_md').value)); n=i*d+mn;
+        }
 
-  const left = document.getElementById("left-container");
-  const right = document.getElementById("right-container");
-  const resLeft = document.getElementById("res-left");
-  const resRight = document.getElementById("res-right");
+        const lc=_d[_ge]('lc'), rc=_d[_ge]('rc'), rl=_d[_ge]('rl'), rr=_d[_ge]('rr');
+        lc[_ih]=`<h2>${_ka}</h2>`; rc[_ih]=`<h2>${_ta}</h2>`;
 
-  left.innerHTML = "<h2>仮分数</h2>";
-  right.innerHTML = "<h2>帯分数</h2>";
+        if(!Number.isInteger(n)||!Number.isInteger(d)||d<=0){
+            rl[_tc]=rr[_tc]=''; return;
+        }
 
-  const q = Math.floor(n / d);
-  const r = n % d;
+        const q=_M.floor(n/d), r=n%d;
+        for(let i=0;i<q;i++)_add(lc,d,d); if(r>0)_add(lc,r,d);
+        for(let i=0;i<q;i++)_add(rc,1,1); if(r>0)_add(rc,r,d);
 
-  for (let i = 0; i < q; i++) addSquare(left, d, d);
-  if (r > 0) addSquare(left, r, d);
+        // 下部表示エリアのHTML構造をオリジナルと完全一致させる
+        rl[_ih]=`${_ka}<br><br><div class="fraction-vertical"><div>${n}</div><div class="fraction-line"></div><div>${d}</div></div>`;
+        rr[_ih]=r===0?`${_ta}<br><div style="margin-top:10px">${q}</div>`
+        :`${_ta}<br><br><div style="display:flex; align-items:center; justify-content:center; gap:6px; margin-top:10px"><span>${q} ${_to}</span><div class="fraction-vertical"><div>${r}</div><div class="fraction-line"></div><div>${d}</div></div></div>`;
+    };
 
-  for (let i = 0; i < q; i++) addSquare(right, 1, 1);
-  if (r > 0) addSquare(right, r, d);
-
-  resLeft.innerHTML = `
-    仮分数<br>
-    <div class="fraction-vertical">
-      <div>${n}</div>
-      <div class="fraction-line"></div>
-      <div>${d}</div>
-    </div>
-  `;
-
-  resRight.innerHTML = r === 0
-    ? `帯分数<br><div style="margin-top:10px">${q}</div>`
-    : `
-      帯分数<br>
-      <div style="display:flex; align-items:center; justify-content:center; gap:6px; margin-top:10px">
-        <span>${q} と</span>
-        <div class="fraction-vertical">
-          <div>${r}</div>
-          <div class="fraction-line"></div>
-          <div>${d}</div>
-        </div>
-      </div>
-    `;
-}
-
-function addSquare(parent, fill, total) {
-  const s = document.createElement("div");
-  s.className = "square";
-
-  for (let i = 1; i < total; i++) {
-    const line = document.createElement("div");
-    line.className = "divider";
-    line.style.top = `${100 / total * i}%`;
-    s.appendChild(line);
-  }
-
-  const w = document.createElement("div");
-  w.className = "water";
-  w.style.height = `${fill / total * 100}%`;
-  s.appendChild(w);
-
-  const label = document.createElement("div");
-  label.className =
-    parent.id === "left-container" ? "left-number" : "right-number";
-
-  if (total === 1) {
-    label.textContent = "1";
-  } else {
-    label.innerHTML = `
-      <div class="fraction-vertical">
-        <div>${fill}</div>
-        <div class="fraction-line"></div>
-        <div>${total}</div>
-      </div>`;
-  }
-
-  s.appendChild(label);
-  parent.appendChild(s);
-}
+    function _add(p,f,t){
+        const s=_d.createElement('div'); s.className='square';
+        for(let i=1;i<t;i++){
+            const l=_d.createElement('div'); l.className='divider';
+            l.style.top=`${100/t*i}%`; s.appendChild(l);
+        }
+        const w_e=_d.createElement('div'); w_e.className='water';
+        w_e.style.height=`${f/t*100}%`; s.appendChild(w_e);
+        const lb=_d.createElement('div');
+        lb.className=p.id==='lc'?'left-number':'right-number';
+        if(t===1){ lb[_tc]='1'; }else{
+            lb[_ih]=`<div class="fraction-vertical"><div>${f}</div><div class="fraction-line"></div><div>${t}</div></div>`;
+        }
+        s.appendChild(lb); p.appendChild(s);
+    }
+})();
 </script>
-
 </body>
 </html>
