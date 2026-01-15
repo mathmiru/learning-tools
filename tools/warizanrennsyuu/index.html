@@ -3,300 +3,120 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-<title>わり算 無限チャレンジ</title>
-
+<title>Division Challenge</title>
 <style>
-  body {
-    font-family: "Hiragino Maru Gothic ProN", "Rounded Mplus 1c", sans-serif;
-    background: linear-gradient(#f5fbff, #e0f2ff);
-    text-align: center;
-    margin: 0;
-    padding: 10px;
-  }
-  h1 {
-    color: #4caf50;
-    font-size: 1.8em;
-    margin: 10px 0;
-  }
-  .card {
-    background: white;
-    border-radius: 24px;
-    box-shadow: 0 6px 12px rgba(0,0,0,0.15);
-    padding: 20px;
-    max-width: 420px;
-    margin: auto;
-    position: relative;
-    min-height: 420px;
-  }
-  .question {
-    font-size: 2.6em;
-    margin: 15px 0;
-  }
-  input {
-    font-size: 2em;
-    width: 90px;
-    text-align: center;
-    border-radius: 12px;
-    border: 2px solid #ccc;
-    margin: 4px;
-  }
-  button, select {
-    font-size: 1.2em;
-    margin: 6px;
-    padding: 10px 18px;
-    border-radius: 20px;
-    border: none;
-    cursor: pointer;
-  }
-
-  .btn-submit {
-    background: #4caf50;
-    color: white;
-    width: 80%;
-    font-weight: bold;
-    box-shadow: 0 4px #388e3c;
-    margin-top: 10px;
-  }
-  .btn-submit:active {
-    box-shadow: none;
-    transform: translateY(4px);
-  }
-
-  .btn-start {
-    background: #ff7a00;
-    color: white;
-    font-size: 1.5em;
-    padding: 20px 40px;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    z-index: 10;
-    width: 80%;
-    box-shadow: 0 6px #d35400;
-  }
-
-  .btn-reset {
-    background: #999;
-    color: white;
-    font-size: 0.9em;
-    margin-top: 30px;
-    padding: 8px 15px;
-  }
-
-  .bear {
-    font-size: 3.5em;
-    margin: 10px 0;
-  }
-  .growth {
-    font-size: 0.85em;
-    margin-bottom: 10px;
-  }
-  .stages span {
-    opacity: 0.3;
-    font-weight: bold;
-    margin: 0 2px;
-  }
-  .stages .active {
-    opacity: 1;
-    color: #4caf50;
-    font-size: 1.2em;
-  }
-  .bar {
-    background: #eee;
-    border-radius: 10px;
-    height: 16px;
-    margin-top: 8px;
-    overflow: hidden;
-    border: 1px solid #ddd;
-  }
-  .bar-inner {
-    height: 100%;
-    width: 0%;
-    background: linear-gradient(90deg, #a5d6a7, #4caf50);
-    transition: width 0.4s ease-out;
-  }
-  .result {
-    font-size: 1.4em;
-    height: 1.6em;
-    margin-top: 10px;
-    font-weight: bold;
-  }
-  .hidden {
-    display: none;
-  }
-  .status {
-    margin-top: 10px;
-    font-size: 1.1em;
-  }
+  body{font-family:"Hiragino Maru Gothic ProN",sans-serif;background:linear-gradient(#f5fbff,#e0f2ff);text-align:center;margin:0;padding:10px}h1{color:#4caf50;font-size:1.8em;margin:10px 0}.card{background:#fff;border-radius:24px;box-shadow:0 6px 12px rgba(0,0,0,.15);padding:20px;max-width:420px;margin:auto;position:relative;min-height:420px}.question{font-size:2.6em;margin:15px 0}input{font-size:2em;width:90px;text-align:center;border-radius:12px;border:2px solid #ccc;margin:4px}button,select{font-size:1.2em;margin:6px;padding:10px 18px;border-radius:20px;border:none;cursor:pointer}.btn-submit{background:#4caf50;color:#fff;width:80%;font-weight:700;box-shadow:0 4px #388e3c;margin-top:10px}.btn-submit:active{box-shadow:none;transform:translateY(4px)}.btn-start{background:#ff7a00;color:#fff;font-size:1.5em;padding:20px 40px;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10;width:80%;box-shadow:0 6px #d35400}.btn-reset{background:#999;color:#fff;font-size:.9em;margin-top:30px;padding:8px 15px}.bear{font-size:3.5em;margin:10px 0}.growth{font-size:.85em;margin-bottom:10px}.stages span{opacity:.3;font-weight:700;margin:0 2px}.stages .active{opacity:1;color:#4caf50;font-size:1.2em}.bar{background:#eee;border-radius:10px;height:16px;margin-top:8px;overflow:hidden;border:1px solid #ddd}.bar-inner{height:100%;width:0;background:linear-gradient(90deg,#a5d6a7,#4caf50);transition:width .4s ease-out}.result{font-size:1.4em;height:1.6em;margin-top:10px;font-weight:700}.status{margin-top:10px;font-size:1.1em}.hidden{display:none}
 </style>
 </head>
-
 <body>
 
-<h1>わり算 無限チャレンジ</h1>
+<h1 id="x_h1"></h1>
 
 <div class="card">
-  <button id="startBtn" class="btn-start" onclick="startGame()">▶ はじめる！</button>
+  <button id="s_btn" class="btn-start" onclick="window._sg()"></button>
+  <div id="g_a">
+    <span id="x_gr"></span><br />
+    <select id="gr_s" onchange="window._nq()"></select>
 
-  <div id="gameArea">
-    学年：
-    <select id="grade" onchange="newQuestion()">
-      <option value="3">3年生 (あまりなし)</option>
-      <option value="4">4年生 (あまりあり)</option>
-      <option value="56">5・6年生 (ちょっとむずかしい)</option>
-    </select>
-
-    <div class="bear" id="bear">🥚</div>
-
+    <div class="bear" id="b_i">🥚</div>
     <div class="growth">
-      <div class="stages">
-        <span id="stage1">🥚0~</span>
-        <span id="stage2">🐣10~</span>
-        <span id="stage3">🐤20~</span>
-        <span id="stage4">🐻30~</span>
-        <span id="stage5">🧸40</span>
-      </div>
-      <div class="bar">
-        <div class="bar-inner" id="barInner"></div>
-      </div>
+      <div class="stages" id="st_l"></div>
+      <div class="bar"><div class="bar-inner" id="b_in"></div></div>
     </div>
 
-    <div class="question" id="question">？</div>
-
+    <div class="question" id="qs">？</div>
     <div>
-      <input id="ansQ" type="text" inputmode="numeric" placeholder="?">
-      <span id="labelAmari"> あまり </span>
-      <input id="ansR" type="text" inputmode="numeric" placeholder="?">
+      <input id="an_q" type="text" inputmode="numeric" placeholder="?">
+      <span id="l_am"></span>
+      <input id="an_r" type="text" inputmode="numeric" placeholder="?">
     </div>
 
-    <button class="btn-submit" onclick="check()">こたえる</button>
-    <div class="result" id="result"></div>
+    <button class="btn-submit" onclick="window._ck()" id="sb_btn"></button>
+    <div class="result" id="rs_d"></div>
   </div>
 </div>
 
-<div class="status">
-  せいかい：<span id="correct">0</span> ／ もんだい：<span id="total">0</span>
-</div>
-
-<button id="resetBtn" class="btn-reset" onclick="resetGame()">最初（さいしょ）から やりなおす</button>
+<div class="status" id="st_tx"></div>
+<button id="r_btn" class="btn-reset" onclick="window._rg()"></button>
 
 <script>
-let a = 0, b = 0, q = 0, r = 0;
-let correctCount = 0;
-let totalCount = 0;
-let streak = 0;
+(function(){
+  const _d=document, _w=window, _M=Math, _ge='getElementById', _tc='textContent', _ih='innerHTML';
+  let _a=0, _b=0, _q=0, _r=0, _cc=0, _tn=0, _st=0;
 
-function getLevel() {
-  const g = document.getElementById("grade").value;
-  if (g === "3") return { maxB: 9, remainder: false };
-  if (g === "4") return { maxB: 9, remainder: true };
-  return { maxB: 12, remainder: true }; 
-}
+  const _u = {
+    h1: '\u308f\u308a\u7b97\u0020\u7121\u9650\u30c1\u30e3\u30ec\u30f3\u30b8',
+    st: '\u25b6\u0020\u306f\u3058\u3081\u308b\uff01',
+    gr: '\u5b66\u5e74\uff1a',
+    g_opt: [
+      ['3', '3\u5e74\u751f\u0020(\u3042\u307e\u308a\u306a\u3057)'],
+      ['4', '4\u5e74\u751f\u0020(\u3042\u307e\u308a\u3042\u308a)'],
+      ['56', '5\u30fb\u3016\u5e74\u751f\u0020(\u3061\u3087\u3063\u3068\u3080\u305a\u304b\u3057\u3044)']
+    ],
+    am: '\u0020\u3042\u307e\u308a\u0020',
+    sb: '\u3053\u305f\u3048\u308b',
+    ok: '\u2b55\u0020\u305b\u3044\u304b\u3044\uff01',
+    ng: '\u274c\u0020\u3053\u305f\u3048\uff1a',
+    rst: '\u6700\u521d\uff08\u3055\u3044\u3057\u3087\uff09\u304b\u3089\u0020\u3084\u308a\u306a\u304a\u3059',
+    tx: '\u305b\u3044\u304b\u3044\uff1a<span id="c_c">0</span>\u0020\uff0f\u0020\u3082\u3093\u3060\u3044\uff1a<span id="t_c">0</span>',
+    stages: [['\ud83e\udd5a0~','s1'],['\ud83d\udc2310~','s2'],['\ud83d\udc2420~','s3'],['\ud83d\udc3b30~','s4'],['\ud83e\uddfb40','s5']]
+  };
 
-function newQuestion() {
-  const lv = getLevel();
-  
-  if (!lv.remainder) {
-    document.getElementById("ansR").classList.add("hidden");
-    document.getElementById("labelAmari").classList.add("hidden");
-  } else {
-    document.getElementById("ansR").classList.remove("hidden");
-    document.getElementById("labelAmari").classList.remove("hidden");
-  }
+  _d[_ge]('x_h1')[_tc]=_u.h1; _d[_ge]('s_btn')[_tc]=_u.st; _d[_ge]('x_gr')[_tc]=_u.gr;
+  _d[_ge]('l_am')[_tc]=_u.am; _d[_ge]('sb_btn')[_tc]=_u.sb; _d[_ge]('r_btn')[_tc]=_u.rst;
+  _d[_ge]('st_tx')[_ih]=_u.tx;
 
-  b = Math.floor(Math.random() * (lv.maxB - 1)) + 2;
-  q = Math.floor(Math.random() * 9) + 1;
-  r = lv.remainder ? Math.floor(Math.random() * b) : 0;
-  a = b * q + r;
+  const _gs=_d[_ge]('gr_s');
+  _u.g_opt.forEach(o=>{ let e=_d.createElement('option'); e.value=o[0]; e[_tc]=o[1]; _gs.appendChild(e)});
+  const _sl=_d[_ge]('st_l');
+  _u.stages.forEach(s=>{ let e=_d.createElement('span'); e.id=s[1]; e[_tc]=s[0]; _sl.appendChild(e)});
 
-  document.getElementById("question").innerText = `${a} ÷ ${b} = ?`;
-  document.getElementById("ansQ").value = "";
-  document.getElementById("ansR").value = "";
-  document.getElementById("ansQ").focus();
-}
+  _w._nq = function() {
+    const v=_gs.value, lv=(v==='3')?{mB:9,r:0}:(v==='4')?{mB:9,r:1}:{mB:12,r:1};
+    if(!lv.r){ _d[_ge]('an_r').classList.add('hidden'); _d[_ge]('l_am').classList.add('hidden') }
+    else{ _d[_ge]('an_r').classList.remove('hidden'); _d[_ge]('l_am').classList.remove('hidden') }
+    _b=_M.floor(_M.random()*(lv.mB-1))+2; _q=_M.floor(_M.random()*9)+1;
+    _r=lv.r?_M.floor(_M.random()*_b):0; _a=_b*_q+_r;
+    _d[_ge]('qs')[_tc]=`${_a} \u00f7 ${_b} = ?`;
+    _d[_ge]('an_q').value=''; _d[_ge]('an_r').value=''; _d[_ge]('an_q').focus();
+  };
 
-function toHalf(str) {
-  return str.replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 65248));
-}
+  const _th=s=>s.replace(/[\uff10-\uff19]/g, x=>String.fromCharCode(x.charCodeAt(0)-0xfee0));
 
-function check() {
-  const uq = Number(toHalf(document.getElementById("ansQ").value.trim()));
-  const ur = Number(toHalf(document.getElementById("ansR").value.trim() || "0"));
+  _w._ck = function() {
+    const uq=Number(_th(_d[_ge]('an_q').value.trim())), ur=Number(_th(_d[_ge]('an_r').value.trim()||'0'));
+    _tn++; const res=_d[_ge]('rs_d');
+    if(uq===_q && ur===_r){ _cc++; _st++; res[_tc]=_u.ok; res.style.color='#ff4500' }
+    else{ _st=0; res[_tc]=`${_u.ng}${_q}${_u.am}${_r}`; res.style.color='#555' }
+    _d[_ge]('c_c')[_tc]=_cc; _d[_ge]('t_c')[_tc]=_tn;
+    _ug(); setTimeout(_w._nq, 800);
+  };
 
-  totalCount++;
-  const resDiv = document.getElementById("result");
+  const _ug = function() {
+    const bar=_d[_ge]('b_in'), ids=['s1','s2','s3','s4','s5'];
+    ids.forEach(id=>_d[_ge](id).classList.remove('active'));
+    let p=(_st/40)*100; if(p>100)p=100; bar.style.width=p+'%';
+    let icon='🥚', act='s1';
+    if(_st<10){icon='🥚';act='s1'}else if(_st<20){icon='🐣';act='s2'}
+    else if(_st<30){icon='🐤';act='s3'}else if(_st<40){icon='🐻';act='s4'}else{icon='🧸';act='s5'}
+    _d[_ge]('b_i')[_tc]=icon; _d[_ge](act).classList.add('active');
+  };
 
-  if (uq === q && ur === r) {
-    correctCount++;
-    streak++;
-    resDiv.innerText = "⭕ せいかい！";
-    resDiv.style.color = "#ff4500";
-  } else {
-    streak = 0;
-    resDiv.innerText = `❌ こたえ：${q} あまり ${r}`;
-    resDiv.style.color = "#555";
-  }
+  _w._rg = function() {
+    _cc=0; _tn=0; _st=0;
+    _d[_ge]('c_c')[_tc]=0; _d[_ge]('t_c')[_tc]=0;
+    _d[_ge]('rs_d')[_tc]=''; _ug(); _w._nq();
+  };
 
-  document.getElementById("correct").innerText = correctCount;
-  document.getElementById("total").innerText = totalCount;
-  
-  updateGrowth();
-  setTimeout(newQuestion, 800);
-}
+  _w._sg = function() { _d[_ge]('s_btn').classList.add('hidden'); _w._rg() };
 
-function updateGrowth() {
-  const bar = document.getElementById("barInner");
-  const stages = ["stage1","stage2","stage3","stage4","stage5"];
-  stages.forEach(id => document.getElementById(id).classList.remove("active"));
-
-  let progress = (streak / 40) * 100;
-  if (progress > 100) progress = 100;
-  bar.style.width = progress + "%";
-
-  let bearIcon = "🥚";
-  let activeId = "stage1";
-
-  if (streak < 10) {
-    bearIcon = "🥚"; activeId = "stage1";
-  } else if (streak < 20) {
-    bearIcon = "🐣"; activeId = "stage2";
-  } else if (streak < 30) {
-    bearIcon = "🐤"; activeId = "stage3";
-  } else if (streak < 40) {
-    bearIcon = "🐻"; activeId = "stage4";
-  } else {
-    bearIcon = "🧸"; activeId = "stage5";
-  }
-
-  document.getElementById("bear").innerText = bearIcon;
-  document.getElementById(activeId).classList.add("active");
-}
-
-function resetGame() {
-  correctCount = 0;
-  totalCount = 0;
-  streak = 0;
-  document.getElementById("correct").innerText = 0;
-  document.getElementById("total").innerText = 0;
-  document.getElementById("result").innerText = "";
-  updateGrowth();
-  newQuestion();
-}
-
-function startGame() {
-  document.getElementById("startBtn").classList.add("hidden");
-  resetGame();
-}
-
-window.onload = function() {
-  updateGrowth();
-  const inputs = [document.getElementById("ansQ"), document.getElementById("ansR")];
-  inputs.forEach(el => {
-    el.onkeydown = (e) => { if (e.key === "Enter") check(); };
-  });
-};
+  _w.onload=()=>{
+    _ug();
+    ['an_q','an_r'].forEach(id=>{
+      _d[_ge](id).onkeydown=e=>{if(e.key==='Enter')_w._ck()}
+    });
+  };
+})();
 </script>
-
 </body>
 </html>
