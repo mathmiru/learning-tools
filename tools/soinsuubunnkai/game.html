@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>わり算クエスト！</title>
+    <style>
+        body{font-family:"Meryro","Hiragino Kaku Gothic ProN",sans-serif;background-color:#1a1a2e;color:white;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;margin:0;overflow:hidden;touch-action:manipulation}#_0x1{text-align:center}.c_b{display:block;width:280px;padding:15px;margin:10px;font-size:18px;font-weight:bold;border-radius:10px;cursor:pointer;border:none;color:white;box-shadow:0 5px 0 rgba(0,0,0,0.3)}.c1{background:#4caf50}.c2{background:#2196f3}.c3{background:#9c27b0}#_0x2{display:none;width:90%;max-width:450px;text-align:center}#_0x3{background:#ffeb3b;color:#333;padding:5px 10px;border-radius:5px;font-size:13px;font-weight:bold;margin-bottom:10px}#_0x4{width:100%;height:20px;background:#444;border-radius:10px;margin-bottom:5px;overflow:hidden;border:2px solid #fff}#_0x5{width:0%;height:100%;background:linear-gradient(90deg,#4fc3f7,#00e5ff);transition:width 0.3s ease}#_0x6{display:flex;justify-content:space-between;font-weight:bold;margin-bottom:10px;color:#4fc3f7;font-size:14px}#_0x7{height:150px;display:flex;flex-direction:column;align-items:center;justify-content:center}#_0x8{font-size:70px;transition:0.3s}#_0x9{font-size:60px;font-weight:900;margin-top:-10px;color:#fff;text-shadow:0 0 10px #000}#_0xa{background:rgba(255,255,255,0.1);border:1px dashed #4fc3f7;padding:8px;border-radius:8px;margin-bottom:10px;font-size:22px;color:#ffeb3b;min-height:30px;font-weight:bold}#_0xb{height:35px;display:flex;justify-content:center;gap:5px;margin-bottom:10px}.g_m{background:#ffd700;color:#333;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:bold;border:2px solid white;animation:p_p 0.3s forwards}@keyframes p_p{from{transform:scale(0)}to{transform:scale(1)}}#_0xc{background:#fff;color:#333;padding:10px;border-radius:8px;margin-bottom:15px;font-weight:bold;min-height:40px}#_0xd{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:15px}.w_b{background:#3f51b5;color:white;border:none;padding:12px 0;font-size:20px;font-weight:bold;border-radius:8px;cursor:pointer;box-shadow:0 4px 0 #1a237e}.w_b:active{transform:translateY(2px);box-shadow:0 2px 0 #1a237e}#_0xe{background:#ff9800;color:white;padding:15px;border:none;border-radius:50px;font-size:20px;font-weight:bold;display:none;width:100%;cursor:pointer}.s_h{animation:s_k 0.3s}@keyframes s_k{0%,100%{transform:translateX(0)}25%{transform:translateX(-10px);color:red}75%{transform:translateX(10px);color:red}}/* レベルアップ通知パネル */#_0x_lu{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);z-index:999;flex-direction:column;align-items:center;justify-content:center;text-align:center}#_0x_lu h2{font-size:48px;color:#ffeb3b;margin:0;text-shadow:0 0 20px #ff9800;animation:p_p 0.5s cubic-bezier(0.175,0.885,0.32,1.275)}#_0x_lu p{font-size:20px;margin:20px 0}.tap_next{font-size:14px;color:#aaa;margin-top:40px;animation:blink 1s infinite}@keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+    </style>
+</head>
+<body>
+    <div id="_0x1">
+        <h1 style="color:#ffeb3b">わり算クエスト！</h1>
+        <p>コースをえらんでね</p>
+        <button class="c_b c1" onclick="_0xf(1)">レベル1（2, 3, 5, 7）</button>
+        <button class="c_b c2" onclick="_0xf(2)">レベル2（+ 11, 13）</button>
+        <button class="c_b c3" onclick="_0xf(3)">レベル3（+ 17, 19）</button>
+    </div>
+    <div id="_0x2">
+        <div id="_0x3">【ルール】モンスターの数字を「わりきれる数字」でこうげきしよう！</div>
+        <div id="_0x6">
+            <div>プレイヤーLv: <span id="_0x10">1</span></div>
+            <div>つぎのLvまで: <span id="_0x11">0 / 15</span></div>
+        </div>
+        <div id="_0x4"><div id="_0x5"></div></div>
+        <div id="_0x7"><div id="_0x8">👾</div><div id="_0x9">?</div></div>
+        <div id="_0xa">モンスターがあらわれた！</div>
+        <div id="_0xb"></div>
+        <div id="_0xc">どの数字でこうげきする？</div>
+        <div id="_0xd"></div>
+        <button id="_0xe" onclick="_0x12()">つぎの敵をさがす</button>
+    </div>
+    <div id="_0x_lu" onclick="this.style.display='none'">
+        <h2>LEVEL UP!</h2>
+        <p id="_0x_lu_t"></p>
+        <div class="tap_next">画面をタップしてつぎへ</div>
+    </div>
+    <script>
+        (function(){let _0x13=1,_0x14=1,_0x15=0,_0x16=0,_0x17=[];const _0x18={1:[2,3,5,7],2:[2,3,5,7,11,13],3:[2,3,5,7,11,13,17,19]};window._0xf=function(_0x19){_0x13=_0x19;_0x17=_0x18[_0x19];document.getElementById('_0x1').style.display='none';document.getElementById('_0x2').style.display='block';const _0x1a=document.getElementById('_0xd');_0x1a.style.gridTemplateColumns=(_0x19===1)?"repeat(2,1fr)":"repeat(4,1fr)";_0x17.forEach(_0x1b=>{const _0x1c=document.createElement('button');_0x1c.className='w_b';_0x1c.textContent=_0x1b;_0x1c.onclick=()=>_0x1d(_0x1b);_0x1a.appendChild(_0x1c)});_0x1e();_0x12()};function _0x1e(){const _0x1f=(_0x14===1)?15:(_0x14===2)?20:25;const _0x20=(_0x15/_0x1f)*100;document.getElementById('_0x5').style.width=_0x20+"%";document.getElementById('_0x11').textContent=`${_0x15} / ${_0x1f}`;document.getElementById('_0x10').textContent=_0x14}window._0x12=function(){document.getElementById('_0xe').style.display='none';document.getElementById('_0xd').style.display='grid';document.getElementById('_0xb').innerHTML='';document.getElementById('_0xa').textContent='バトル開始！';document.getElementById('_0xc').textContent='どの数字でこうげきする？';const _0x21=document.getElementById('_0x8');_0x21.style.transform='scale(1)';_0x21.style.opacity='1';const _0x22=['👾','👻','🦇','🕷️','🦂','🐉','👹','🦖','🤖','💀','👺','🛸'];_0x21.textContent=_0x22[Math.floor(Math.random()*_0x22.length)];let _0x23=1;let _0x24=_0x14+1;for(let i=0;i<_0x24;i++){let _0x25=_0x17[Math.floor(Math.random()*_0x17.length)];if(_0x14===1&&_0x23*_0x25>60)continue;if(_0x23*_0x25<3000)_0x23*=_0x25}if(_0x23<4)_0x23*=_0x17[0]*_0x17[1];_0x16=_0x23;document.getElementById('_0x9').textContent=_0x16};function _0x1d(_0x26){const _0x27=document.getElementById('_0xc'),_0x28=document.getElementById('_0xa'),_0x29=document.getElementById('_0x9');if(_0x16%_0x26===0){const _0x2a=_0x16/_0x26;_0x28.textContent=`${_0x16} ÷ ${_0x26} = ${_0x2a}`;_0x16=_0x2a;_0x29.textContent=_0x16;const _0x2b=document.createElement('div');_0x2b.className='g_m';_0x2b.textContent=_0x26;document.getElementById('_0xb').appendChild(_0x2b);_0x27.textContent=`命中！弱点をついたぞ！`;if(_0x16===1)_0x2c()}else{_0x28.textContent=`${_0x16} は ${_0x26} でわれない！`;_0x27.textContent=`きかなかった！別の数字をえらぼう`;const _0x2d=document.getElementById('_0x8');_0x2d.classList.remove('s_h');void _0x2d.offsetWidth;_0x2d.classList.add('s_h')}}function _0x2c(){document.getElementById('_0xc').textContent=`モンスターをたおした！`;document.getElementById('_0x8').style.transform='scale(0)';document.getElementById('_0x8').style.opacity='0';document.getElementById('_0xe').style.display='block';document.getElementById('_0xd').style.display='none';_0x15++;const _0x2e=(_0x14===1)?15:(_0x14===2)?20:25;if(_0x15>=_0x2e){_0x14++;_0x15=0;const _0x2f=document.getElementById('_0x_lu');const _0x30=document.getElementById('_0x_lu_t');_0x30.innerHTML=`プレイヤーレベルが <b>${_0x14}</b> になった！<br>敵がさらに合体して強くなるぞ！`;_0x2f.style.display='flex'}_0x1e()}})();
+    </script>
+</body>
+</html>
