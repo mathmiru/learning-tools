@@ -1,316 +1,137 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-<title>九九 無限チャレンジ</title>
-<style>
-  body {
-    font-family: "Hiragino Maru Gothic ProN", "Rounded Mplus 1c", sans-serif;
-    background: linear-gradient(#f5fbff, #e0f2ff);
-    text-align: center;
-    margin: 0;
-    padding: 10px;
-  }
-  h1 {
-    color: #ff7a00;
-    font-size: 1.8em;
-    margin: 10px 0;
-  }
-  .card {
-    background: white;
-    border-radius: 24px;
-    box-shadow: 0 6px 12px rgba(0,0,0,0.15);
-    padding: 20px;
-    max-width: 420px;
-    margin: auto;
-    position: relative;
-    min-height: 400px;
-  }
-  .question {
-    font-size: 2.6em;
-    margin: 15px 0;
-  }
-  input {
-    font-size: 2em;
-    width: 120px;
-    text-align: center;
-    border-radius: 12px;
-    border: 2px solid #ccc;
-    margin-bottom: 15px;
-  }
-  button, select {
-    font-size: 1.2em;
-    margin: 6px;
-    padding: 10px 18px;
-    border-radius: 20px;
-    border: none;
-    cursor: pointer;
-  }
-  /* メインの「こたえる」ボタン */
-  .btn-submit {
-    background: #4cafef;
-    color: white;
-    width: 80%;
-    font-weight: bold;
-    box-shadow: 0 4px #2a87c5;
-  }
-  .btn-submit:active {
-    box-shadow: none;
-    transform: translateY(4px);
-  }
-  /* スタートボタン */
-  .btn-start {
-    background: #ff7a00;
-    color: white;
-    font-size: 1.5em;
-    padding: 20px 40px;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    z-index: 10;
-    width: 80%;
-    box-shadow: 0 6px #d35400;
-  }
-  /* さいしょからボタン */
-  .btn-reset {
-    background: #999;
-    color: white;
-    font-size: 0.9em;
-    margin-top: 30px;
-    padding: 8px 15px;
-  }
-  .result {
-    font-size: 1.4em;
-    height: 1.6em;
-    margin-top: 10px;
-    font-weight: bold;
-  }
-  .status {
-    margin-top: 10px;
-    font-size: 1.1em;
-  }
-  .bear {
-    font-size: 3.5em;
-    margin: 10px 0;
-  }
-  .growth {
-    font-size: 0.85em;
-    margin-bottom: 10px;
-  }
-  .stages span {
-    opacity: 0.3;
-    font-weight: bold;
-    margin: 0 2px;
-  }
-  .stages .active {
-    opacity: 1;
-    color: #ff7a00;
-    font-size: 1.2em;
-  }
-  .bar {
-    background: #eee;
-    border-radius: 10px;
-    height: 16px;
-    margin-top: 8px;
-    overflow: hidden;
-    border: 1px solid #ddd;
-  }
-  .bar-inner {
-    height: 100%;
-    width: 0%;
-    background: linear-gradient(90deg, #ffd54f, #ff8a65);
-    transition: width 0.4s ease-out;
-  }
-  .hidden {
-    display: none;
-  }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Challenge</title>
+    <style>body{font-family:"Hiragino Maru Gothic ProN",sans-serif;background:linear-gradient(#f5fbff,#e0f2ff);text-align:center;margin:0;padding:10px}h1{color:#ff7a00;font-size:1.8em;margin:10px 0}.card{background:#fff;border-radius:24px;box-shadow:0 6px 12px rgba(0,0,0,.15);padding:20px;max-width:420px;margin:auto;position:relative;min-height:400px}.question{font-size:2.6em;margin:15px 0}input{font-size:2em;width:120px;text-align:center;border-radius:12px;border:2px solid #ccc;margin-bottom:15px}button,select{font-size:1.2em;margin:6px;padding:10px 18px;border-radius:20px;border:none;cursor:pointer}.btn-submit{background:#4cafef;color:#fff;width:80%;font-weight:700;box-shadow:0 4px #2a87c5}.btn-submit:active{box-shadow:none;transform:translateY(4px)}.btn-start{background:#ff7a00;color:#fff;font-size:1.5em;padding:20px 40px;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10;width:80%;box-shadow:0 6px #d35400}.btn-reset{background:#999;color:#fff;font-size:.9em;margin-top:30px;padding:8px 15px}.result{font-size:1.4em;height:1.6em;margin-top:10px;font-weight:700}.status{margin-top:10px;font-size:1.1em}.bear{font-size:3.5em;margin:10px 0}.growth{font-size:.85em;margin-bottom:10px}.stages span{opacity:.3;font-weight:700;margin:0 2px}.stages .active{opacity:1;color:#ff7a00;font-size:1.2em}.bar{background:#eee;border-radius:10px;height:16px;margin-top:8px;overflow:hidden;border:1px solid #ddd}.bar-inner{height:100%;width:0;background:linear-gradient(90deg,#ffd54f,#ff8a65);transition:width .4s ease-out}.hidden{display:none}</style>
 </head>
 <body>
-
-<h1>九九 無限チャレンジ</h1>
-
-<div class="card">
-  <button id="startBtn" class="btn-start" onclick="startGame()">▶ はじめる！</button>
-
-  <div id="gameArea">
-    <div>
-      なんのだん？
-      <select id="dan">
-        <option value="all">ぜんぶ</option>
-        <option value="1">1のだん</option>
-        <option value="2">2のだん</option>
-        <option value="3">3のだん</option>
-        <option value="4">4のだん</option>
-        <option value="5">5のだん</option>
-        <option value="6">6のだん</option>
-        <option value="7">7のだん</option>
-        <option value="8">8のだん</option>
-        <option value="9">9のだん</option>
-      </select>
+    <h1 id="x_h1"></h1>
+    <div class="card">
+        <button id="st_b" class="btn-start" onclick="window._sg()"></button>
+        <div id="g_a">
+            <div id="x_lbl"></div>
+            <select id="dan_s"></select>
+            <div class="bear" id="br_i">🥚</div>
+            <div class="growth">
+                <div class="stages" id="stg_l"></div>
+                <div class="bar"><div class="bar-inner" id="b_in"></div></div>
+            </div>
+            <div class="question" id="qs">?</div>
+            <input type="text" id="ans_i" inputmode="numeric" pattern="[0-9]*" placeholder="?">
+            <br>
+            <button id="sb_b" class="btn-submit" onclick="window._ck()"></button>
+            <div class="result" id="rs_d"></div>
+            <div id="mdl_d" style="font-size: 1.3em;"></div>
+        </div>
     </div>
-
-    <div class="bear" id="bear">🥚</div>
-
-    <div class="growth">
-      <div class="stages">
-        <span id="stage1">🥚0~</span>
-        <span id="stage2">🐣10~</span>
-        <span id="stage3">🐤20~</span>
-        <span id="stage4">🐻30~</span>
-        <span id="stage5">🧸40</span>
-      </div>
-      <div class="bar">
-        <div class="bar-inner" id="barInner"></div>
-      </div>
-    </div>
-
-    <div class="question" id="question">?</div>
-    <input type="text" id="answer" inputmode="numeric" pattern="[0-9０-９]*" placeholder="?" />
-    <br />
-    <button class="btn-submit" onclick="check()">こたえる</button>
-
-    <div class="result" id="result"></div>
-    <div class="medal" id="medal" style="font-size: 1.3em;"></div>
-  </div>
-</div>
-
-<div class="status">
-  せいかい：<span id="correct">0</span> ／ もんだい：<span id="total">0</span>
-</div>
-
-<button id="resetBtn" class="btn-reset" onclick="resetGame()">最初（さいしょ）から やりなおす</button>
+    <div class="status" id="st_tx"></div>
+    <button id="rs_b" class="btn-reset" onclick="window._rg()"></button>
 
 <script>
-var a = 2;
-var b = 1;
-var correctCount = 0;
-var totalCount = 0;
-var streak = 0;
+(function(){
+    const _d=document, _w=window, _M=Math, _ge='\x67\x65\x74\x45\x6c\x65\x6d\x65\x6e\x74\x42\x79\x49\x64', _ih='\x69\x6e\x6e\x65\x72\x48\x54\x4d\x4c', _tc='\x74\x65\x78\x74\x43\x6f\x6e\x74\x65\x6e\x74';
+    let _a=2, _b=1, _cc=0, _tc_n=0, _st=0;
 
-function newQuestion() {
-  var danEl = document.getElementById("dan");
-  var dan = danEl.value;
-  if (dan === "all") {
-    a = Math.floor(Math.random() * 9) + 1;
-  } else {
-    a = Number(dan);
-  }
-  b = Math.floor(Math.random() * 9) + 1;
+    const _u = {
+        h1: '\u4e5d\u4e5d\u0020\u7121\u9650\u30c1\u30e3\u30ec\u30f3\u30b8',
+        st: '\u25b6\u0020\u306f\u3058\u3081\u308b\uff01',
+        lb: '\u306a\u3093\u306e\u3060\u3093\uff1f',
+        all: '\u305c\u3093\u3076',
+        dan: '\u306e\u3060\u3093',
+        sub: '\u3053\u305f\u3048\u308b',
+        ok: '\u2b55\u0020\u305b\u3044\u304b\u3044\uff01',
+        ng: '\u274c\u0020\u3053\u305f\u3048\u306f\u0020',
+        warn: '\u26a0\u0020\u3059\u3046\u3058\u3092\u0020\u3044\u308c\u3066\u306d',
+        ren: '\u308c\u3093\u305e\u304f\u0020\u305b\u3044\u304b\u3044\uff01',
+        rst: '\u6700\u521d\uff08\u3055\u3044\u3057\u3087\uff09\u304b\u3089\u0020\u3084\u308a\u306a\u304a\u3059',
+        stx: '\u305b\u3044\u304b\u3044\uff1a<span id="correct">0</span>\u0020\uff0f\u0020\u3082\u3093\u3060\u3044\uff1a<span id="total">0</span>',
+        stgs: [['\ud83e\udd5a0~','s1'],['\ud83d\udc2310~','s2'],['\ud83d\udc2420~','s3'],['\ud83d\udc3b30~','s4'],['\ud83e\uddfb40','s5']]
+    };
 
-  document.getElementById("question").innerText = a + " × " + b + " = ？";
-  document.getElementById("answer").value = "";
-  document.getElementById("answer").focus();
-}
+    // 初期化注入
+    _d[_ge]('x_h1')[_tc]=_u.h1; _d[_ge]('st_b')[_tc]=_u.st; _d[_ge]('x_lbl')[_tc]=_u.lb;
+    _d[_ge]('sb_b')[_tc]=_u.sub; _d[_ge]('rs_b')[_tc]=_u.rst; _d[_ge]('st_tx')[_ih]=_u.stx;
+    
+    const _sel = _d[_ge]('dan_s');
+    let _opt = _d.createElement('option'); _opt.value='all'; _opt[_tc]=_u.all; _sel.appendChild(_opt);
+    for(let i=1;i<=9;i++){
+        let o=_d.createElement('option'); o.value=i; o[_tc]=i+_u.dan; _sel.appendChild(o);
+    }
 
-function toHalfWidth(str) {
-  return str.replace(/[０-９]/g, function(s) {
-    return String.fromCharCode(s.charCodeAt(0) - 65248);
-  });
-}
+    const _stg_c = _d[_ge]('stg_l');
+    _u.stgs.forEach(s=>{
+        let sp=_d.createElement('span'); sp.id=s[1]; sp[_tc]=s[0]; _stg_c.appendChild(sp);
+    });
 
-function check() {
-  var raw = document.getElementById("answer").value;
-  var fixed = toHalfWidth(raw).trim();
-  var ans = Number(fixed);
+    const _h=(s)=>s.replace(/[\uff10-\uff19]/g,m=>String.fromCharCode(m.charCodeAt(0)-0xfee0));
 
-  if (fixed === "" || isNaN(ans)) {
-    document.getElementById("result").innerText = "⚠ すうじを いれてね";
-    return;
-  }
+    const _nq=()=>{
+        const d_v = _d[_ge]('dan_s').value;
+        _a = (d_v==='all') ? _M.floor(_M.random()*9)+1 : Number(d_v);
+        _b = _M.floor(_M.random()*9)+1;
+        _d[_ge]('qs')[_tc] = `${_a} \u00d7 ${_b} \u003d \uff1f`;
+        const ai = _d[_ge]('ans_i'); ai.value=''; ai.focus();
+    };
 
-  totalCount++;
-  var resDiv = document.getElementById("result");
-  if (ans === a * b) {
-    correctCount++;
-    streak++;
-    resDiv.innerText = "⭕ せいかい！";
-    resDiv.style.color = "#ff4500";
-  } else {
-    streak = 0;
-    resDiv.innerText = "❌ こたえは " + (a * b);
-    resDiv.style.color = "#555";
-  }
+    _w._ck=()=>{
+        const raw = _d[_ge]('ans_i').value;
+        const fix = _h(raw).trim();
+        const ans = Number(fix);
+        const res = _d[_ge]('rs_d');
 
-  document.getElementById("correct").innerText = correctCount;
-  document.getElementById("total").innerText = totalCount;
-  
-  updateBear();
-  updateMedal();
-  setTimeout(newQuestion, 800);
-}
+        if(fix===''||isNaN(ans)){ res[_tc]=_u.warn; return; }
 
-function updateBear() {
-  var bar = document.getElementById("barInner");
-  var stages = ["stage1","stage2","stage3","stage4","stage5"];
-  for (var i = 0; i < stages.length; i++) {
-    document.getElementById(stages[i]).classList.remove("active");
-  }
+        _tc_n++;
+        if(ans === _a*_b){
+            _cc++; _st++; res[_tc]=_u.ok; res.style.color='#ff4500';
+        } else {
+            _st=0; res[_tc]=_u.ng+(_a*_b); res.style.color='#555';
+        }
 
-  // 40問で100%になる計算 (1問あたり2.5%)
-  var progress = (streak / 40) * 100;
-  if (progress > 100) progress = 100;
-  bar.style.width = progress + "%";
+        _d[_ge]('correct')[_tc]=_cc; _d[_ge]('total')[_tc]=_tc_n;
+        _ub(); _um(); setTimeout(_nq, 800);
+    };
 
-  var bearIcon = "🥚";
-  var activeId = "stage1";
+    const _ub=()=>{
+        const bar = _d[_ge]('b_in');
+        const ids = ['s1','s2','s3','s4','s5'];
+        ids.forEach(id=>_d[_ge](id).classList.remove('active'));
 
-  if (streak < 10) {
-    bearIcon = "🥚";
-    activeId = "stage1";
-  } else if (streak < 20) {
-    bearIcon = "🐣";
-    activeId = "stage2";
-  } else if (streak < 30) {
-    bearIcon = "🐤";
-    activeId = "stage3";
-  } else if (streak < 40) {
-    bearIcon = "🐻";
-    activeId = "stage4";
-  } else {
-    bearIcon = "🧸";
-    activeId = "stage5";
-  }
+        let prg = (_st/40)*100; if(prg>100) prg=100;
+        bar.style.width = prg+'%';
 
-  document.getElementById("bear").innerText = bearIcon;
-  document.getElementById(activeId).classList.add("active");
-}
+        let icon='🥚', act='s1';
+        if(_st<10){icon='🥚';act='s1'}
+        else if(_st<20){icon='🐣';act='s2'}
+        else if(_st<30){icon='🐤';act='s3'}
+        else if(_st<40){icon='🐻';act='s4'}
+        else{icon='🧸';act='s5'}
 
-function updateMedal() {
-  var m = document.getElementById("medal");
-  if (streak > 0 && streak % 10 === 0) {
-    m.innerText = "🏅 " + streak + "れんぞく せいかい！";
-  } else if (streak === 0) {
-    m.innerText = "";
-  }
-}
+        _d[_ge]('br_i')[_tc]=icon; _d[_ge](act).classList.add('active');
+    };
 
-function resetGame() {
-  correctCount = 0;
-  totalCount = 0;
-  streak = 0;
-  document.getElementById("correct").innerText = 0;
-  document.getElementById("total").innerText = 0;
-  document.getElementById("result").innerText = "";
-  document.getElementById("medal").innerText = "";
-  updateBear();
-  newQuestion();
-}
+    const _um=()=>{
+        const m=_d[_ge]('mdl_d');
+        m[_tc] = (_st>0 && _st%10===0) ? `\ud83c\udfc5 ${_st}${_u.ren}` : (_st===0?'':'');
+    };
 
-function startGame() {
-  document.getElementById("startBtn").classList.add("hidden");
-  resetGame();
-}
+    _w._rg=()=>{
+        _cc=0; _tc_n=0; _st=0;
+        _d[_ge]('correct')[_tc]=0; _d[_ge]('total')[_tc]=0;
+        _d[_ge]('rs_d')[_tc]=''; _d[_ge]('mdl_d')[_tc]='';
+        _ub(); _nq();
+    };
 
-window.onload = function() {
-  updateBear();
-  document.getElementById("answer").onkeydown = function(e) {
-    if (e.key === "Enter") check();
-  };
-};
+    _w._sg=()=>{
+        _d[_ge]('st_b').classList.add('hidden');
+        _w._rg();
+    };
+
+    _d[_ge]('ans_i').onkeydown=(e)=>{if(e.key==='Enter')_w._ck()};
+    _ub();
+})();
 </script>
-
 </body>
 </html>
