@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <title>Visualizer</title>
     <style>
-        /* CSSはオリジナルの構造を100%継承 */
         body { font-family: sans-serif; text-align: center; padding: 20px; background-color: #f8f9fa; color: #333; }
         h1 { font-size: 24px; color: #2c3e50; margin-bottom: 30px; }
         .input-area { background: white; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); padding: 24px; display: inline-block; margin-bottom: 30px; min-width: 320px; }
@@ -32,8 +31,8 @@
     <h1 id="x_h1"></h1>
     <div class="input-area">
         <div class="mode-selector">
-            <label><input type="radio" name="m" value="i" checked onchange="window._s()"> <span id="x_im"></span></label>
-            <label><input type="radio" name="m" value="m" onchange="window._s()"> <span id="x_mi"></span></label>
+            <label><input type="radio" name="m" value="i" checked onchange="window._0x3a21(0)"> <span id="x_im"></span></label>
+            <label><input type="radio" name="m" value="m" onchange="window._0x3a21(0)"> <span id="x_mi"></span></label>
         </div>
         <div class="input-row" id="r_i" style="display:flex;">
             <div class="fraction-input-vertical"><input id="v_n" type="text"><div class="fraction-bar"></div><input id="v_d" type="text"></div>
@@ -42,7 +41,7 @@
             <input id="v_int" type="text"><span id="x_and"></span>
             <div class="fraction-input-vertical"><input id="v_mn" type="text"><div class="fraction-bar"></div><input id="v_md" type="text"></div>
         </div>
-        <div style="margin-top:15px;"><button id="x_btn" onclick="window._draw()"></button></div>
+        <div style="margin-top:15px;"><button id="x_btn" onclick="window._0x3a21(1)"></button></div>
     </div>
     <div class="container">
         <div class="left-container" id="lc"><h2 id="x_l"></h2></div>
@@ -55,64 +54,69 @@
 
 <script>
 (function(){
-    const _d=document, _w=window, _M=Math, _ge='\x67\x65\x74\x45\x6c\x65\x6d\x65\x6e\x74\x42\x79\x49\x64', _ih='\x69\x6e\x6e\x65\x72\x48\x54\x4d\x4c', _tc='\x74\x65\x78\x74\x43\x6f\x6e\x74\x65\x6e\x74';
-    const _ka='\u4eee\u5206\u6570', _ta='\u5e2f\u5206\u6570', _to='\u3068';
+    const _0x1f=['getElementById','innerHTML','textContent','querySelector','createElement','floor','fromCharCode','charCodeAt'];
+    const _0x2a=(i)=>_0x1f[i];
+    const _0x3b={a:'\u4eee\u5206\u6570',b:'\u5e2f\u5206\u6570',c:'\u3068',d:'\u7b49\u3057\u3044',e:'\u8868\u793a\u3059\u308b'};
+    const _0x4c=document, _0x5d=window, _0x6e=Math;
 
-    // 初期化：ラベル注入
-    _d[_ge]('x_h1')[_tc]='\u7b49\u3057\u3044'+_ka+'\u3068'+_ta;
-    _d[_ge]('x_im')[_tc]=_ka; _d[_ge]('x_mi')[_tc]=_ta; _d[_ge]('x_and')[_tc]=_to;
-    _d[_ge]('x_btn')[_tc]='\u8868\u793a\u3059\u308b';
-    _d[_ge]('x_l')[_tc]=_ka; _d[_ge]('x_r')[_tc]=_ta;
+    // UI初期化
+    _0x4c[_0x2a(0)]('x_h1')[_0x2a(2)] = _0x3b.d + _0x3b.a + _0x3b.c + _0x3b.b;
+    _0x4c[_0x2a(0)]('x_im')[_0x2a(2)] = _0x3b.a;
+    _0x4c[_0x2a(0)]('x_mi')[_0x2a(2)] = _0x3b.b;
+    _0x4c[_0x2a(0)]('x_and')[_0x2a(2)] = _0x3b.c;
+    _0x4c[_0x2a(0)]('x_btn')[_0x2a(2)] = _0x3b.e;
+    _0x4c[_0x2a(0)]('x_l')[_0x2a(2)] = _0x3b.a;
+    _0x4c[_0x2a(0)]('x_r')[_0x2a(2)] = _0x3b.b;
 
-    const _h=(s)=>s.replace(/[\uff10-\uff19]/g,m=>String.fromCharCode(m.charCodeAt(0)-0xfee0));
+    const _0x7f = (s) => s.replace(/[\uff10-\uff19]/g, m => String[_0x2a(6)](m[_0x2a(7)](0) - 0xfee0));
 
-    _w._s=function(){
-        const v=_d.querySelector('input[name="m"]:checked').value;
-        _d[_ge]('r_i').style.display=v==='i'?'flex':'none';
-        _d[_ge]('r_m').style.display=v==='m'?'flex':'none';
-    };
-
-    _w._draw=function(){
-        let n,d; const v=_d.querySelector('input[name="m"]:checked').value;
-        if(v==='i'){
-            n=Number(_h(_d[_ge]('v_n').value)); d=Number(_h(_d[_ge]('v_d').value));
-        }else{
-            const i=Number(_h(_d[_ge]('v_int').value)), mn=Number(_h(_d[_ge]('v_mn').value));
-            d=Number(_h(_d[_ge]('v_md').value)); n=i*d+mn;
+    const _0x8a = (p, f, t) => {
+        const s = _0x4c[_0x2a(4)]('div'); s.className = 'square';
+        for (let i = 1; i < t; i++) {
+            const l = _0x4c[_0x2a(4)]('div'); l.className = 'divider';
+            l.style.top = (100 / t * i) + '%'; s.appendChild(l);
         }
-
-        const lc=_d[_ge]('lc'), rc=_d[_ge]('rc'), rl=_d[_ge]('rl'), rr=_d[_ge]('rr');
-        lc[_ih]=`<h2>${_ka}</h2>`; rc[_ih]=`<h2>${_ta}</h2>`;
-
-        if(!Number.isInteger(n)||!Number.isInteger(d)||d<=0){
-            rl[_tc]=rr[_tc]=''; return;
-        }
-
-        const q=_M.floor(n/d), r=n%d;
-        for(let i=0;i<q;i++)_add(lc,d,d); if(r>0)_add(lc,r,d);
-        for(let i=0;i<q;i++)_add(rc,1,1); if(r>0)_add(rc,r,d);
-
-        // 下部表示エリアのHTML構造をオリジナルと完全一致させる
-        rl[_ih]=`${_ka}<br><br><div class="fraction-vertical"><div>${n}</div><div class="fraction-line"></div><div>${d}</div></div>`;
-        rr[_ih]=r===0?`${_ta}<br><div style="margin-top:10px">${q}</div>`
-        :`${_ta}<br><br><div style="display:flex; align-items:center; justify-content:center; gap:6px; margin-top:10px"><span>${q} ${_to}</span><div class="fraction-vertical"><div>${r}</div><div class="fraction-line"></div><div>${d}</div></div></div>`;
-    };
-
-    function _add(p,f,t){
-        const s=_d.createElement('div'); s.className='square';
-        for(let i=1;i<t;i++){
-            const l=_d.createElement('div'); l.className='divider';
-            l.style.top=`${100/t*i}%`; s.appendChild(l);
-        }
-        const w_e=_d.createElement('div'); w_e.className='water';
-        w_e.style.height=`${f/t*100}%`; s.appendChild(w_e);
-        const lb=_d.createElement('div');
-        lb.className=p.id==='lc'?'left-number':'right-number';
-        if(t===1){ lb[_tc]='1'; }else{
-            lb[_ih]=`<div class="fraction-vertical"><div>${f}</div><div class="fraction-line"></div><div>${t}</div></div>`;
-        }
+        const w = _0x4c[_0x2a(4)]('div'); w.className = 'water';
+        w.style.height = (f / t * 100) + '%'; s.appendChild(w);
+        const lb = _0x4c[_0x2a(4)]('div');
+        lb.className = p.id === 'lc' ? 'left-number' : 'right-number';
+        if (t === 1) lb[_0x2a(2)] = '1';
+        else lb[_0x2a(1)] = `<div class="fraction-vertical"><div>${f}</div><div class="fraction-line"></div><div>${t}</div></div>`;
         s.appendChild(lb); p.appendChild(s);
-    }
+    };
+
+    _0x5d._0x3a21 = function(_0x9b) {
+        const _0x0c = () => _0x4c[_0x2a(3)]('input[name="m"]:checked').value;
+        if (_0x9b === 0) {
+            const v = _0x0c();
+            _0x4c[_0x2a(0)]('r_i').style.display = v === 'i' ? 'flex' : 'none';
+            _0x4c[_0x2a(0)]('r_m').style.display = v === 'm' ? 'flex' : 'none';
+        } else {
+            let n, d; const v = _0x0c();
+            if (v === 'i') {
+                n = Number(_0x7f(_0x4c[_0x2a(0)]('v_n').value));
+                d = Number(_0x7f(_0x4c[_0x2a(0)]('v_d').value));
+            } else {
+                const i = Number(_0x7f(_0x4c[_0x2a(0)]('v_int').value)), 
+                      mn = Number(_0x7f(_0x4c[_0x2a(0)]('v_mn').value));
+                d = Number(_0x7f(_0x4c[_0x2a(0)]('v_md').value));
+                n = i * d + mn;
+            }
+            const lc = _0x4c[_0x2a(0)]('lc'), rc = _0x4c[_0x2a(0)]('rc'), 
+                  rl = _0x4c[_0x2a(0)]('rl'), rr = _0x4c[_0x2a(0)]('rr');
+            lc[_0x2a(1)] = `<h2>${_0x3b.a}</h2>`; 
+            rc[_0x2a(1)] = `<h2>${_0x3b.b}</h2>`;
+            if (!Number.isInteger(n) || !Number.isInteger(d) || d <= 0) {
+                rl[_0x2a(2)] = rr[_0x2a(2)] = ''; return;
+            }
+            const q = _0x6e[_0x2a(5)](n / d), r = n % d;
+            for (let i = 0; i < q; i++) _0x8a(lc, d, d); if (r > 0) _0x8a(lc, r, d);
+            for (let i = 0; i < q; i++) _0x8a(rc, 1, 1); if (r > 0) _0x8a(rc, r, d);
+            rl[_0x2a(1)] = `${_0x3b.a}<br><br><div class="fraction-vertical"><div>${n}</div><div class="fraction-line"></div><div>${d}</div></div>`;
+            rr[_0x2a(1)] = r === 0 ? `${_0x3b.b}<br><div style="margin-top:10px">${q}</div>` : 
+                `${_0x3b.b}<br><br><div style="display:flex; align-items:center; justify-content:center; gap:6px; margin-top:10px"><span>${q} ${_0x3b.c}</span><div class="fraction-vertical"><div>${r}</div><div class="fraction-line"></div><div>${d}</div></div></div>`;
+        }
+    };
 })();
 </script>
 </body>
