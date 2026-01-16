@@ -12,124 +12,12 @@
         <div class="g"><input type="number" id="n1" value="2"><div class="l"></div><input type="number" id="d1" value="3"></div>
         <select id="op" class="o"><option value="+">+</option><option value="-">-</option></select>
         <div class="g"><input type="number" id="n2" value="2"><div class="l"></div><input type="number" id="d2" value="3"></div>
-        <button class="b" id="bt" onclick="window._x()"></button>
+        <button class="b" id="bt" onclick="window._0x5f2b()"></button>
     </div>
     <canvas id="cv" width="1000" height="800"></canvas>
 </div>
 <script>
-(function(){
-    const _d=document,_m=Math,_c=_d.getElementById('cv'),_q=_c.getContext('2d'),_r=50,_g=110,_o=90,_rg=160,_tm=120,_bm=100;
-    const _cl={b:{f:'#4facfe',s:'#00f2fe'},g:{f:'#43e97b',s:'#38f9d7'},t:'#333',s:'#888',a:'#ccc'};
-    
-    // 文字列の復元
-    _d.getElementById('t1').textContent = '\u5206\u6570\u53ef\u8996\u5316\u30c4\u30fc\u30eb';
-    _d.getElementById('bt').textContent = '\u8a08\u7b97';
-
-    const _gcd = (a, b) => b === 0 ? a : _gcd(b, a % b);
-
-    const _txt = (x, y, t, f, c, b = 'middle') => {
-        _q.fillStyle = c; _q.font = f; _q.textAlign = 'center'; _q.textBaseline = b;
-        _q.fillText(t, x, y);
-    };
-
-    const _fTxt = (x, y, n, d, l) => {
-        _txt(x, y - 65, l, '16px sans-serif', _cl.s);
-        _txt(x, y - 15, n, 'bold 28px sans-serif', _cl.t);
-        _q.fillRect(x - 30, y - 5, 60, 4);
-        _txt(x, y + 35, d, 'bold 28px sans-serif', _cl.t);
-    };
-
-    const _stk = (x, by, n, d, f, s) => {
-        let cn = _m.max(1, _m.ceil(n / d));
-        for (let i = 0; i < cn; i++) {
-            let y = by - _r - (i * _g);
-            _q.beginPath(); _q.arc(x, y, _r, 0, _m.PI * 2);
-            _q.fillStyle = '#fff'; _q.fill();
-            for (let j = 0; j < d; j++) {
-                if (i * d + j < n) {
-                    let sA = (_m.PI * 2 / d) * j - _m.PI / 2, eA = (_m.PI * 2 / d) * (j + 1) - _m.PI / 2;
-                    _q.beginPath(); _q.moveTo(x, y); _q.arc(x, y, _r, sA, eA);
-                    _q.fillStyle = f; _q.globalAlpha = 0.8; _q.fill();
-                    _q.strokeStyle = '#fff'; _q.lineWidth = 2; _q.stroke();
-                }
-            }
-            _q.globalAlpha = 1; _q.beginPath(); _q.arc(x, y, _r, 0, _m.PI * 2);
-            _q.strokeStyle = s; _q.lineWidth = 3; _q.stroke();
-        }
-    };
-
-    window._x = function() {
-        const n1=parseInt(_d.getElementById('n1').value), d1=parseInt(_d.getElementById('d1').value);
-        const n2=parseInt(_d.getElementById('n2').value), d2=parseInt(_d.getElementById('d2').value);
-        const op=_d.getElementById('op').value;
-        if (d1 <= 0 || d2 <= 0) return;
-
-        const cD = (d1 === d2) ? d1 : (d1 * d2) / _gcd(d1, d2);
-        const rN1 = n1 * (cD / d1), rN2 = n2 * (cD / d2);
-        const fN = (op === "+") ? rN1 + rN2 : rN1 - rN2;
-        const nc = (d1 !== d2);
-
-        const r1m = nc ? _m.max(_m.ceil(n1/d1), _m.ceil(n2/d2)) : _m.max(_m.ceil(n1/d1), _m.ceil(n2/d2), _m.ceil(_m.abs(fN)/cD));
-        const r2m = nc ? _m.max(_m.ceil(rN1/cD), _m.ceil(rN2/cD), _m.ceil(_m.abs(fN)/cD)) : 0;
-
-        _c.height = _tm + (r1m * _g) + _o + (nc ? _rg + (r2m * _g) + _o : 0) + _bm;
-        _q.clearRect(0, 0, _c.width, _c.height);
-
-        const p1 = 200, p2 = 500, p3 = 800;
-        let bY = _tm + r1m * _g;
-
-        _stk(p1, bY - _o, n1, d1, _cl.b.f, _cl.b.s);
-        _fTxt(p1, bY, n1, d1, '\u5206\u6570\u0031');
-        _txt((p1+p2)/2, bY - _o - _g/2, op, 'bold 50px sans-serif', _cl.t);
-        _stk(p2, bY - _o, n2, d2, _cl.g.f, _cl.g.s);
-        _fTxt(p2, bY, n2, d2, '\u5206\u6570\u0032');
-
-        if (!nc) {
-            _txt((p2+p3)/2, bY - _o - _g/2, '=', 'bold 50px sans-serif', _cl.t);
-            _res(p3, bY, rN1, rN2, cD, op);
-        } else {
-            const arr = (x, y) => {
-                _q.beginPath(); _q.moveTo(x, y); _q.lineTo(x, y + 40); _q.lineTo(x - 10, y + 30);
-                _q.moveTo(x, y + 40); _q.lineTo(x + 10, y + 30); _q.strokeStyle = _cl.a; _q.lineWidth = 3; _q.stroke();
-            };
-            arr(p1, bY - r2m * _g - _rg - _o / 2); arr(p2, bY - r2m * _g - _rg - _o / 2);
-            bY += _o + _rg + r2m * _g;
-            _stk(p1, bY - _o, rN1, cD, _cl.b.f, _cl.b.s);
-            _fTxt(p1, bY, rN1, cD, '\u901a\u5206');
-            _txt((p1+p2)/2, bY - _o - _g/2, op, 'bold 50px sans-serif', _cl.s);
-            _stk(p2, bY - _o, rN2, cD, _cl.g.f, _cl.g.s);
-            _fTxt(p2, bY, rN2, cD, '\u901a\u5206');
-            _txt((p2+p3)/2, bY - _o - _g/2, '=', 'bold 50px sans-serif', _cl.t);
-            _res(p3, bY, rN1, rN2, cD, op);
-        }
-    };
-
-    const _res = (x, by, n1, n2, d, op) => {
-        const h = by - _o, tN = (op === "+") ? n1 + n2 : n1, fN = (op === "+") ? n1 + n2 : n1 - n2;
-        let cn = _m.max(1, _m.ceil(tN / d));
-        for (let i = 0; i < cn; i++) {
-            let y = h - _r - (i * _g);
-            _q.beginPath(); _q.arc(x, y, _r, 0, _m.PI * 2);
-            _q.fillStyle = '#fff'; _q.fill();
-            for (let j = 0; j < d; j++) {
-                let u = i * d + j; if (u >= tN) continue;
-                let sA = (_m.PI * 2 / d) * j - _m.PI / 2, eA = (_m.PI * 2 / d) * (j + 1) - _m.PI / 2;
-                _q.save();
-                if (op === "+") { _q.fillStyle = (u < n1) ? _cl.b.f : _cl.g.f; _q.globalAlpha = 0.8; }
-                else {
-                    if (u < fN) { _q.fillStyle = _cl.b.f; _q.globalAlpha = 0.8; }
-                    else { _q.fillStyle = _cl.g.f; _q.setLineDash([4, 4]); _q.globalAlpha = 0.2; }
-                }
-                _q.beginPath(); _q.moveTo(x, y); _q.arc(x, y, _r, sA, eA); _q.fill();
-                _q.strokeStyle = '#fff'; _q.lineWidth = 2; _q.stroke(); _q.restore();
-            }
-            _q.beginPath(); _q.arc(x, y, _r, 0, _m.PI * 2); _q.strokeStyle = '#333'; _q.lineWidth = 2; _q.stroke();
-        }
-        _fTxt(x, by, fN, d, '\u7b54\u3048');
-    };
-
-    window._x();
-})();
+(function(_0x1,_0x2){const _0x3=['\x74\x65\x78\x74\x43\x6f\x6e\x74\x65\x6e\x74','\x67\x65\x74\x45\x6c\x65\x6d\x65\x6e\x74\x42\x79\x49\x64','\u5206\u6570\u53ef\u8996\u5316\u30c4\u30fc\u30eb','\u8a08\u7b97','\x63\x76','\x32\x64','\x6e\x31','\x64\x31','\x6e\x32','\x64\x32','\x6f\x70','\x76\x61\x6c\x75\x65'];const _0x4=function(_0x5,_0x6){return _0x3[_0x5];};(function(){const _0x7=document;const _0x8=Math;_0x7[_0x4(1)]('t1')[_0x4(0)]=_0x4(2);_0x7[_0x4(1)]('bt')[_0x4(0)]=_0x4(3);const _0x9=_0x7[_0x4(1)](_0x4(4));const _0xa=_0x9.getContext(_0x4(5));const _0xb=50,_0xc=110,_0xd=90,_0xe=160,_0xf=120,_0x10=100;const _0x11={b:{f:'#4facfe',s:'#00f2fe'},g:{f:'#43e97b',s:'#38f9d7'},t:'#333',s:'#888',a:'#ccc'};const _0x12=(a,b)=>b===0?a:_0x12(b,a%b);const _0x13=(x,y,t,f,c,b='middle')=>{_0xa.fillStyle=c;_0xa.font=f;_0xa.textAlign='center';_0xa.textBaseline=b;_0xa.fillText(t,x,y);};const _0x14=(x,y,n,d,l)=>{_0x13(x,y-65,l,'16px sans-serif',_0x11.s);_0x13(x,y-15,n,'bold 28px sans-serif',_0x11.t);_0xa.fillRect(x-30,y-5,60,4);_0x13(x,y+35,d,'bold 28px sans-serif',_0x11.t);};const _0x15=(x,by,n,d,f,s)=>{let cn=_0x8.max(1,_0x8.ceil(n/d));for(let i=0;i<cn;i++){let y=by-_0xb-(i*_0xc);_0xa.beginPath();_0xa.arc(x,y,_0xb,0,_0x8.PI*2);_0xa.fillStyle='#fff';_0xa.fill();for(let j=0;j<d;j++){if(i*d+j<n){let sA=(_0x8.PI*2/d)*j-_0x8.PI/2,eA=(_0x8.PI*2/d)*(j+1)-_0x8.PI/2;_0xa.beginPath();_0xa.moveTo(x,y);_0xa.arc(x,y,_0xb,sA,eA);_0xa.fillStyle=f;_0xa.globalAlpha=0.8;_0xa.fill();_0xa.strokeStyle='#fff';_0xa.lineWidth=2;_0xa.stroke();}}_0xa.globalAlpha=1;_0xa.beginPath();_0xa.arc(x,y,_0xb,0,_0x8.PI*2);_0xa.strokeStyle=s;_0xa.lineWidth=3;_0xa.stroke();}};const _0x16=(x,by,n1,n2,d,op)=>{const h=by-_0xd,tN=(op==="+")?n1+n2:n1,fN=(op==="+")?n1+n2:n1-n2;let cn=_0x8.max(1,_0x8.ceil(tN/d));for(let i=0;i<cn;i++){let y=h-_0xb-(i*_0xc);_0xa.beginPath();_0xa.arc(x,y,_0xb,0,_0x8.PI*2);_0xa.fillStyle='#fff';_0xa.fill();for(let j=0;j<d;j++){let u=i*d+j;if(u>=tN)continue;let sA=(_0x8.PI*2/d)*j-_0x8.PI/2,eA=(_0x8.PI*2/d)*(j+1)-_0x8.PI/2;_0xa.save();if(op==="+"){_0xa.fillStyle=(u<n1)?_0x11.b.f:_0x11.g.f;_0xa.globalAlpha=0.8;}else{if(u<fN){_0xa.fillStyle=_0x11.b.f;_0xa.globalAlpha=0.8;}else{_0xa.fillStyle=_0x11.g.f;_0xa.setLineDash([4,4]);_0xa.globalAlpha=0.2;}}_0xa.beginPath();_0xa.moveTo(x,y);_0xa.arc(x,y,_0xb,sA,eA);_0xa.fill();_0xa.strokeStyle='#fff';_0xa.lineWidth=2;_0xa.stroke();_0xa.restore();}_0xa.beginPath();_0xa.arc(x,y,_0xb,0,_0x8.PI*2);_0xa.strokeStyle='#333';_0xa.lineWidth=2;_0xa.stroke();}_0x14(x,by,fN,d,'\u7b54\u3048');};window._0x5f2b=function(){const _0x17=parseInt(_0x7[_0x4(1)](_0x4(6))[_0x4(11)]),_0x18=parseInt(_0x7[_0x4(1)](_0x4(7))[_0x4(11)]),_0x19=parseInt(_0x7[_0x4(1)](_0x4(8))[_0x4(11)]),_0x1a=parseInt(_0x7[_0x4(1)](_0x4(9))[_0x4(11)]),_0x1b=_0x7[_0x4(1)](_0x4(10))[_0x4(11)];if(_0x18<=0||_0x1a<=0)return;const _0x1c=(_0x18===_0x1a)?_0x18:(_0x18*_0x1a)/_0x12(_0x18,_0x1a);const _0x1d=_0x17*(_0x1c/_0x18),_0x1e=_0x19*(_0x1c/_0x1a);const _0x1f=(_0x1b==="+")?_0x1d+_0x1e:_0x1d-_0x1e;const _0x20=(_0x18!==_0x1a);const _0x21=_0x20?_0x8.max(_0x8.ceil(_0x17/_0x18),_0x8.ceil(_0x19/_0x1a)):_0x8.max(_0x8.ceil(_0x17/_0x18),_0x8.ceil(_0x19/_0x1a),_0x8.ceil(_0x8.abs(_0x1f)/_0x1c));const _0x22=_0x20?_0x8.max(_0x8.ceil(_0x1d/_0x1c),_0x8.ceil(_0x1e/_0x1c),_0x8.ceil(_0x8.abs(_0x1f)/_0x1c)):0;_0x9.height=_0xf+(_0x21*_0x10)+_0xd+(_0x20?_0xe+(_0x22*_0x10)+_0xd:0)+_0x10;_0xa.clearRect(0,0,_0x9.width,_0x9.height);const _0x23=200,_0x24=500,_0x25=800;let _0x26=_0xf+_0x21*_0x10;_0x15(_0x23,_0x26-_0xd,_0x17,_0x18,_0x11.b.f,_0x11.b.s);_0x14(_0x23,_0x26,_0x17,_0x18,'\u5206\u6570\u0031');_0x13((_0x23+_0x24)/2,_0x26-_0xd-_0xc/2,_0x1b,'bold 50px sans-serif',_0x11.t);_0x15(_0x24,_0x26-_0xd,_0x19,_0x1a,_0x11.g.f,_0x11.g.s);_0x14(_0x24,_0x26,_0x19,_0x1a,'\u5206\u6570\u0032');if(!_0x20){_0x13((_0x24+_0x25)/2,_0x26-_0xd-_0xc/2,'=','bold 50px sans-serif',_0x11.t);_0x16(_0x25,_0x26,_0x1d,_0x1e,_0x1c,_0x1b);}else{const _0x27=(x,y)=>{_0xa.beginPath();_0xa.moveTo(x,y);_0xa.lineTo(x,y+40);_0xa.lineTo(x-10,y+30);_0xa.moveTo(x,y+40);_0xa.lineTo(x+10,y+30);_0xa.strokeStyle=_0x11.a;_0xa.lineWidth=3;_0xa.stroke();};_0x27(_0x23,_0x26-_0x22*_0x10-_0xe-_0xd/2);_0x27(_0x24,_0x26-_0x22*_0x10-_0xe-_0xd/2);_0x26+=_0xd+_0xe+_0x22*_0x10;_0x15(_0x23,_0x26-_0xd,_0x1d,_0x1c,_0x11.b.f,_0x11.b.s);_0x14(_0x23,_0x26,_0x1d,_0x1c,'\u901a\u5206');_0x13((_0x23+_0x24)/2,_0x26-_0xd-_0xc/2,_0x1b,'bold 50px sans-serif',_0x11.s);_0x15(_0x24,_0x26-_0xd,_0x1e,_0x1c,_0x11.g.f,_0x11.g.s);_0x14(_0x24,_0x26,_0x1e,_0x1c,'\u901a\u5206');_0x13((_0x24+_0x25)/2,_0x26-_0xd-_0xc/2,'=','bold 50px sans-serif',_0x11.t);_0x16(_0x25,_0x26,_0x1d,_0x1e,_0x1c,_0x1b);}};window._0x5f2b();})();}());
 </script>
 </body>
 </html>
