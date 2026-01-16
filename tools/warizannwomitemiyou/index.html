@@ -30,65 +30,100 @@ button:hover{filter:brightness(.95);transform:scale(1.02)}
 </head>
 <body>
 <div class="ct">
-    <header><h2 id="x_h2"></h2></header>
+    <header><h2 id="_0x_h"></h2></header>
     <div class="cd">
         <div class="ig">
-            <div class="ii"><span class="lt" id="x_l1"></span><input id="v_d" type="number" value="12"></div>
+            <div class="ii"><span class="lt" id="_0x_l1"></span><input id="_0x_vd" type="number" value="12"></div>
             <div style="font-size:24px;font-weight:700">÷</div>
-            <div class="ii"><span class="lt" id="x_l2"></span><input id="v_s" type="number" value="3"></div>
+            <div class="ii"><span class="lt" id="_0x_l2"></span><input id="_0x_vs" type="number" value="3"></div>
         </div>
         <div class="br">
-            <button onclick="window._sA()" class="ba" id="x_ba"></button>
-            <button onclick="window._sB()" class="bb" id="x_bb"></button>
+            <button onclick="window._0x_a()" class="ba" id="_0x_ba"></button>
+            <button onclick="window._0x_b()" class="bb" id="_0x_bb"></button>
         </div>
     </div>
-    <div class="cd" id="arA" style="display:none"><div class="st" id="x_s2"></div><div id="g_A" class="cc"></div></div>
-    <div class="cd" id="arB" style="display:none"><div class="st" id="x_s3"></div><div id="g_B" class="cc"></div></div>
+    <div class="cd" id="_0x_arA" style="display:none"><div class="st" id="_0x_sa"></div><div id="_0x_ga" class="cc"></div></div>
+    <div class="cd" id="_0x_arB" style="display:none"><div class="st" id="_0x_sb"></div><div id="_0x_gb" class="cc"></div></div>
 </div>
 
 <script>
 (function(){
-    const _d=document,_w=window,_ge='getElementById',_tc='textContent',_ih='innerHTML';
-    const _u={
-        h2:'\u308f\u308a\u3056\u3093\u3092\u0020\u304f\u3089\u3079\u3066\u307f\u3088\u3046',
-        l1:'\u305c\u3093\u3076',l2:'\u308f\u308b\u6570',
-        ba:'A\uff1a\u304a\u306a\u3058\u6570\u305a\u3064\uff08\u307b\u3046\u304c\u3093\uff09',
-        bb:'B\uff1a\u3058\u3085\u3093\u3070\u3093\u306b\uff08\u3068\u3046\u3076\u3093\uff09',
-        s2:'\u2460 A\uff1a\u304a\u306a\u3058\u6570\u305a\u3064\u308f\u3051\u308b',
-        s3:'\u2461 B\uff1a\u3058\u3085\u3093\u3070\u3093\u306b\u304f\u3070\u308b',
-        rem:'\u3042\u307e\u308a',tme:'\u3064\u3081',bme:'\u3070\u3093\u3081'
+    const _0x_p = ['getElementById','textContent','innerHTML','createElement','appendChild','scrollIntoView','children','classList','add','value'];
+    const _0x_s = {
+        h: '\u308f\u308a\u3056\u3093\u3092\x20\u304f\u3089\u3079\u3066\u307f\u3088\u3046',
+        l1: '\u305c\u3093\u3076', l2: '\u308f\u308b\u6570',
+        ba: 'A\uff1a\u304a\u306a\u3058\u6570\u305a\u3064\uff08\u307b\u3046\u304c\u3093\uff09',
+        bb: 'B\uff1a\u3058\u3085\u3093\u3070\u3093\u306b\uff08\u3068\u3046\u3076\u3093\uff09',
+        sa: '\u2460 A\uff1a\u304a\u306a\u3058\u6570\u305a\u3064\u308f\u3051\u308b',
+        sb: '\u2461 B\uff1a\u3058\u3085\u3093\u3070\u3093\u306b\u304f\u3070\u308b',
+        rem: '\u3042\u307e\u308a', tme: '\u3064\u3081', bme: '\u3070\u3093\u3081'
     };
-    _d[_ge]('x_h2')[_tc]=_u.h2; _d[_ge]('x_l1')[_tc]=_u.l1; _d[_ge]('x_l2')[_tc]=_u.l2;
-    _d[_ge]('x_ba')[_tc]=_u.ba; _d[_ge]('x_bb')[_tc]=_u.bb;
-    _d[_ge]('x_s2')[_tc]=_u.s2; _d[_ge]('x_s3')[_tc]=_u.s3;
-    function _sc(e){if(e)e.scrollIntoView({behavior:'smooth',block:'center'})}
-    _w._sA=function(){
-        const vD=Math.min(Number(_d[_ge]('v_d').value),100),vS=Number(_d[_ge]('v_s').value);
-        if(vD<1||vS<1)return;const areaA=_d[_ge]('arA');areaA.style.display='block';
-        const area=_d[_ge]('g_A');area[_ih]='';let idx=1;
-        const _nextBox=()=>{
-            if(idx>vD)return;const isR=(idx>Math.floor(vD/vS)*vS);const box=_d.createElement('div');
-            box.className=isR?'gb b-r':'gb b-a';box.innerHTML=`<strong>${isR?_u.rem:(area.children.length+1+_u.tme)}</strong>`;
-            area.appendChild(box);_sc(box);let count=0;
-            const _addBall=()=>{
-                if(count<vS&&idx<=vD){const c=_d.createElement('div');c.className='ci'+(isR?' rem':'');c[_tc]=idx;
-                box.appendChild(c);idx++;count++;setTimeout(_addBall,400)}else{setTimeout(_nextBox,800)}
-            };_addBall()
-        };_nextBox()
+    
+    const _d = document;
+    const _k = (i) => _0x_p[i];
+    const _g = (id) => _d[_k(0)](id);
+
+    _g('_0x_h')[_k(1)] = _0x_s.h;
+    _g('_0x_l1')[_k(1)] = _0x_s.l1;
+    _g('_0x_l2')[_k(1)] = _0x_s.l2;
+    _g('_0x_ba')[_k(1)] = _0x_s.ba;
+    _g('_0x_bb')[_k(1)] = _0x_s.bb;
+    _g('_0x_sa')[_k(1)] = _0x_s.sa;
+    _g('_0x_sb')[_k(1)] = _0x_s.sb;
+
+    window._0x_a = function(){
+        const vD = Math.min(Number(_g('_0x_vd')[_k(9)]), 100);
+        const vS = Number(_g('_0x_vs')[_k(9)]);
+        if(vD < 1 || vS < 1) return;
+        _g('_0x_arA').style.display = 'block';
+        const a = _g('_0x_ga'); a[_k(2)] = '';
+        let i = 1;
+        const fn = () => {
+            if(i > vD) return;
+            const r = (i > Math.floor(vD/vS)*vS);
+            const b = _d[_k(3)]('div');
+            b.className = r ? 'gb b-r' : 'gb b-a';
+            b[_k(2)] = `<strong>${r ? _0x_s.rem : (a[_k(6)].length+1 + _0x_s.tme)}</strong>`;
+            a[_k(4)](b); b[_k(5)]({behavior:'smooth',block:'center'});
+            let c = 0;
+            const add = () => {
+                if(c < vS && i <= vD){
+                    const ball = _d[_k(3)]('div');
+                    ball.className = 'ci' + (r ? ' rem' : '');
+                    ball[_k(1)] = i; b[_k(4)](ball); i++; c++;
+                    setTimeout(add, 400);
+                } else { setTimeout(fn, 800); }
+            }; add();
+        }; fn();
     };
-    _w._sB=function(){
-        const vD=Math.min(Number(_d[_ge]('v_d').value),100),vS=Number(_d[_ge]('v_s').value);
-        if(vD<1||vS<1)return;const areaB=_d[_ge]('arB');areaB.style.display='block';
-        const area=_d[_ge]('g_B');area[_ih]='';const bks=[];
-        for(let i=0;i<vS;i++){const b=_d.createElement('div');b.className='gb b-b';b.innerHTML=`<strong>${i+1+_u.bme}</strong>`;area.appendChild(b);bks.push(b)}
-        const rb=_d.createElement('div');rb.className='gb b-r';rb.innerHTML=`<strong>${_u.rem}</strong>`;area.appendChild(rb);
-        let cur=1,lim=Math.floor(vD/vS)*vS;
-        const _step=()=>{
-            if(cur>vD)return;const c=_d.createElement('div');c.className='ci';c[_tc]=cur;
-            let target=(cur>lim)?rb:bks[(cur-1)%vS];if(cur>lim)c.classList.add('rem');
-            target.appendChild(c);_sc(target);cur++;setTimeout(_step,500)
-        };_step()
-    }
+
+    window._0x_b = function(){
+        const vD = Math.min(Number(_g('_0x_vd')[_k(9)]), 100);
+        const vS = Number(_g('_0x_vs')[_k(9)]);
+        if(vD < 1 || vS < 1) return;
+        _g('_0x_arB').style.display = 'block';
+        const a = _g('_0x_gb'); a[_k(2)] = '';
+        const bks = [];
+        for(let j=0; j<vS; j++){
+            const b = _d[_k(3)]('div');
+            b.className = 'gb b-b';
+            b[_k(2)] = `<strong>${j+1 + _0x_s.bme}</strong>`;
+            a[_k(4)](b); bks.push(b);
+        }
+        const rb = _d[_k(3)]('div');
+        rb.className = 'gb b-r'; rb[_k(2)] = `<strong>${_0x_s.rem}</strong>`;
+        a[_k(4)](rb);
+        let cur = 1, lim = Math.floor(vD/vS)*vS;
+        const step = () => {
+            if(cur > vD) return;
+            const bl = _d[_k(3)]('div');
+            bl.className = 'ci'; bl[_k(1)] = cur;
+            let target = (cur > lim) ? rb : bks[(cur-1)%vS];
+            if(cur > lim) bl[_k(7)][_k(8)]('rem');
+            target[_k(4)](bl); target[_k(5)]({behavior:'smooth',block:'center'});
+            cur++; setTimeout(step, 500);
+        }; step();
+    };
 })();
 </script>
 </body>
