@@ -67,7 +67,7 @@
                     const s=_0x1.createElement('div');s.style.cssText="position:absolute;width:60px;height:60px;transform:translateZ(35px);background:transparent;cursor:pointer;";
                     v.appendChild(s);v.style.transform=`translate3d(${x*66}px,${-y*66}px,${z*66}px)`;v.dataset.id=id;
                     v.onclick=()=>{if(_d||_dg)return;_s(parseInt(v.dataset.id))};_0x2.appendChild(v);
-                    _a.push({el:v,id,can:(x!==0||y!==0||z!==0)});id++;
+                    _a.push({el:v,id,x,y,z,can:(x!==0||y!==0||z!==0)});id++;
                 }
             }
             window._gS=()=>{_0x1.getElementById('_m').style.display='none';_nR()};
@@ -75,14 +75,18 @@
                 _d=!0;_0x4.style.display='none';_0x5.style.display='none';_c=-1;
                 _0x2.classList.remove('_hi');_a.forEach(b=>b.el.classList.remove('_tg','_sl'));
                 if(!r){
-                    const p=_a.filter(b=>b.can);_b=p[Math.floor(Math.random()*p.length)].id;_h=[];
+                    // 確実にカメラ側(z=1, y=0/1, x=0/1など)を狙うロジック
+                    const p=_a.filter(b=>b.can && (b.z===1 || b.y===1 || b.x===1));
+                    _b=p[Math.floor(Math.random()*p.length)].id;_h=[];
                     let n=(_f>=2)?Math.floor(_f/2)+1:1;
                     for(let i=0;i<n;i++){
                         if(_f>=4&&Math.random()<0.35)_h.push({t:'3',dx:(Math.random()>.5?90:-90),dy:(Math.random()>.5?90:-90)});
                         else _h.push({t:Math.random()>.5?'x':'y',d:(Math.random()>.5?90:-90)});
                     }
                 }
-                const t=_a.find(b=>b.id===_b);_i=(t.y===1)?-90:(t.y===-1)?90:0;_j=(t.x===1)?-90:(t.x===-1)?90:(t.z===-1)?180:0;
+                const t=_a.find(b=>b.id===_b);
+                // 初期位置を正解が見える位置にリセット
+                _i=(t.y===1)?-90:(t.y===-1)?90:0; _j=(t.x===1)?-90:(t.x===-1)?90:(t.z===-1)?180:0;
                 _0x2.style.transition="transform 0.8s ease";_aR();await _wT(900);
                 _0x2.classList.add('_hi');t.el.classList.add('_tg');_0x3.textContent="このブロックだよ！ おぼえてね！";_pS(800);
                 await _wT(1500);t.el.classList.remove('_tg');_0x2.classList.remove('_hi');
