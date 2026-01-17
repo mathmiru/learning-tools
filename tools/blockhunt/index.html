@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>ブロック・ハント</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@700;900&display=swap');
+        body { font-family: 'M PLUS Rounded 1c', sans-serif; background: #eef2f3; margin: 0; overflow: hidden; display: flex; flex-direction: column; height: 100vh; }
+        #_m { position: fixed; inset: 0; background: #fff; z-index: 2000; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; }
+        ._rb { background: #fff9db; padding: 20px; border-radius: 20px; margin-bottom: 25px; border: 3px solid #f1c40f; max-width: 340px; font-size: 15px; line-height: 1.7; color: #34495e; }
+        ._sb { padding: 20px 80px; font-size: 28px; font-weight: 900; border: none; border-radius: 50px; background: #2ecc71; color: white; cursor: pointer; box-shadow: 0 6px #27ae60; }
+        ._h { height: 60px; padding: 0 20px; display: flex; justify-content: space-between; align-items: center; background: #fff; z-index: 10; position: relative; }
+        ._ec { position: absolute; bottom: 0; left: 0; width: 100%; height: 8px; background: #eee; }
+        #_eb { width: 0%; height: 100%; background: #2ecc71; transition: width 0.3s ease; }
+        ._ma { height: 60px; background: #34495e; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 18px; z-index: 10; }
+        ._v { flex: 1; position: relative; perspective: 1200px; display: flex; justify-content: center; align-items: center; touch-action: none; background: #eef2f3; }
+        ._w { position: relative; transform-style: preserve-3d; width: 0; height: 0; transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); }
+        ._vx { position: absolute; width: 60px; height: 60px; transform-style: preserve-3d; margin: -30px 0 0 -30px; }
+        ._fa { position: absolute; width: 60px; height: 60px; background: #fff; border: 2px solid #2c3e50; box-sizing: border-box; border-radius: 6px; backface-visibility: hidden; }
+        ._f1 { transform: rotateY(0deg) translateZ(30px); } ._f2 { transform: rotateY(180deg) translateZ(30px); }
+        ._f3 { transform: rotateY(90deg) translateZ(30px); } ._f4 { transform: rotateY(-90deg) translateZ(30px); }
+        ._f5 { transform: rotateX(90deg) translateZ(30px); } ._f6 { transform: rotateX(-90deg) translateZ(30px); }
+        ._w._hi ._vx:not(._tg) ._fa { background: #bdc3c7 !important; border-color: #95a5a6; }
+        ._vx._tg ._fa { background: #f1c40f !important; border: 4px solid #e67e22 !important; }
+        ._vx._sl ._fa { background: #3498db !important; border: 4px solid #2980b9 !important; }
+        ._fo { height: 100px; background: #fff; display: flex; align-items: center; justify-content: center; border-top: 2px solid #ddd; z-index: 10; }
+        #_cb { width: 220px; height: 50px; font-size: 20px; font-weight: 900; background: #2ecc71; color: white; border: none; border-radius: 25px; display: none; box-shadow: 0 4px #27ae60; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div id="_m">
+        <h1 style="color:#2c3e50; font-size: 34px; margin-bottom:10px;">ブロック・ハント</h1>
+        <div class="_rb">
+            <b>【あそびかた】</b><br>
+            ① ひかるブロックを おぼえる<br>
+            ② シャッフル中も 目でしっかり<b>おう</b><br>
+            ③ がめんをまわして せいかいをタッチ！<br>
+            <span style="color: #e67e22; font-size: 13px;">※レベルが あがると スコアが どんどん ふえるよ！</span>
+        </div>
+        <button class="_sb" onclick="_gS()">はじめる</button>
+    </div>
+    <header class="_h">
+        <div style="font-weight:900; font-size: 20px;">Lv.<span id="_lV">1</span></div>
+        <div style="font-size:16px; color:#2c3e50;">スコア: <span id="_sV">0</span></div>
+        <button onclick="location.reload()" style="background:none; border:2px solid #ccc; padding:6px 15px; border-radius:10px; font-weight:900; cursor:pointer; color:#7f8c8d;">タイトル</button>
+        <div class="_ec"><div id="_eb"></div></div>
+    </header>
+    <div id="_msg" class="_ma">じゅんびは いいかな？</div>
+    <div class="_v"><div class="_w" id="_wd"></div></div>
+    <footer class="_fo">
+        <button id="_cb" onclick="_sA()">これに決める！</button>
+        <button id="_rb" onclick="_rR()" style="display:none; padding:12px 25px; background:#e74c3c; color:white; border:none; border-radius:10px; font-weight:bold; cursor:pointer; font-size:16px;">もういちど見る</button>
+    </footer>
+
+    <script>
+        (function(){
+            const _0x1 = document, _0x2 = _0x1.getElementById('_wd'), _0x3 = _0x1.getElementById('_msg'),
+                  _0x4 = _0x1.getElementById('_cb'), _0x5 = _0x1.getElementById('_rb'), _0x6 = _0x1.getElementById('_eb'),
+                  _0x7 = new (window.AudioContext || window.webkitAudioContext)();
+            let _a=[],_b=-1,_c=-1,_d=!1,_e=0,_f=1,_g=0,_h=[],_i=-20,_j=45,_k=5;
+            window.onload=_l; function _l(){
+                _0x2.innerHTML='';_a=[];let id=0;
+                for(let x=-1;x<=1;x++)for(let y=-1;y<=1;y++)for(let z=-1;z<=1;z++){
+                    const v=_0x1.createElement('div');v.className='_vx';
+                    ['_f1','_f2','_f3','_f4','_f5','_f6'].forEach(s=>{const d=_0x1.createElement('div');d.className='_fa '+s;v.appendChild(d);});
+                    const s=_0x1.createElement('div');s.style.cssText="position:absolute;width:60px;height:60px;transform:translateZ(35px);background:transparent;cursor:pointer;";
+                    v.appendChild(s);v.style.transform=`translate3d(${x*66}px,${-y*66}px,${z*66}px)`;v.dataset.id=id;
+                    v.onclick=()=>{if(_d||_dg)return;_s(parseInt(v.dataset.id))};_0x2.appendChild(v);
+                    _a.push({el:v,id,can:(x!==0||y!==0||z!==0)});id++;
+                }
+            }
+            window._gS=()=>{_0x1.getElementById('_m').style.display='none';_nR()};
+            async function _nR(r=!1){
+                _d=!0;_0x4.style.display='none';_0x5.style.display='none';_c=-1;
+                _0x2.classList.remove('_hi');_a.forEach(b=>b.el.classList.remove('_tg','_sl'));
+                if(!r){
+                    const p=_a.filter(b=>b.can);_b=p[Math.floor(Math.random()*p.length)].id;_h=[];
+                    let n=(_f>=2)?Math.floor(_f/2)+1:1;
+                    for(let i=0;i<n;i++){
+                        if(_f>=4&&Math.random()<0.35)_h.push({t:'3',dx:(Math.random()>.5?90:-90),dy:(Math.random()>.5?90:-90)});
+                        else _h.push({t:Math.random()>.5?'x':'y',d:(Math.random()>.5?90:-90)});
+                    }
+                }
+                const t=_a.find(b=>b.id===_b);_i=(t.y===1)?-90:(t.y===-1)?90:0;_j=(t.x===1)?-90:(t.x===-1)?90:(t.z===-1)?180:0;
+                _0x2.style.transition="transform 0.8s ease";_aR();await _wT(900);
+                _0x2.classList.add('_hi');t.el.classList.add('_tg');_0x3.textContent="このブロックだよ！ おぼえてね！";_pS(800);
+                await _wT(1500);t.el.classList.remove('_tg');_0x2.classList.remove('_hi');
+                const sp=Math.max(0.3,0.7-(_f*0.04));_0x2.style.transition=`transform ${sp}s ease-in-out`;
+                for(let m of _h){
+                    _0x3.textContent="シャッフル中...";
+                    if(m.t==='3'){_i+=m.dx;_j+=m.dy}else if(m.t==='x'){_i+=m.d}else{_j+=m.d}_aR();await _wT(sp*1000+50);
+                }
+                _0x3.textContent="どこに いったかな？";_d=!1;
+            }
+            function _aR(){_0x2.style.transform=`rotateX(${_i}deg) rotateY(${_j}deg)`}
+            function _s(id){_c=id;_a.forEach(b=>b.el.classList.remove('_sl'));_a.find(b=>b.id===id).el.classList.add('_sl');_0x4.style.display='block';_0x3.textContent="これでいい？";_pS(600)}
+            window._sA=()=>{
+                if(_d||_c===-1)return;_d=!0;_0x4.style.display='none';const p=100*_f;
+                if(_c===_b){
+                    _e+=p;_g+=1;_0x3.textContent="せいかい！"+p+"ポイント！";
+                    if(_g>=_k){_f++;_g=0;setTimeout(()=>{_0x3.textContent="レベルアップ！ Lv."+_f;_pS(400,!0);_pS(600,!0)},600)}else{_pS(500,!0)}
+                }else{
+                    if(_g>0||_f>1){_g-=0.5;if(_g<0){_f=Math.max(1,_f-1);_g=_k-0.5}}
+                    _0x3.textContent="ハズレ！つぎは がんばろう！";_pS(200);_0x5.style.display='block';_d=!1;
+                }
+                _uU();if(_c===_b)setTimeout(_nR,1500);
+            };
+            function _uU(){_0x1.getElementById('_sV').textContent=_e;_0x1.getElementById('_lV').textContent=_f;_0x6.style.width=(_g/_k)*100+"%"}
+            window._rR=()=>{if(!_d)_nR(!0)};function _wT(ms){return new Promise(r=>setTimeout(r,ms))}
+            let _dg=!1,_sX,_sY;const _dn=(e)=>{if(_d)return;_dg=!1;_sX=e.clientX||e.touches[0].clientX;_sY=e.clientY||e.touches[0].clientY};
+            const _mv=(e)=>{if(_d)return;const x=e.clientX||e.touches[0].clientX,y=e.clientY||e.touches[0].clientY,dx=x-_sX,dy=y-_sY;
+            if(Math.abs(dx)>8||Math.abs(dy)>8){_dg=!0;_0x2.style.transition="none";_j+=dx*0.4;_i-=dy*0.4;_aR();_sX=x;_sY=y}};
+            _0x1.addEventListener('mousedown',_dn);_0x1.addEventListener('mousemove',_mv);_0x1.addEventListener('touchstart',_dn);_0x1.addEventListener('touchmove',_mv);
+            function _pS(f,o=!1){const os=_0x7.createOscillator(),g=_0x7.createGain();os.connect(g);g.connect(_0x7.destination);os.frequency.setValueAtTime(f,_0x7.currentTime);
+            if(o)os.frequency.exponentialRampToValueAtTime(f*1.5,_0x7.currentTime+0.1);g.gain.setValueAtTime(0.04,_0x7.currentTime);g.gain.linearRampToValueAtTime(0,_0x7.currentTime+0.2);os.start();os.stop(_0x7.currentTime+0.2)}
+        })();
+    </script>
+</body>
+</html>
