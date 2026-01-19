@@ -2,60 +2,34 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>太陽系シミュレーター（高精細版）</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>太陽系シミュレーター - 軌跡完全リセット版</title>
     <style>
         body { font-family: 'Helvetica Neue', Arial, sans-serif; background: #000; color: white; margin: 0; overflow: hidden; display: flex; flex-direction: column; height: 100vh; }
-        
-        .controls { 
-            padding: 10px 15px; 
-            background: rgba(20, 20, 25, 0.98); 
-            border-bottom: 2px solid #444; 
-            z-index: 100;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .row { display: flex; justify-content: center; align-items: center; width: 100%; }
-
-        #modeBtn { 
-            background: #2563eb; color: white; 
-            padding: 8px 30px; border: none; border-radius: 6px;
-            font-weight: bold; font-size: 0.95rem; cursor: pointer;
-            min-width: 200px; box-shadow: 0 3px 0 #1d4ed8;
-        }
+        .controls { padding: 15px; background: rgba(20, 20, 25, 0.98); border-bottom: 2px solid #444; z-index: 100; display: flex; flex-direction: column; gap: 12px; }
+        .row { display: flex; justify-content: center; align-items: center; width: 100%; gap: 10px; }
+        #modeBtn { background: #2563eb; color: white; padding: 12px 30px; border: none; border-radius: 8px; font-weight: bold; font-size: 1.1rem; cursor: pointer; min-width: 220px; box-shadow: 0 4px 0 #1d4ed8; }
         #modeBtn:active { transform: translateY(2px); box-shadow: none; }
-
-        .reset-group { gap: 10px; }
-        button.mini-btn { 
-            padding: 4px 12px; border: none; border-radius: 4px; 
-            font-size: 0.7rem; cursor: pointer; color: white;
-            font-weight: bold; white-space: nowrap;
-        }
+        .reset-group { gap: 15px; }
+        button.mini-btn { padding: 10px 20px; border: none; border-radius: 6px; font-size: 0.9rem; cursor: pointer; color: white; font-weight: bold; white-space: nowrap; }
         .btn-gray { background: #4b5563; }
         .btn-red { background: #dc2626; }
-
-        .slider-row { display: flex; gap: 10px; }
-        .slider-row label { font-size: 0.8rem; color: #ccc; min-width: 40px; text-align: right; }
-        input[type="range"] { cursor: pointer; flex-grow: 1; accent-color: #3b82f6; height: 6px; }
-
-        .canvas-container { flex-grow: 1; position: relative; width: 100%; height: 100%; overflow: hidden; }
+        .slider-row { display: flex; gap: 15px; }
+        .slider-row label { font-size: 1rem; color: #ccc; min-width: 50px; text-align: right; font-weight: bold; }
+        input[type="range"] { cursor: pointer; flex-grow: 1; accent-color: #3b82f6; height: 12px; }
+        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 25px; height: 25px; background: #3b82f6; border-radius: 50%; }
+        .canvas-container { flex-grow: 1; position: relative; width: 100%; height: 100%; overflow: hidden; background: #000; }
         canvas { position: absolute; top: 0; left: 0; }
-
         .overlay-info { position: absolute; top: 15px; right: 15px; text-align: right; pointer-events: none; z-index: 10; }
-        h1 { margin: 0; font-size: 1rem; color: #60a5fa; }
-        .date-display { font-size: 1.1rem; font-family: monospace; color: #fff; margin-top: 5px; font-weight: bold; }
-
-        .legend { 
-            position: absolute; bottom: 15px; left: 15px; 
-            background: rgba(0, 0, 0, 0.8); padding: 8px; border-radius: 6px; 
-            border: 1px solid #444; pointer-events: none; 
-            display: flex; gap: 12px; font-size: 0.75rem; z-index: 10;
-        }
-        .legend-col { display: flex; flex-direction: column; gap: 3px; }
-        .legend-item { display: flex; align-items: center; gap: 5px; }
-        .dot { width: 6px; height: 6px; border-radius: 50%; }
-        
+        h1 { margin: 0; font-size: 1.2rem; color: #60a5fa; }
+        .date-display { font-size: 1.5rem; font-family: monospace; color: #fff; margin-top: 5px; font-weight: bold; }
+        .name-list-wrapper { position: absolute; bottom: 15px; left: 15px; background: rgba(0, 0, 0, 0.85); border-radius: 8px; border: 1px solid #444; z-index: 10; display: flex; flex-direction: column; }
+        #nameListContent { padding: 12px; display: flex; gap: 15px; font-size: 0.95rem; }
+        #nameListContent.hidden { display: none; }
+        .toggle-names-btn { background: rgba(68, 68, 68, 0.8); color: #fff; border: none; padding: 8px 14px; font-size: 0.9rem; border-radius: 6px 6px 0 0; cursor: pointer; align-self: flex-start; margin: 4px; font-weight: bold; }
+        .legend-col { display: flex; flex-direction: column; gap: 8px; }
+        .legend-item { display: flex; align-items: center; gap: 8px; }
+        .dot { width: 10px; height: 10px; border-radius: 50%; }
         ruby { ruby-align: center; }
         rt { font-size: 0.55em; color: #60a5fa; font-weight: normal; }
     </style>
@@ -63,21 +37,13 @@
 <body>
 
 <div class="controls">
-    <div class="row">
-        <button id="modeBtn"><ruby>天動説<rt>てんどうせつ</rt></ruby>へ<ruby>切替<rt>きりかえ</rt></ruby></button>
-    </div>
+    <div class="row"><button id="modeBtn"><ruby>天動説<rt>てんどうせつ</rt></ruby>へ<ruby>切替<rt>きりかえ</rt></ruby></button></div>
     <div class="row reset-group">
         <button class="mini-btn btn-gray" onclick="clearPathsOnly()"><ruby>軌跡<rt>きせき</rt></ruby><ruby>消去<rt>しょうきょ</rt></ruby></button>
         <button class="mini-btn btn-red" onclick="fullReset()"><ruby>すべてリセット<rt>すべてりせっと</rt></ruby></button>
     </div>
-    <div class="row slider-row">
-        <label><ruby>速度<rt>そくど</rt></ruby></label>
-        <input type="range" id="speedRange" min="0" max="100" value="30">
-    </div>
-    <div class="row slider-row">
-        <label><ruby>距離<rt>きょり</rt></ruby></label>
-        <input type="range" id="zoomRange" min="0" max="100" value="20">
-    </div>
+    <div class="row slider-row"><label><ruby>速度<rt>そくど</rt></ruby></label><input type="range" id="speedRange" min="0" max="100" value="30"></div>
+    <div class="row slider-row"><label><ruby>距離<rt>きょり</rt></ruby></label><input type="range" id="zoomRange" min="0" max="100" value="20"></div>
 </div>
 
 <div class="canvas-container" id="container">
@@ -87,104 +53,107 @@
         <h1 id="viewTitle"><ruby>地動説<rt>ちどうせつ</rt></ruby> (<ruby>太陽中心<rt>たいようちゅうしん</rt></ruby>)</h1>
         <div class="date-display" id="dateDisplay">1<ruby>年<rt>ねん</rt></ruby> 0<ruby>日目<rt>にちめ</rt></ruby></div>
     </div>
-    <div class="legend" id="legend"></div>
+    <div class="name-list-wrapper">
+        <button class="toggle-names-btn" onclick="toggleNames()" id="toggleBtn"><ruby>名前<rt>なまえ</rt></ruby>を<ruby>隠<rt>かく</rt></ruby>す</button>
+        <div id="nameListContent"></div>
+    </div>
 </div>
 
 <script>
-const mainCanvas = document.getElementById('mainCanvas');
-const pathCanvas = document.getElementById('pathCanvas');
-const ctx = mainCanvas.getContext('2d');
-const pCtx = pathCanvas.getContext('2d');
-const container = document.getElementById('container');
-const modeBtn = document.getElementById('modeBtn');
-const zoomRange = document.getElementById('zoomRange');
-const speedRange = document.getElementById('speedRange');
-const dateDisplay = document.getElementById('dateDisplay');
-const viewTitle = document.getElementById('viewTitle');
+const mainCanvas = document.getElementById('mainCanvas'), pathCanvas = document.getElementById('pathCanvas');
+const ctx = mainCanvas.getContext('2d'), pCtx = pathCanvas.getContext('2d');
+const container = document.getElementById('container'), modeBtn = document.getElementById('modeBtn');
+const zoomRange = document.getElementById('zoomRange'), speedRange = document.getElementById('speedRange');
+const dateDisplay = document.getElementById('dateDisplay'), viewTitle = document.getElementById('viewTitle');
 
 const planets = [
-    { name: "水星", yomi: "すいせい", dist: 0.39, speed: 4.15, color: "#a1a1aa", size: 0.38 },
-    { name: "金星", yomi: "きんせい", dist: 0.72, speed: 1.62, color: "#facc15", size: 0.95 },
-    { name: "地球", yomi: "ちきゅう", dist: 1.00, speed: 1.00, color: "#3b82f6", size: 1.00 },
-    { name: "火星", yomi: "かせい", dist: 1.52, speed: 0.53, color: "#ef4444", size: 0.53 },
-    { name: "木星", yomi: "もくせい", dist: 5.20, speed: 0.084, color: "#fb923c", size: 11.2 },
-    { name: "土星", yomi: "どせい", dist: 9.54, speed: 0.034, color: "#fde047", size: 9.4 },
-    { name: "天王星", yomi: "てんのうせい", dist: 19.2, speed: 0.012, color: "#67e8f9", size: 4.0 },
-    { name: "海王星", yomi: "かいおうせい", dist: 30.1, speed: 0.006, color: "#818cf8", size: 3.9 }
+    { name: "水星", yomi: "すいせい", dist: 0.39, speed: 4.15, color: "#ffffff", size: 0.38 },
+    { name: "金星", yomi: "きんせい", dist: 0.72, speed: 1.62, color: "#ff88ff", size: 0.95 },
+    { name: "地球", yomi: "ちきゅう", dist: 1.00, speed: 1.00, color: "#00ccff", size: 1.00 },
+    { name: "火星", yomi: "かせい", dist: 1.52, speed: 0.53, color: "#ff4444", size: 0.53 },
+    { name: "木星", yomi: "もくせい", dist: 5.20, speed: 0.084, color: "#cc88ff", size: 11.2 },
+    { name: "土星", yomi: "どせい", dist: 9.54, speed: 0.034, color: "#ffcc00", size: 9.4 },
+    { name: "天王星", yomi: "てんのうせい", dist: 19.2, speed: 0.012, color: "#00ffff", size: 4.0 },
+    { name: "海王星", yomi: "かいおうせい", dist: 30.1, speed: 0.006, color: "#6666ff", size: 3.9 }
 ];
 
-const legendContainer = document.getElementById('legend');
-let col1 = document.createElement('div'); col1.className = 'legend-col';
-let col2 = document.createElement('div'); col2.className = 'legend-col';
+let totalDays = 0, isGeocentric = false, minZoom = 0, maxZoom = 0;
+let requestReset = false; // リセットフラグ
+
+function toggleNames() {
+    const content = document.getElementById('nameListContent'), btn = document.getElementById('toggleBtn');
+    content.classList.toggle('hidden');
+    btn.innerHTML = content.classList.contains('hidden') ? '<ruby>名前<rt>なまえ</rt></ruby>を<ruby>表示<rt>ひょうじ</rt></ruby>する' : '<ruby>名前<rt>なまえ</rt></ruby>を<ruby>隠<rt>かく</rt></ruby>す';
+}
+
+// 凡例の生成
+const nameListContent = document.getElementById('nameListContent');
+let col1 = document.createElement('div'), col2 = document.createElement('div');
+col1.className = col2.className = 'legend-col';
 planets.forEach((p, i) => {
     const item = `<div class="legend-item"><div class="dot" style="background:${p.color}"></div><ruby>${p.name}<rt>${p.yomi}</rt></ruby></div>`;
     if(i < 4) col1.innerHTML += item; else col2.innerHTML += item;
 });
-legendContainer.appendChild(col1); legendContainer.appendChild(col2);
-
-let totalDays = 0;
-let isGeocentric = false;
-let minZoom = 0, maxZoom = 0;
+nameListContent.appendChild(col1); nameListContent.appendChild(col2);
 
 function resize() {
     mainCanvas.width = pathCanvas.width = container.clientWidth;
     mainCanvas.height = pathCanvas.height = container.clientHeight;
-    const minDimension = Math.min(mainCanvas.width, mainCanvas.height) / 2;
-    minZoom = minDimension / (30.1 * 1.1); 
-    maxZoom = minDimension / (0.39 * 1.5);
+    const minDim = Math.min(mainCanvas.width, mainCanvas.height) / 2;
+    minZoom = minDim / (30.1 * 1.1); maxZoom = minDim / (0.39 * 1.5);
     clearPathsOnly();
 }
 window.addEventListener('resize', resize);
 resize();
 
+// 【重要】1回で確実に消去するための関数
 function clearPathsOnly() {
-    pCtx.clearRect(0, 0, pathCanvas.width, pathCanvas.height);
+    pCtx.setTransform(1, 0, 0, 1, 0, 0); // 変形をリセット
+    pCtx.globalCompositeOperation = 'source-over';
+    pCtx.clearRect(0, 0, pathCanvas.width, pathCanvas.height); // 透明化
+    pCtx.fillStyle = "#000";
+    pCtx.fillRect(0, 0, pathCanvas.width, pathCanvas.height); // 黒で塗りつぶし
+    pCtx.beginPath(); // パスを完全に断ち切る
+    requestReset = true; // 次の描画開始点をリセット
 }
 
-function fullReset() {
-    totalDays = 0;
-    clearPathsOnly();
-    isGeocentric = false;
-    speedRange.value = 30;
-    zoomRange.value = 20;
-    updateModeUI();
+function fullReset() { 
+    totalDays = 0; 
+    clearPathsOnly(); 
+    isGeocentric = false; 
+    speedRange.value = 30; 
+    zoomRange.value = 20; 
+    updateModeUI(); 
 }
 
-modeBtn.addEventListener('click', () => {
-    isGeocentric = !isGeocentric;
-    updateModeUI();
+modeBtn.addEventListener('click', () => { 
+    isGeocentric = !isGeocentric; 
+    updateModeUI(); 
     clearPathsOnly(); 
 });
 
 function updateModeUI() {
-    if (isGeocentric) {
-        viewTitle.innerHTML = '<ruby>天動説<rt>てんどうせつ</rt></ruby> (<ruby>地球中心<rt>ちきゅうちゅうしん</rt></ruby>)';
-        modeBtn.innerHTML = '<ruby>地動説<rt>ちどうせつ</rt></ruby>へ<ruby>切替<rt>きりかえ</rt></ruby>';
-    } else {
-        viewTitle.innerHTML = '<ruby>地動説<rt>ちどうせつ</rt></ruby> (<ruby>太陽中心<rt>たいようちゅうしん</rt></ruby>)';
-        modeBtn.innerHTML = '<ruby>天動説<rt>てんどうせつ</rt></ruby>へ<ruby>切替<rt>きりかえ</rt></ruby>';
-    }
+    viewTitle.innerHTML = isGeocentric ? '<ruby>天動説<rt>てんどうせつ</rt></ruby> (<ruby>地球中心<rt>ちきゅうちゅうしん</rt></ruby>)' : '<ruby>地動説<rt>ちどうせつ</rt></ruby> (<ruby>太陽中心<rt>たいようちゅうしん</rt></ruby>)';
+    modeBtn.innerHTML = isGeocentric ? '<ruby>地動説<rt>ちどうせつ</rt></ruby>へ<ruby>切替<rt>きりかえ</rt></ruby>' : '<ruby>天動説<rt>てんどうせつ</rt></ruby>へ<ruby>切替<rt>きりかえ</rt></ruby>';
 }
 
 function getZoomLevel() {
     const val = parseFloat(zoomRange.value) / 100;
     return minZoom * Math.pow(maxZoom / minZoom, val);
 }
-
 zoomRange.addEventListener('input', clearPathsOnly);
 
 function getPositions(days, zoom, cx, cy) {
     const earthAngle = days * (Math.PI * 2 / 365.25);
-    const ex = Math.cos(earthAngle) * 1.00 * zoom;
-    const ey = Math.sin(earthAngle) * 1.00 * zoom;
+    const ex = Math.cos(earthAngle) * 1.00 * zoom, ey = Math.sin(earthAngle) * 1.00 * zoom;
     let sunPos = isGeocentric ? { x: cx - ex, y: cy - ey } : { x: cx, y: cy };
     let planetPos = planets.map(p => {
         const angle = days * (Math.PI * 2 / 365.25) * p.speed;
-        const tx = Math.cos(angle) * p.dist * zoom;
-        const ty = Math.sin(angle) * p.dist * zoom;
-        return {
-            x: isGeocentric ? (tx - ex) + cx : tx + cx,
-            y: isGeocentric ? (ty - ey) + cy : ty + cy
+        const tx = Math.cos(angle) * p.dist * zoom, ty = Math.sin(angle) * p.dist * zoom;
+        const fudge = 0.0001; 
+        return { 
+            x: isGeocentric ? (tx - ex) + cx + fudge : tx + cx + fudge, 
+            y: isGeocentric ? (ty - ey) + cy + fudge : ty + cy + fudge 
         };
     });
     return { sun: sunPos, planets: planetPos };
@@ -192,68 +161,53 @@ function getPositions(days, zoom, cx, cy) {
 
 function animate() {
     ctx.clearRect(0, 0, mainCanvas.width, mainCanvas.height);
-    const zoom = getZoomLevel();
-    const speedVal = parseInt(speedRange.value);
-    
-    // 速度計算（滑らかさを保てる範囲に調整）
+    const zoom = getZoomLevel(), speedVal = parseInt(speedRange.value);
     const daysPerFrame = (Math.pow(speedVal, 2.5)) * 0.0001; 
-    const cx = mainCanvas.width / 2;
-    const cy = mainCanvas.height / 2;
+    const cx = mainCanvas.width / 2, cy = mainCanvas.height / 2;
 
     if (daysPerFrame > 0) {
-        // 計算ステップをさらに細分化（0.1日単位で計算）
         const steps = Math.min(Math.ceil(daysPerFrame / 0.1), 100); 
         const stepDays = daysPerFrame / steps;
+        
+        const zoomRatio = (zoom - minZoom) / (maxZoom - minZoom);
+        pCtx.lineWidth = Math.max(0.8, 1.2 - (zoomRatio * 0.4));
+        pCtx.globalCompositeOperation = 'lighter';
 
-        for (let s = 0; s < steps; s++) {
-            const currentDays = totalDays + (s * stepDays);
-            const nextDays = totalDays + ((s + 1) * stepDays);
-            const pos1 = getPositions(currentDays, zoom, cx, cy);
-            const pos2 = getPositions(nextDays, zoom, cx, cy);
-
-            // 太陽の軌道（視認性をアップ）
-            if (isGeocentric) {
-                pCtx.strokeStyle = "rgba(255, 255, 0, 0.4)"; 
-                pCtx.lineWidth = 1.2;
-                pCtx.beginPath();
-                pCtx.moveTo(pos1.sun.x, pos1.sun.y);
-                pCtx.lineTo(pos2.sun.x, pos2.sun.y);
-                pCtx.stroke();
+        const drawSinglePath = (getPosFunc, color, opacity) => {
+            pCtx.strokeStyle = color;
+            pCtx.globalAlpha = Math.min(0.9, opacity + (1 - zoomRatio) * 0.5);
+            pCtx.beginPath();
+            
+            // リセット直後は moveTo から開始
+            let start = getPosFunc(totalDays);
+            pCtx.moveTo(start.x, start.y);
+            
+            for(let s=1; s<=steps; s++) {
+                let next = getPosFunc(totalDays + (s * stepDays));
+                pCtx.lineTo(next.x, next.y);
             }
+            pCtx.stroke();
+        };
 
-            // 惑星の軌道（アルファ値を0.1から0.4へ引き上げ）
-            planets.forEach((p, i) => {
-                pCtx.strokeStyle = p.color;
-                pCtx.globalAlpha = 0.4; 
-                pCtx.lineWidth = 1.2;
-                pCtx.beginPath();
-                pCtx.moveTo(pos1.planets[i].x, pos1.planets[i].y);
-                pCtx.lineTo(pos2.planets[i].x, pos2.planets[i].y);
-                pCtx.stroke();
-                pCtx.globalAlpha = 1.0;
-            });
-        }
+        if (isGeocentric) drawSinglePath((d) => getPositions(d, zoom, cx, cy).sun, "#ffcc00", 0.3);
+        planets.forEach((p, i) => drawSinglePath((d) => getPositions(d, zoom, cx, cy).planets[i], p.color, 0.3));
+        
+        totalDays += daysPerFrame;
+        requestReset = false; // 描画完了
     }
 
-    totalDays += daysPerFrame;
-    const year = Math.floor(totalDays / 365) + 1;
-    const day = Math.floor(totalDays % 365);
-    dateDisplay.innerHTML = `${year}<ruby>年<rt>ねん</rt></ruby> ${day}<ruby>日目<rt>にちめ</rt></ruby>`;
-
+    // メインキャンバス（天体本体）の描画
+    dateDisplay.innerHTML = `${Math.floor(totalDays / 365) + 1}<ruby>年<rt>ねん</rt></ruby> ${Math.floor(totalDays % 365)}<ruby>日目<rt>にちめ</rt></ruby>`;
     const finalPos = getPositions(totalDays, zoom, cx, cy);
+    
     if (isGeocentric) {
-        let earthSize = Math.max(1, 1.5 * (zoom / 40));
-        ctx.fillStyle = "#3b82f6"; ctx.beginPath(); ctx.arc(cx, cy, earthSize, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = "#3b82f6"; ctx.beginPath(); ctx.arc(cx, cy, Math.max(1.5, 2 * (zoom / 40)), 0, Math.PI*2); ctx.fill();
     }
-    let sunRadius = Math.max(1.8, 15 * (zoom / 40)); 
-    ctx.fillStyle = "#ffcc00";
-    ctx.beginPath(); ctx.arc(finalPos.sun.x, finalPos.sun.y, sunRadius, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = "#ffcc00"; ctx.beginPath(); ctx.arc(finalPos.sun.x, finalPos.sun.y, Math.max(2.0, 15 * (zoom / 40)), 0, Math.PI*2); ctx.fill();
     planets.forEach((p, i) => {
-        let drawSize = Math.max(1.0, p.size * (zoom / 40)); 
-        ctx.fillStyle = p.color;
-        ctx.beginPath(); ctx.arc(finalPos.planets[i].x, finalPos.planets[i].y, drawSize, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = p.color; ctx.beginPath(); ctx.arc(finalPos.planets[i].x, finalPos.planets[i].y, Math.max(1.2, p.size * (zoom / 40)), 0, Math.PI*2); ctx.fill();
     });
-
+    
     requestAnimationFrame(animate);
 }
 animate();
