@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>太陽系シミュレーター - 軌跡完全リセット版</title>
+    <title>太陽系シミュレーター</title>
     <style>
         body { font-family: 'Helvetica Neue', Arial, sans-serif; background: #000; color: white; margin: 0; overflow: hidden; display: flex; flex-direction: column; height: 100vh; }
         .controls { padding: 15px; background: rgba(20, 20, 25, 0.98); border-bottom: 2px solid #444; z-index: 100; display: flex; flex-direction: column; gap: 12px; }
@@ -40,7 +40,7 @@
     <div class="row"><button id="modeBtn"><ruby>天動説<rt>てんどうせつ</rt></ruby>へ<ruby>切替<rt>きりかえ</rt></ruby></button></div>
     <div class="row reset-group">
         <button class="mini-btn btn-gray" onclick="clearPathsOnly()"><ruby>軌跡<rt>きせき</rt></ruby><ruby>消去<rt>しょうきょ</rt></ruby></button>
-        <button class="mini-btn btn-red" onclick="fullReset()"><ruby>すべてリセット<rt>すべてりせっと</rt></ruby></button>
+        <button class="mini-btn btn-red" onclick="resetTimeAndPaths()"><ruby>リセット<rt>りせっと</rt></ruby></button>
     </div>
     <div class="row slider-row"><label><ruby>速度<rt>そくど</rt></ruby></label><input type="range" id="speedRange" min="0" max="100" value="30"></div>
     <div class="row slider-row"><label><ruby>距離<rt>きょり</rt></ruby></label><input type="range" id="zoomRange" min="0" max="100" value="20"></div>
@@ -78,7 +78,6 @@ const planets = [
 ];
 
 let totalDays = 0, isGeocentric = false, minZoom = 0, maxZoom = 0;
-let requestReset = false; // リセットフラグ
 
 function toggleNames() {
     const content = document.getElementById('nameListContent'), btn = document.getElementById('toggleBtn');
@@ -86,7 +85,6 @@ function toggleNames() {
     btn.innerHTML = content.classList.contains('hidden') ? '<ruby>名前<rt>なまえ</rt></ruby>を<ruby>表示<rt>ひょうじ</rt></ruby>する' : '<ruby>名前<rt>なまえ</rt></ruby>を<ruby>隠<rt>かく</rt></ruby>す';
 }
 
-// 凡例の生成
 const nameListContent = document.getElementById('nameListContent');
 let col1 = document.createElement('div'), col2 = document.createElement('div');
 col1.className = col2.className = 'legend-col';
@@ -106,24 +104,20 @@ function resize() {
 window.addEventListener('resize', resize);
 resize();
 
-// 【重要】1回で確実に消去するための関数
+// 軌跡を物理的に即座に消去する関数
 function clearPathsOnly() {
-    pCtx.setTransform(1, 0, 0, 1, 0, 0); // 変形をリセット
+    pCtx.setTransform(1, 0, 0, 1, 0, 0);
     pCtx.globalCompositeOperation = 'source-over';
-    pCtx.clearRect(0, 0, pathCanvas.width, pathCanvas.height); // 透明化
+    pCtx.clearRect(0, 0, pathCanvas.width, pathCanvas.height);
     pCtx.fillStyle = "#000";
-    pCtx.fillRect(0, 0, pathCanvas.width, pathCanvas.height); // 黒で塗りつぶし
-    pCtx.beginPath(); // パスを完全に断ち切る
-    requestReset = true; // 次の描画開始点をリセット
+    pCtx.fillRect(0, 0, pathCanvas.width, pathCanvas.height);
+    pCtx.beginPath();
 }
 
-function fullReset() { 
-    totalDays = 0; 
-    clearPathsOnly(); 
-    isGeocentric = false; 
-    speedRange.value = 30; 
-    zoomRange.value = 20; 
-    updateModeUI(); 
+// リセット：日付と軌跡のみ。スライダー（速度・距離）と説（地動・天動）は維持
+function resetTimeAndPaths() {
+    totalDays = 0;
+    clearPathsOnly();
 }
 
 modeBtn.addEventListener('click', () => { 
@@ -134,7 +128,7 @@ modeBtn.addEventListener('click', () => {
 
 function updateModeUI() {
     viewTitle.innerHTML = isGeocentric ? '<ruby>天動説<rt>てんどうせつ</rt></ruby> (<ruby>地球中心<rt>ちきゅうちゅうしん</rt></ruby>)' : '<ruby>地動説<rt>ちどうせつ</rt></ruby> (<ruby>太陽中心<rt>たいようちゅうしん</rt></ruby>)';
-    modeBtn.innerHTML = isGeocentric ? '<ruby>地動説<rt>ちどうせつ</rt></ruby>へ<ruby>切替<rt>きりかえ</rt></ruby>' : '<ruby>天動説<rt>てんどうせつ</rt></ruby>へ<ruby>切替<rt>きりかえ</rt></ruby>';
+    modeBtn.innerHTML = isGeocentric ? '<ruby>地動説<rt>てんどうせつ</rt></ruby>へ<ruby>切替<rt>きりかえ</rt></ruby>' : '<ruby>天動説<rt>てんどうせつ</rt></ruby>へ<ruby>切替<rt>きりかえ</rt></ruby>';
 }
 
 function getZoomLevel() {
@@ -177,11 +171,8 @@ function animate() {
             pCtx.strokeStyle = color;
             pCtx.globalAlpha = Math.min(0.9, opacity + (1 - zoomRatio) * 0.5);
             pCtx.beginPath();
-            
-            // リセット直後は moveTo から開始
             let start = getPosFunc(totalDays);
             pCtx.moveTo(start.x, start.y);
-            
             for(let s=1; s<=steps; s++) {
                 let next = getPosFunc(totalDays + (s * stepDays));
                 pCtx.lineTo(next.x, next.y);
@@ -193,13 +184,10 @@ function animate() {
         planets.forEach((p, i) => drawSinglePath((d) => getPositions(d, zoom, cx, cy).planets[i], p.color, 0.3));
         
         totalDays += daysPerFrame;
-        requestReset = false; // 描画完了
     }
 
-    // メインキャンバス（天体本体）の描画
     dateDisplay.innerHTML = `${Math.floor(totalDays / 365) + 1}<ruby>年<rt>ねん</rt></ruby> ${Math.floor(totalDays % 365)}<ruby>日目<rt>にちめ</rt></ruby>`;
     const finalPos = getPositions(totalDays, zoom, cx, cy);
-    
     if (isGeocentric) {
         ctx.fillStyle = "#3b82f6"; ctx.beginPath(); ctx.arc(cx, cy, Math.max(1.5, 2 * (zoom / 40)), 0, Math.PI*2); ctx.fill();
     }
@@ -207,7 +195,6 @@ function animate() {
     planets.forEach((p, i) => {
         ctx.fillStyle = p.color; ctx.beginPath(); ctx.arc(finalPos.planets[i].x, finalPos.planets[i].y, Math.max(1.2, p.size * (zoom / 40)), 0, Math.PI*2); ctx.fill();
     });
-    
     requestAnimationFrame(animate);
 }
 animate();
