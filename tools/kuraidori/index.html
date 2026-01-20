@@ -2,11 +2,14 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,touch-action=manipulation">
 <title>10しんほうマスター</title>
 <style>
     :root{--u:12px;--c-1:#ff6b6b;--c-10:#feca57;--c-100:#54a0ff;--bg-1:#fff5f5;--bg-10:#fffdf0;--bg-100:#f0f7ff;--h-min:240px}
-    body{font-family:sans-serif;background-color:#f0f2f5;margin:0;padding:5px;display:flex;flex-direction:column;align-items:center;user-select:none}
+    /* すべてのボタンでダブルタップズームを無効化 */
+    button { touch-action: manipulation; }
+    
+    body{font-family:sans-serif;background-color:#f0f2f5;margin:0;padding:5px;display:flex;flex-direction:column;align-items:center;user-select:none;overflow-x:hidden}
     .S_T{display:flex;gap:10px;margin-bottom:12px;width:95%;max-width:450px}
     .T_B{flex:1;padding:12px 2px;border-radius:12px;border:none;cursor:pointer;font-weight:700;font-size:11px;transition:all .1s;box-shadow:0 4px #bbb;background:#e0e0e0;color:#666;position:relative;top:0}
     .T_B:active{top:2px;box-shadow:0 2px #999}
@@ -59,14 +62,14 @@
         <div class="C_L W_10">
             <button id="_0x10mg" class="B_M" onclick="_0x88dd(10)">10こを<br>ひゃくへ</button>
             <button id="_0x10p" class="B_P" onclick="_0x77cc(10,1)">＋10</button>
-            <div class="L_B">じゅう</div>
+            <div class="label L_B">じゅう</div>
             <div id="_0x10r" class="R_M R_10"><div id="_0x10g" class="G_10"></div></div>
             <button id="_0x10m" class="B_MI" onclick="_0x77cc(10,-1)">ー10</button>
         </div>
         <div class="C_L W_1">
             <button id="_0x1mg" class="B_M" onclick="_0x88dd(1)">10こを<br>じゅうへ</button>
             <button id="_0x1p" class="B_P" onclick="_0x77cc(1,1)">＋1</button>
-            <div class="L_B">いち</div>
+            <div class="label L_B">いち</div>
             <div id="_0x1r" class="R_M R_1"><div id="_0x1g" class="G_1"></div></div>
             <button id="_0x1m" class="B_MI" onclick="_0x77cc(1,-1)">ー1</button>
         </div>
