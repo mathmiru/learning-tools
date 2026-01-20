@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>10しんほうマスター</title>
+<style>
+    :root{--u:12px;--c-1:#ff6b6b;--c-10:#feca57;--c-100:#54a0ff;--bg-1:#fff5f5;--bg-10:#fffdf0;--bg-100:#f0f7ff;--h-min:240px}
+    body{font-family:sans-serif;background-color:#f0f2f5;margin:0;padding:5px;display:flex;flex-direction:column;align-items:center;user-select:none}
+    .S_T{display:flex;gap:10px;margin-bottom:12px;width:95%;max-width:450px}
+    .T_B{flex:1;padding:12px 2px;border-radius:12px;border:none;cursor:pointer;font-weight:700;font-size:11px;transition:all .1s;box-shadow:0 4px #bbb;background:#e0e0e0;color:#666;position:relative;top:0}
+    .T_B:active{top:2px;box-shadow:0 2px #999}
+    .T_B.O_N{background:#ffec3d;color:#333;box-shadow:0 4px #d4a017}
+    .T_C{width:95%;max-width:450px;background:#fff;padding:8px;border-radius:8px;box-shadow:0 2px 5px rgba(0,0,0,.05);text-align:center;margin-bottom:10px;min-height:40px;display:flex;align-items:center;justify-content:center}
+    .T_V{font-size:26px;font-weight:700;color:#e67e22}
+    .H_D{visibility:hidden!important;display:none!important}
+    .C_N{display:flex;justify-content:center;align-items:flex-start;gap:5px;width:98vw;max-width:500px}
+    .C_L{display:flex;flex-direction:column;gap:3px;align-items:center}
+    .W_100{width:46%}.W_10{width:36%}.W_1{width:14%}
+    .R_M{width:100%;min-height:var(--h-min);height:auto;border:2px solid #888;border-radius:6px;display:flex;flex-direction:column-reverse;align-items:center;padding:10px 0;box-sizing:border-box}
+    .R_100{border-color:var(--c-100);background-color:var(--bg-100)}
+    .R_10{border-color:var(--c-10);background-color:var(--bg-10)}
+    .R_1{border-color:var(--c-1);background-color:var(--bg-1)}
+    .R_M.F_L{border-width:4px;background-color:#ffe0e0;border-color:#ff4757}
+    button{width:100%;border:none;border-radius:5px;cursor:pointer;color:#fff;font-weight:700}
+    .B_R{height:38px;font-size:11px;background-color:#7f8c8d;box-shadow:0 2px #5d6d6e}
+    .B_M{height:38px;font-size:11px;background-color:#9b59b6;box-shadow:0 2px #8e44ad}
+    .B_P{height:42px;font-size:18px;background-color:#2ecc71;box-shadow:0 3px #27ae60}
+    .B_MI{height:42px;font-size:18px;background-color:#e74c3c;box-shadow:0 3px #c0392b}
+    .M_R{animation:P_S .7s infinite;background-color:#f39c12!important;box-shadow:0 3px #d35400!important}
+    @keyframes P_S{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+    button:disabled{background-color:#ccc!important;box-shadow:none!important;opacity:.3;top:0!important}
+    .I_B{display:flex;flex-direction:column;align-items:center}
+    .I_N{font-size:9px;font-weight:700;height:11px;color:#444;margin-bottom:1px}
+    .I_N.V_H{visibility:hidden}
+    .T_I{width:var(--u);height:var(--u);background:var(--c-1);border:1px solid rgba(0,0,0,.3)}
+    .B_A{width:var(--u);height:calc(var(--u) * 10);background-color:var(--c-10);border:1px solid rgba(0,0,0,.3);background-image:repeating-linear-gradient(to bottom,transparent,transparent calc(var(--u) - 1px),rgba(0,0,0,.2) calc(var(--u) - 1px),rgba(0,0,0,.2) var(--u))}
+    .P_L{width:calc(var(--u) * 10);height:calc(var(--u) * 10);background-color:var(--c-100);border:1px solid rgba(0,0,0,.3);background-image:repeating-linear-gradient(to right,transparent,transparent calc(var(--u) - 1px),rgba(0,0,0,.1) calc(var(--u) - 1px),rgba(0,0,0,.1) var(--u)),repeating-linear-gradient(to bottom,transparent,transparent calc(var(--u) - 1px),rgba(0,0,0,.1) calc(var(--u) - 1px),rgba(0,0,0,.1) var(--u))}
+    .G_1{display:flex;flex-direction:column-reverse;gap:2px}
+    .G_10{display:grid;grid-template-columns:repeat(5,auto);gap:2px;padding:0 2px}
+    .G_100{display:flex;flex-direction:column-reverse;gap:2px}
+    .L_B{font-weight:700;font-size:15px;margin:2px 0}
+</style>
+</head>
+<body>
+    <div class="S_T">
+        <button id="_0x1f2a" class="T_B" onclick="_0x42b1('total')">ごうけい ⇆ だす</button>
+        <button id="_0x5e2b" class="T_B" onclick="_0x42b1('block')">かずを ⇆ だす</button>
+    </div>
+    <div class="T_C"><div id="_0x9a2c" class="T_V H_D">ごうけい：<span id="_0x3d4e">0</span></div></div>
+    <div class="C_N">
+        <div class="C_L W_100">
+            <button class="B_R" onclick="_0x99ff()">ぜんぶけす</button>
+            <button id="_0x100p" class="B_P" onclick="_0x77cc(100,1)">＋100</button>
+            <div class="L_B">ひゃく</div>
+            <div id="_0x100r" class="R_M R_100"><div id="_0x100g" class="G_100"></div></div>
+            <button id="_0x100m" class="B_MI" onclick="_0x77cc(100,-1)">ー100</button>
+        </div>
+        <div class="C_L W_10">
+            <button id="_0x10mg" class="B_M" onclick="_0x88dd(10)">10こを<br>ひゃくへ</button>
+            <button id="_0x10p" class="B_P" onclick="_0x77cc(10,1)">＋10</button>
+            <div class="L_B">じゅう</div>
+            <div id="_0x10r" class="R_M R_10"><div id="_0x10g" class="G_10"></div></div>
+            <button id="_0x10m" class="B_MI" onclick="_0x77cc(10,-1)">ー10</button>
+        </div>
+        <div class="C_L W_1">
+            <button id="_0x1mg" class="B_M" onclick="_0x88dd(1)">10こを<br>じゅうへ</button>
+            <button id="_0x1p" class="B_P" onclick="_0x77cc(1,1)">＋1</button>
+            <div class="L_B">いち</div>
+            <div id="_0x1r" class="R_M R_1"><div id="_0x1g" class="G_1"></div></div>
+            <button id="_0x1m" class="B_MI" onclick="_0x77cc(1,-1)">ー1</button>
+        </div>
+    </div>
+    <script>
+        (function(){
+            let _0x1=0,_0x10=0,_0x100=0,_0xST=false,_0xSB=false;
+            window._0x42b1=function(t){
+                if(t==='total'){_0xST=!_0xST;const b=document.getElementById('_0x1f2a');b.className=_0xST?'T_B O_N':'T_B';b.innerText=_0xST?'ごうけい ⇆ かくす':'ごうけい ⇆ だす';}
+                else{_0xSB=!_0xSB;const b=document.getElementById('_0x5e2b');b.className=_0xSB?'T_B O_N':'T_B';b.innerText=_0xSB?'かずを ⇆ かくす':'かずを ⇆ だす';}
+                _0x55ee();
+            };
+            window._0x77cc=function(p,v){let n=(p===1?_0x1:(p===10?_0x10:_0x100))+v;if(n>=0&&n<=10){if(p===1)_0x1=n;else if(p===10)_0x10=n;else _0x100=n;_0x55ee();}};
+            window._0x88dd=function(f){if(f===1&&_0x1===10){_0x1=0;_0x10++;}else if(f===10&&_0x10===10){_0x10=0;_0x100++;}_0x55ee();};
+            window._0x99ff=function(){_0x1=0;_0x10=0;_0x100=0;_0x55ee();};
+            function _0x55ee(){
+                const ta=document.getElementById('_0x9a2c');_0xST?ta.classList.remove('H_D'):ta.classList.add('H_D');
+                const rd=(i,c,p,s)=>{
+                    const e=document.getElementById(i);e.innerHTML='';
+                    for(let j=1;j<=c;j++){e.innerHTML+=`<div class="I_B"><div class="I_N${_0xSB?'':' V_H'}">${j*p}</div><div class="${s}"></div></div>`;}
+                };
+                rd('_0x1g',_0x1,1,'T_I');rd('_0x10g',_0x10,10,'B_A');rd('_0x100g',_0x100,100,'P_L');
+                document.getElementById('_0x3d4e').innerText=_0x100*100+_0x10*10+_0x1;
+                document.getElementById('_0x1p').disabled=(_0x1>=10);document.getElementById('_0x10p').disabled=(_0x10>=10);document.getElementById('_0x100p').disabled=(_0x100>=10);
+                const m1=document.getElementById('_0x1mg'),m10=document.getElementById('_0x10mg');
+                m1.disabled=(_0x1<10);m1.classList.toggle('M_R',_0x1===10);
+                m10.disabled=(_0x10<10);m10.classList.toggle('M_R',_0x10===10);
+                document.getElementById('_0x1r').classList.toggle('F_L',_0x1===10);
+                document.getElementById('_0x10r').classList.toggle('F_L',_0x10===10);
+                document.getElementById('_0x100r').classList.toggle('F_L',_0x100===10);
+            }
+            _0x55ee();
+        })();
+    </script>
+</body>
+</html>
