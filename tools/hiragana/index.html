@@ -2,6 +2,7 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>ひらがなパーク</title>
     <style>
         body { 
@@ -9,17 +10,22 @@
             text-align: center; 
             background-color: #2c3e50; 
             margin: 0; padding: 0; 
-            overflow-x: hidden; 
+            overflow: hidden; /* スクロール禁止にしてアプリっぽくする */
             touch-action: manipulation; 
-            color: #333; 
+            color: #333;
+            /* iOSでのバウンススクロール防止 */
+            position: fixed;
+            width: 100%;
+            height: 100%;
         }
         
         /* ゲーム画面全体 */
         .game-wrapper {
-            max-width: 600px; 
+            width: 100%;
+            max-width: 600px; /* PCで見るときは広がりすぎないように */
             margin: 0 auto; 
             background: #eef9f0; 
-            min-height: 100vh;
+            height: 100dvh; /* dvhを使うとアドレスバーを除いた高さピッタリになる */
             display: flex; 
             flex-direction: column; 
             position: relative;
@@ -30,64 +36,77 @@
         .hud {
             background: #34495e; 
             color: white; 
-            padding: 10px 20px;
+            padding: 8px 15px; /* 少し狭くして画面を有効活用 */
             display: flex; 
             justify-content: space-between; 
             align-items: center;
-            font-size: 20px; 
+            font-size: 18px; 
             font-weight: bold; 
-            border-bottom: 5px solid #2c3e50;
+            border-bottom: 4px solid #2c3e50;
+            flex-shrink: 0; /* 縮まないように固定 */
         }
-        .score-box { color: #f1c40f; font-size: 24px; }
-        .combo-box { color: #e74c3c; font-size: 20px; opacity: 0; transition: opacity 0.2s; }
-        .combo-box.show { opacity: 1; transform: scale(1.2); }
+        .score-box { color: #f1c40f; font-size: 22px; }
+        .combo-box { color: #e74c3c; font-size: 18px; opacity: 0; transition: opacity 0.2s; }
+        .combo-box.show { opacity: 1; transform: scale(1.1); }
 
         /* メインエリア */
         .container { 
-            padding: 20px; 
+            padding: 10px; /* 余白を減らす */
             flex: 1; 
             display: flex; 
             flex-direction: column; 
             align-items: center; 
+            justify-content: space-evenly; /* 上下にバランスよく配置 */
+            overflow-y: auto; /* 万が一画面が小さすぎたらスクロール許可 */
         }
         
         /* イラストとヒント */
-        .illust-area { position: relative; width: 100%; height: 160px; margin-bottom: 20px; }
+        .illust-area { 
+            position: relative; 
+            width: 100%; 
+            height: auto;
+            min-height: 140px; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 10px; 
+        }
         #illust-display { 
-            font-size: 110px; 
-            line-height: 140px; 
+            font-size: 100px; /* 少し調整 */
+            line-height: 1;
             transition: transform 0.2s; 
             cursor: default; 
-            letter-spacing: -15px; 
+            /* 絵文字がOSによってずれるのを防ぐ */
+            display: inline-block;
         }
         
         /* ヒントボタン */
         .hint-btn {
-            position: absolute; right: 10px; bottom: 0;
+            position: absolute; right: 0; bottom: 0;
             background: #3498db; color: white; border: none;
-            border-radius: 50px; padding: 8px 16px; font-size: 16px; font-weight: bold;
-            cursor: pointer; box-shadow: 0 4px 0 #2980b9; transition: transform 0.1s;
-            display: flex; align-items: center; gap: 5px;
+            border-radius: 50px; padding: 6px 14px; font-size: 14px; font-weight: bold;
+            cursor: pointer; box-shadow: 0 3px 0 #2980b9; transition: transform 0.1s;
+            display: flex; align-items: center; gap: 4px;
         }
-        .hint-btn:active { transform: translateY(4px); box-shadow: none; }
-        .hint-used { background: #95a5a6; box-shadow: 0 4px 0 #7f8c8d; }
+        .hint-btn:active { transform: translateY(3px); box-shadow: none; }
+        .hint-used { background: #95a5a6; box-shadow: 0 3px 0 #7f8c8d; }
 
         /* 文字スロット */
         .word-area { 
             display: flex; 
             justify-content: center; 
-            gap: 6px; 
-            margin-bottom: 25px; 
+            gap: 5px; 
+            margin-bottom: 15px; 
             flex-wrap: wrap; 
         }
         .slot { 
-            width: 55px; height: 55px; 
-            line-height: 55px; 
-            font-size: 30px; 
+            width: 50px; height: 50px; /* スマホ向けに少し調整 */
+            line-height: 50px; 
+            font-size: 28px; 
             font-weight: bold; 
             background: #fff; 
             border: 3px dashed #bdc3c7; 
-            border-radius: 12px; 
+            border-radius: 10px; 
             color: transparent; 
             transition: all 0.2s; 
         }
@@ -95,44 +114,44 @@
             background: #fff9e6; 
             border: 3px solid #f39c12; 
             color: #333; 
-            transform: scale(1.1); 
-            box-shadow: 0 4px 0 rgba(0,0,0,0.1); 
+            transform: scale(1.05); 
+            box-shadow: 0 3px 0 rgba(0,0,0,0.1); 
         }
         .static-char { 
-            font-size: 30px; 
+            font-size: 28px; 
             font-weight: bold; 
             color: #7f8c8d; 
-            width: 55px; 
-            line-height: 55px; 
+            width: 50px; 
+            line-height: 50px; 
         }
 
         /* 選択肢ボタン */
         .choices { 
             display: grid; 
             grid-template-columns: repeat(3, 1fr); 
-            gap: 12px; 
+            gap: 10px; 
             width: 100%; 
-            max-width: 380px; 
+            max-width: 360px; 
         }
         .choice-btn { 
-            font-size: 28px; 
-            padding: 12px 0; 
+            font-size: 26px; 
+            padding: 10px 0; 
             cursor: pointer; 
-            border: 4px solid #ecf0f1; 
-            border-radius: 15px; 
+            border: 3px solid #ecf0f1; 
+            border-radius: 12px; 
             background: #fff; 
-            box-shadow: 0 6px 0 #bdc3c7; 
+            box-shadow: 0 5px 0 #bdc3c7; 
             transition: all 0.1s; 
             color: #2c3e50; 
             font-weight: bold;
             user-select: none; 
             -webkit-tap-highlight-color: transparent;
         }
-        .choice-btn:active { transform: translateY(4px); box-shadow: 0 2px 0 #bdc3c7; }
+        .choice-btn:active { transform: translateY(4px); box-shadow: 0 1px 0 #bdc3c7; }
 
         /* アニメーション */
         .shake { animation: shake-ani 0.4s; background-color: #e74c3c !important; border-color: #c0392b !important; color: white !important; }
-        @keyframes shake-ani { 0% {transform: translateX(0);} 25% {transform: translateX(-6px);} 50% {transform: translateX(6px);} 75% {transform: translateX(-6px);} 100% {transform: translateX(0);} }
+        @keyframes shake-ani { 0% {transform: translateX(0);} 25% {transform: translateX(-5px);} 50% {transform: translateX(5px);} 75% {transform: translateX(-5px);} 100% {transform: translateX(0);} }
 
         .jump { animation: jump-ani 0.6s infinite; }
         @keyframes jump-ani { 0%, 100% {transform: scale(1);} 50% {transform: scale(1.2) rotate(5deg);} }
@@ -146,27 +165,38 @@
         @keyframes float-up { 0% {opacity: 1; transform: translateY(0) scale(0.5);} 50% {transform: translateY(-50px) scale(1.2);} 100% {opacity: 0; transform: translateY(-100px) scale(1);} }
 
         /* メニュー画面 */
-        #menu-screen { text-align: center; padding-top: 50px; }
+        #menu-screen { 
+            text-align: center; 
+            padding-top: 30px; 
+            overflow-y: auto; /* メニューはスクロールできるように */
+            flex: 1;
+            width: 100%;
+        }
         
         .level-btn { 
-            display: block; width: 85%; margin: 15px auto; padding: 18px; 
+            display: block; width: 85%; margin: 12px auto; padding: 16px; 
             font-size: 18px; background: white; border: 4px solid #2ecc71; 
-            color: #27ae60; border-radius: 50px; cursor: pointer; 
-            box-shadow: 0 6px 0 #27ae60; transition: transform 0.1s; font-weight: bold;
+            color: #27ae60; border-radius: 40px; cursor: pointer; 
+            box-shadow: 0 5px 0 #27ae60; transition: transform 0.1s; font-weight: bold;
         }
-        .level-btn:active { transform: translateY(6px); box-shadow: none; }
+        .level-btn:active { transform: translateY(5px); box-shadow: none; }
         
         #message { height: 30px; font-size: 20px; font-weight: bold; color: #e74c3c; margin: 5px 0; }
 
         /* 戻るボタン */
-        .back-btn { margin-top: auto; background: none; border: none; color: #95a5a6; text-decoration: underline; cursor: pointer; padding: 20px; }
+        .back-btn { 
+            margin-top: auto; 
+            background: none; border: none; color: #95a5a6; 
+            text-decoration: underline; cursor: pointer; padding: 15px; 
+            font-size: 14px;
+        }
     </style>
 </head>
 <body>
 
 <div class="game-wrapper">
     <div id="menu-screen">
-        <h1 style="color:#2c3e50; margin:0 0 30px 0; font-size: 40px;">ひらがなパーク</h1>
+        <h1 style="color:#2c3e50; margin:0 0 20px 0; font-size: 32px;">ひらがなパーク</h1>
         <button class="level-btn" onclick="startGame(1)">Lv.1 １文字あな（きほん）</button>
         <button class="level-btn" onclick="startGame(2)">Lv.2 ２文字あな（きほん）</button>
         <button class="level-btn" onclick="startGame(3)">Lv.3 ぜんぶ入力（きほん）</button>
@@ -193,7 +223,7 @@
             <div class="word-area" id="word-slots"></div>
             <div class="choices" id="choices-area"></div>
             
-            <button class="back-btn" onclick="location.reload()">あきらめてメニューにもどる</button>
+            <button class="back-btn" onclick="location.reload()">メニューにもどる</button>
         </div>
     </div>
 </div>
@@ -508,4 +538,3 @@
 </script>
 </body>
 </html>
-
