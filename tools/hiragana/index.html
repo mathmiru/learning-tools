@@ -10,10 +10,9 @@
             text-align: center; 
             background-color: #2c3e50; 
             margin: 0; padding: 0; 
-            overflow: hidden; /* スクロール禁止にしてアプリっぽくする */
+            overflow: hidden; /* スクロール禁止 */
             touch-action: manipulation; 
             color: #333;
-            /* iOSでのバウンススクロール防止 */
             position: fixed;
             width: 100%;
             height: 100%;
@@ -22,28 +21,28 @@
         /* ゲーム画面全体 */
         .game-wrapper {
             width: 100%;
-            max-width: 600px; /* PCで見るときは広がりすぎないように */
+            max-width: 600px;
             margin: 0 auto; 
             background: #eef9f0; 
-            height: 100dvh; /* dvhを使うとアドレスバーを除いた高さピッタリになる */
+            height: 100dvh; /* アドレスバー除外の高さ */
             display: flex; 
             flex-direction: column; 
             position: relative;
             box-shadow: 0 0 20px rgba(0,0,0,0.5);
         }
 
-        /* HUD (スコア表示など) */
+        /* HUD */
         .hud {
             background: #34495e; 
             color: white; 
-            padding: 8px 15px; /* 少し狭くして画面を有効活用 */
+            padding: 8px 15px; 
             display: flex; 
             justify-content: space-between; 
             align-items: center;
             font-size: 18px; 
             font-weight: bold; 
             border-bottom: 4px solid #2c3e50;
-            flex-shrink: 0; /* 縮まないように固定 */
+            flex-shrink: 0; 
         }
         .score-box { color: #f1c40f; font-size: 22px; }
         .combo-box { color: #e74c3c; font-size: 18px; opacity: 0; transition: opacity 0.2s; }
@@ -51,13 +50,13 @@
 
         /* メインエリア */
         .container { 
-            padding: 10px; /* 余白を減らす */
+            padding: 10px; 
             flex: 1; 
             display: flex; 
             flex-direction: column; 
             align-items: center; 
-            justify-content: space-evenly; /* 上下にバランスよく配置 */
-            overflow-y: auto; /* 万が一画面が小さすぎたらスクロール許可 */
+            justify-content: space-evenly; 
+            overflow-y: auto; 
         }
         
         /* イラストとヒント */
@@ -72,11 +71,10 @@
             margin-bottom: 10px; 
         }
         #illust-display { 
-            font-size: 100px; /* 少し調整 */
+            font-size: 100px; 
             line-height: 1;
             transition: transform 0.2s; 
             cursor: default; 
-            /* 絵文字がOSによってずれるのを防ぐ */
             display: inline-block;
         }
         
@@ -100,7 +98,7 @@
             flex-wrap: wrap; 
         }
         .slot { 
-            width: 50px; height: 50px; /* スマホ向けに少し調整 */
+            width: 50px; height: 50px; 
             line-height: 50px; 
             font-size: 28px; 
             font-weight: bold; 
@@ -168,7 +166,7 @@
         #menu-screen { 
             text-align: center; 
             padding-top: 30px; 
-            overflow-y: auto; /* メニューはスクロールできるように */
+            overflow-y: auto; 
             flex: 1;
             width: 100%;
         }
@@ -231,7 +229,6 @@
 <script>
     // ---------------------------------------------------------
     // 【真・完全版】データ定義
-    // 基本50音から、濁音・半濁音・拗音（小さいやゆよ）まで網羅
     // ---------------------------------------------------------
     const basicWords = [
         // あ行
@@ -248,7 +245,8 @@
         {word:'そうじ', icon:'🧹', target:[0]}, 
         // た行
         {word:'たいこ', icon:'🥁', target:[0]}, {word:'ちいず', icon:'🧀', target:[0]},
-        {word:'つくえ', icon:'🏫', target:[0]}, {word:'てぶくろ', icon:'🧤', target:[0]},
+        {word:'つき', icon:'🌙', target:[0]}, // ← 【修正】つくえ(学校)を「つき(月)」に変更
+        {word:'てぶくろ', icon:'🧤', target:[0]},
         {word:'とけい', icon:'⏰', target:[0]}, 
         // な行
         {word:'なす', icon:'🍆', target:[0]}, {word:'にんじん', icon:'🥕', target:[0]},
@@ -276,7 +274,7 @@
     const complexWords = [
         // がぎぐげご
         {word:'がっこう', icon:'🏫', target:[0]}, {word:'ぎたあ', icon:'🎸', target:[0]},
-        {word:'ぐろおぶ', icon:'🧤', target:[0]}, {word:'げえむ', icon:'🎮', target:[0]},
+        {word:'ぐるぐる', icon:'🌀', target:[0]}, {word:'げえむ', icon:'🎮', target:[0]},
         {word:'ごりら', icon:'🦍', target:[0]},
         // ざじずぜぞ
         {word:'ざりがに', icon:'🦞', target:[0]}, {word:'じいぱん', icon:'👖', target:[0]},
@@ -433,17 +431,14 @@
         let correctChar = currentQuiz.word[targetIdx];
         let pool = [correctChar];
 
-        // 誤答（ダミー）作成ロジック
         if (currentLevel >= 4) {
             const youonChars = ['ゃ','ゅ','ょ','っ','や','ゆ','よ','つ'];
             const dakuMap = {
                 'か':'が','き':'ぎ','く':'ぐ','け':'げ','こ':'ご','さ':'ざ','し':'じ','す':'ず','せ':'ぜ','そ':'ぞ','た':'だ','ち':'ぢ','つ':'づ','て':'で','と':'ど','は':'ばぱ','ひ':'びぴ','ふ':'ぶぷ','へ':'べぺ','ほ':'ぼぽ','が':'か','ぎ':'き','ぐ':'く','げ':'け','ご':'こ','ざ':'さ','じ':'し','ず':'す','ぜ':'せ','ぞ':'そ','だ':'た','ぢ':'ち','づ':'つ','て':'で','ど':'と','ば':'はぱ','び':'ひぴ','ぶ':'ふぷ','べ':'へぺ','ぼ':'ほぽ','ぱ':'はば','ぴ':'ひび','ぷ':'ふぶ','ぺ':'へべ','ぽ':'ほぼ'
             };
-            // 拗音なら拗音を混ぜる
             if (youonChars.includes(correctChar)) {
                 pool = [...new Set([correctChar, ...youonChars])].slice(0, 6);
             } 
-            // 濁音・半濁音なら関連文字を混ぜる
             else if (dakuMap[correctChar]) {
                 let relatives = dakuMap[correctChar].split('');
                 pool = [...new Set([correctChar, ...relatives])];
