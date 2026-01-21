@@ -5,7 +5,97 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>わり算クエスト！</title>
     <style>
-        body{font-family:"Meryro","Hiragino Kaku Gothic ProN",sans-serif;background-color:#1a1a2e;color:white;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;margin:0;overflow:hidden;touch-action:manipulation}#_0x1{text-align:center}.c_b{display:block;width:280px;padding:15px;margin:10px;font-size:18px;font-weight:bold;border-radius:10px;cursor:pointer;border:none;color:white;box-shadow:0 5px 0 rgba(0,0,0,0.3)}.c1{background:#4caf50}.c2{background:#2196f3}.c3{background:#9c27b0}#_0x2{display:none;width:90%;max-width:450px;text-align:center}#_0x3{background:#ffeb3b;color:#333;padding:5px 10px;border-radius:5px;font-size:13px;font-weight:bold;margin-bottom:10px}#_0x4{width:100%;height:20px;background:#444;border-radius:10px;margin-bottom:5px;overflow:hidden;border:2px solid #fff}#_0x5{width:0%;height:100%;background:linear-gradient(90deg,#4fc3f7,#00e5ff);transition:width 0.3s ease}#_0x6{display:flex;justify-content:space-between;font-weight:bold;margin-bottom:10px;color:#4fc3f7;font-size:14px}#_0x7{height:150px;display:flex;flex-direction:column;align-items:center;justify-content:center}#_0x8{font-size:70px;transition:0.3s}#_0x9{font-size:60px;font-weight:900;margin-top:-10px;color:#fff;text-shadow:0 0 10px #000}#_0xa{background:rgba(255,255,255,0.1);border:1px dashed #4fc3f7;padding:8px;border-radius:8px;margin-bottom:10px;font-size:22px;color:#ffeb3b;min-height:30px;font-weight:bold}#_0xb{height:35px;display:flex;justify-content:center;gap:5px;margin-bottom:10px}.g_m{background:#ffd700;color:#333;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:bold;border:2px solid white;animation:p_p 0.3s forwards}@keyframes p_p{from{transform:scale(0)}to{transform:scale(1)}}#_0xc{background:#fff;color:#333;padding:10px;border-radius:8px;margin-bottom:15px;font-weight:bold;min-height:40px}#_0xd{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:15px}.w_b{background:#3f51b5;color:white;border:none;padding:12px 0;font-size:20px;font-weight:bold;border-radius:8px;cursor:pointer;box-shadow:0 4px 0 #1a237e}.w_b:active{transform:translateY(2px);box-shadow:0 2px 0 #1a237e}#_0xe{background:#ff9800;color:white;padding:15px;border:none;border-radius:50px;font-size:20px;font-weight:bold;display:none;width:100%;cursor:pointer}.s_h{animation:s_k 0.3s}@keyframes s_k{0%,100%{transform:translateX(0)}25%{transform:translateX(-10px);color:red}75%{transform:translateX(10px);color:red}}#_0x_lu{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);z-index:999;flex-direction:column;align-items:center;justify-content:center;text-align:center}#_0x_lu h2{font-size:48px;color:#ffeb3b;margin:0;text-shadow:0 0 20px #ff9800;animation:p_p 0.5s cubic-bezier(0.175,0.885,0.32,1.275)}#_0x_lu p{font-size:20px;margin:20px 0}.tap_next{font-size:14px;color:#aaa;margin-top:40px;animation:blink 1s infinite}@keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+        body {
+            font-family: "Meryro", "Hiragino Kaku Gothic ProN", sans-serif;
+            background-color: #1a1a2e;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 10px;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+            touch-action: manipulation
+        }
+
+        /* --- タイトル画面 --- */
+        #_0x1 { text-align: center; margin-top: 50px; }
+        .c_b { display: block; width: 280px; padding: 15px; margin: 10px; font-size: 18px; font-weight: bold; border-radius: 10px; cursor: pointer; border: none; color: white; box-shadow: 0 5px 0 rgba(0,0,0,0.3) }
+        .c1 { background: #4caf50 } .c2 { background: #2196f3 } .c3 { background: #9c27b0 }
+
+        /* --- ゲーム画面レイアウト --- */
+        #_0x2 { display: none; width: 95%; max-width: 450px; text-align: center; }
+        
+        /* ヘッダー部分を整理 */
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 10px;
+            gap: 10px;
+        }
+        #_0x3 { background: #ffeb3b; color: #333; padding: 8px; border-radius: 5px; font-size: 12px; font-weight: bold; flex: 1; line-height: 1.4; }
+        .exit_b {
+            background: #e91e63;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            font-size: 12px;
+            font-weight: bold;
+            border-radius: 5px;
+            cursor: pointer;
+            box-shadow: 0 3px 0 #880e4f;
+            white-space: nowrap;
+        }
+
+        #_0x4 { width: 100%; height: 18px; background: #444; border-radius: 10px; margin-bottom: 5px; overflow: hidden; border: 2px solid #fff }
+        #_0x5 { width: 0%; height: 100%; background: linear-gradient(90deg, #4fc3f7, #00e5ff); transition: width 0.3s ease }
+        #_0x6 { display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 8px; color: #4fc3f7; font-size: 13px }
+        
+        #_0x7 { height: 150px; display: flex; flex-direction: column; align-items: center; justify-content: center }
+        #_0x8 { font-size: 65px; transition: 0.3s }
+        #_0x9 { font-size: 55px; font-weight: 900; margin-top: -10px; color: #fff; text-shadow: 0 0 10px #000 }
+        
+        #_0xa { background: rgba(255,255,255,0.1); border: 1px dashed #4fc3f7; padding: 8px; border-radius: 8px; margin-bottom: 10px; font-size: 18px; color: #ffeb3b; height: 30px; line-height: 30px; font-weight: bold; overflow: hidden; }
+        #_0xb { height: 35px; display: flex; justify-content: center; gap: 5px; margin-bottom: 10px }
+        .g_m { background: #ffd700; color: #333; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: bold; border: 2px solid white; animation: p_p 0.3s forwards }
+        #_0xc { background: #fff; color: #333; padding: 10px; border-radius: 8px; margin-bottom: 15px; font-weight: bold; height: 24px; line-height: 24px; }
+
+        .btn-container { height: 170px; position: relative; width: 100%; }
+        #_0xd { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; position: absolute; width: 100%; top: 0; }
+        .w_b { background: #3f51b5; color: white; border: none; padding: 12px 0; font-size: 20px; font-weight: bold; border-radius: 8px; cursor: pointer; box-shadow: 0 4px 0 #1a237e }
+        
+        #_0xe { background: #ff9800; color: white; padding: 20px; border: none; border-radius: 50px; font-size: 22px; font-weight: bold; display: none; width: 100%; cursor: pointer; position: absolute; top: 10px; left: 0; right: 0; box-shadow: 0 5px 0 #e65100; }
+
+        /* --- ダイアログ共通 --- */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85);
+            z-index: 1000;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+        .modal-box {
+            background: #2a2a40;
+            border: 3px solid #ffeb3b;
+            padding: 25px;
+            border-radius: 15px;
+            width: 80%;
+            max-width: 320px;
+        }
+        .modal-btns { display: flex; gap: 10px; justify-content: center; margin-top: 20px; }
+        .m_btn { padding: 10px 20px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; min-width: 80px; }
+        .m_yes { background: #e91e63; color: white; }
+        .m_no { background: #777; color: white; }
+
+        @keyframes p_p { from { transform: scale(0) } to { transform: scale(1) } }
+        .tap_next { font-size: 14px; color: #aaa; margin-top: 40px; animation: blink 1s infinite }
+        @keyframes blink { 0%, 100% { opacity: 1 } 50% { opacity: 0.3 } }
     </style>
 </head>
 <body>
@@ -16,25 +106,47 @@
         <button class="c_b c2" onclick="_0x_f(2)">レベル2（+ 11, 13）</button>
         <button class="c_b c3" onclick="_0x_f(3)">レベル3（+ 17, 19）</button>
     </div>
+
     <div id="_0x2">
-        <div id="_0x3">【ルール】モンスターの数字を「わりきれる数字」でこうげきしよう！</div>
+        <div class="game-header">
+            <div id="_0x3">モンスターをわりきれる数字でこうげきしよう！</div>
+            <button class="exit_b" onclick="_0x_open_exit()">タイトルへ</button>
+        </div>
+        
         <div id="_0x6">
             <div>プレイヤーLv: <span id="_0x10">1</span></div>
             <div>つぎのLvまで: <span id="_0x11">0 / 15</span></div>
         </div>
         <div id="_0x4"><div id="_0x5"></div></div>
+        
         <div id="_0x7"><div id="_0x8">👾</div><div id="_0x9">?</div></div>
         <div id="_0xa">モンスターがあらわれた！</div>
         <div id="_0xb"></div>
         <div id="_0xc">どの数字でこうげきする？</div>
-        <div id="_0xd"></div>
-        <button id="_0xe" onclick="_0x_next()">つぎの敵をさがす</button>
+        
+        <div class="btn-container">
+            <div id="_0xd"></div>
+            <button id="_0xe" onclick="_0x_next()">つぎの敵をさがす</button>
+        </div>
     </div>
-    <div id="_0x_lu" onclick="this.style.display='none'">
-        <h2 id="_0x_lu_h">LEVEL UP!</h2>
-        <p id="_0x_lu_t"></p>
+
+    <div id="exit_modal" class="modal-overlay">
+        <div class="modal-box">
+            <h3 style="color:#ffeb3b;margin-top:0">確認</h3>
+            <p>タイトルにもどりますか？<br><small>（レベルはリセットされます）</small></p>
+            <div class="modal-btns">
+                <button class="m_btn m_yes" onclick="location.reload()">はい</button>
+                <button class="m_btn m_no" onclick="_0x_close_exit()">いいえ</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="_0x_lu" class="modal-overlay" onclick="this.style.display='none'">
+        <h2 id="_0x_lu_h" style="font-size:48px;color:#ffeb3b;text-shadow:0 0 20px #ff9800;">LEVEL UP!</h2>
+        <p id="_0x_lu_t" style="font-size:20px;"></p>
         <div class="tap_next">画面をタップしてつぎへ</div>
     </div>
+
 <script>
 (function(){
     const _0xS = [
@@ -47,11 +159,16 @@
     let _lv = 1, _plv = 1, _xp = 0, _tgt = 0, _prms = [];
     const _db = {1:[2,3,5,7], 2:[2,3,5,7,11,13], 3:[2,3,5,7,11,13,17,19]};
 
+    // ダイアログ操作
+    window._0x_open_exit = () => { document.getElementById('exit_modal').style.display = 'flex'; };
+    window._0x_close_exit = () => { document.getElementById('exit_modal').style.display = 'none'; };
+
     window._0x_f = function(n) {
         _lv = n; _prms = _db[n];
         _g(_0xK(0))('_0x1')[_0xK(1)][_0xK(2)] = _0xK(3);
         _g(_0xK(0))('_0x2')[_0xK(1)][_0xK(2)] = _0xK(4);
         const btns = _g(_0xK(0))('_0xd');
+        btns.innerHTML = '';
         btns[_0xK(1)].gridTemplateColumns = (n===1) ? "repeat(2,1fr)" : "repeat(4,1fr)";
         _prms.forEach(p => {
             const b = _g(_0xK(5))('button'); b.className = 'w_b'; b.textContent = p;
@@ -107,10 +224,8 @@
             _xp -= 0.5;
             if(_xp < 0 && _plv > 1) {
                 _plv--; _xp = (_plv===1)?14:(_plv===2)?19:24;
-                _0x_pop(_0xK(18), "レベルが下がってしまった...<br>つぎはもっと慎重にいこう！");
+                _0x_pop(_0xK(18), "レベルが下がってしまった...");
             }
-            const mon = _g(_0xK(0))('_0x8');
-            mon.classList.remove('s_h'); void mon.offsetWidth; mon.classList.add('s_h');
             _0x_u();
         }
     }
@@ -125,7 +240,7 @@
         const mx = (_plv===1)?15:(_plv===2)?20:25;
         if(_xp >= mx) {
             _plv++; _xp = 0;
-            _0x_pop(_0xK(17), "プレイヤーレベルが <b>"+_plv+"</b> になった！<br>敵がさらに合体して強くなるぞ！");
+            _0x_pop(_0xK(17), "レベルが "+_plv+" になった！");
         }
         _0x_u();
     }
