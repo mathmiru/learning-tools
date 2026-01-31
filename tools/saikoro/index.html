@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dice Sim</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: sans-serif; margin: 0; background: #f0f2f5; display: flex; flex-direction: column; align-items: center; height: 100vh; overflow: hidden; }
+        .app-container { background: white; width: 95%; max-width: 500px; height: 98vh; display: flex; flex-direction: column; padding: 10px; box-sizing: border-box; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h2 { font-size: 1.1rem; margin: 5px 0; text-align: center; color: #333; }
+        .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 5px; }
+        .input-group { grid-column: span 2; display: flex; align-items: center; justify-content: center; gap: 10px; background: #f8f9fa; padding: 8px; border-radius: 5px; }
+        button { padding: 10px; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 0.9rem; }
+        .btn-run { background: #007bff; color: white; }
+        .btn-skip { background: #6c757d; color: white; }
+        .btn-reset { background: #dc3545; color: white; grid-column: span 2; padding: 5px; margin-top: 5px; }
+        button:disabled:not(.btn-skip) { opacity: 0.5; }
+        .dice-display { font-size: 3rem; text-align: center; height: 1.2em; margin: 5px 0; color: #333; }
+        .rolling { animation: r_ 0.3s infinite linear; display: inline-block; }
+        @keyframes r_ { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .chart-container { flex-grow: 1; min-height: 0; position: relative; }
+        .stats-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin-top: 10px; }
+        .stats-table th, .stats-table td { border: 1px solid #eee; padding: 6px; text-align: center; }
+        .stats-table th { background: #f8f9fa; color: #666; }
+        .total-row { font-weight: bold; background: #eee; }
+    </style>
+</head>
+<body>
+<div class="app-container">
+    <h2>さいころ分布シミュレーター</h2>
+    <div class="controls">
+        <div class="input-group">
+            <label>回数:</label>
+            <input type="number" id="_v0" value="10" min="1" style="width: 70px; padding: 5px; border: 1px solid #ccc; border-radius: 4px;">
+        </div>
+        <button class="btn-run" id="_b1" onclick="_f1()">なげる</button>
+        <button class="btn-skip" id="_b2" onclick="_f2()">スキップ</button>
+        <button class="btn-reset" id="_b3" onclick="_f3()">リセット</button>
+    </div>
+    <div class="dice-display" id="_d0"></div>
+    <div class="chart-container"><canvas id="_c0"></canvas></div>
+    <table class="stats-table">
+        <tr><th>目</th><td>1</td><td>2</td><td>3</td><td>4</td><td>5</td><td>6</td><th class="total-row">計</th></tr>
+        <tr><th>回</th><td id="_s0">0</td><td id="_s1">0</td><td id="_s2">0</td><td id="_s3">0</td><td id="_s4">0</td><td id="_s5">0</td><td id="_st" class="total-row">0</td></tr>
+    </table>
+</div>
+<script>
+(function(_0x1,_0x2){const _0x3=[0,0,0,0,0,0],_0x4=['\u2680','\u2681','\u2682','\u2683','\u2684','\u2685'];let _0x5=0,_0x6=!1,_0x7=!1,_0x8;const _0x9=document['getElementById']('_c0')['getContext']('2d');_0x8=new Chart(_0x9,{type:'bar',data:{labels:['1','2','3','4','5','6'],datasets:[{label:'',data:_0x3,backgroundColor:'#3498db'}]},options:{maintainAspectRatio:!1,plugins:{legend:{display:!1}},scales:{y:{beginAtZero:!0,ticks:{precision:0}}}}});window['_f1']=async function(){if(_0x6)return;_0x6=!0;_0x7=!1;document['getElementById']('_b1')['disabled']=!0;document['getElementById']('_b3')['disabled']=!0;const _0xa=parseInt(document['getElementById']('_v0')['value'])||0;const _0xb=document['getElementById']('_d0');let _0xc=_0xa;for(let i=0;i<_0xa;i++){if(_0x7){for(let j=0;j<_0xc;j++){_0x3[Math['floor'](Math['random']()*6)]++;_0x5++}break}_0xb['innerHTML']='<span class="rolling">\uD83C\uDFB2</span>';await new Promise(r=>setTimeout(r,60));const _0xd=Math['floor'](Math['random']()*6);_0x3[_0xd]++;_0x5++;_0xc--;_0xb['innerText']=_0x4[_0xd];_0xe();await new Promise(r=>setTimeout(r,40))}_0xb['innerText']='\u304a\u308f\u308a';_0xe();_0x6=!1;document['getElementById']('_b1')['disabled']=!1;document['getElementById']('_b3')['disabled']=!1};window['_f2']=function(){if(_0x6){_0x7=!0}else{const _0xa=parseInt(document['getElementById']('_v0')['value'])||0;for(let i=0;i<_0xa;i++){_0x3[Math['floor'](Math['random']()*6)]++;_0x5++}document['getElementById']('_d0')['innerText']='\u304a\u308f\u308a';_0xe()}};window['_f3']=function(){if(_0x6)return;_0x3['fill'](0);_0x5=0;document['getElementById']('_d0')['innerText']='';_0xe();_0x8['update']()};function _0xe(){_0x3['forEach']((v,i)=>document['getElementById']('_s'+i)['innerText']=v);document['getElementById']('_st')['innerText']=_0x5;_0x8['data']['datasets'][0]['data']=_0x3;_0x8['update']('none')}})();
+</script>
+</body>
+</html>
