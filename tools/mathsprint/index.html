@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>算数スプリント</title>
+<style>
+    * { box-sizing: border-box; touch-action: manipulation; } /* ズーム防止 */
+    body, html { margin: 0; padding: 0; width: 100%; height: 100%; font-family: 'Helvetica Neue', Arial, sans-serif; background-color: #f0f0f0; overflow: hidden; user-select: none; }
+    .screen { position: absolute; inset: 0; display: none; flex-direction: column; }
+    .active { display: flex; }
+    header { height: 50px; background: #333; color: white; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; z-index: 100; }
+    .back-btn { background: #e74c3c; border: none; color: white; padding: 6px 15px; border-radius: 4px; cursor: pointer; font-size: 0.9rem; font-weight: bold; }
+    #title-screen { background: linear-gradient(135deg, #1e3c72, #2a5298); align-items: center; justify-content: center; text-align: center; }
+    #medal-count-display { background: rgba(255,255,255,0.2); color: #ffd700; padding: 8px 20px; border-radius: 20px; font-weight: bold; margin-bottom: 20px; border: 2px solid #ffd700; }
+    .btn-container { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 90%; max-width: 440px; }
+    .btn { background: white; border: none; padding: 16px; font-size: 1.1rem; font-weight: bold; border-radius: 12px; cursor: pointer; box-shadow: 0 4px 0 #bbb; color: #333; }
+    .btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #bbb; }
+    .btn.adult { background: #ff7e5f; color: white; box-shadow: 0 4px 0 #d45d40; }
+    .btn.math-dept { grid-column: span 2; background: #8e44ad; color: white; box-shadow: 0 4px 0 #6c3483; }
+    #track-area { height: 25vh; min-height: 150px; position: relative; background: linear-gradient(to bottom, #87CEEB 0%, #b4e4ff 50%, #228B22 50%, #32CD32 100%); border-bottom: 4px solid #fff; overflow: hidden; }
+    #goal-line { position: absolute; right: 5%; top: 0; bottom: 0; width: 12px; background: repeating-linear-gradient(45deg, #000, #000 8px, #fff 8px, #fff 16px); }
+    .character { position: absolute; left: 0; width: 50px; height: 50px; transition: left 0.1s linear; }
+    .char-img { font-size: 40px; transform: scaleX(-1); display: inline-block; animation: bob 0.4s infinite alternate; }
+    @keyframes bob { from { transform: scaleX(-1) translateY(0); } to { transform: scaleX(-1) translateY(-6px); } }
+    .boosting .char-img::after { content: '🔥'; position: absolute; left: 25px; font-size: 20px; }
+    .stunned .char-img { transform: scaleX(-1) rotate(20deg); opacity: 0.5; filter: grayscale(1); animation: none; }
+    #control-panel { flex: 1; background: #222; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 10px; gap: 10px; }
+    #q-display-row { background: #000; padding: 10px 20px; border-radius: 10px; width: 95%; max-width: 400px; text-align: center; border: 2px solid #444; }
+    #question-text { font-size: 2.2rem; font-weight: bold; color: #ffeb3b; }
+    #answer-preview { font-size: 2.2rem; color: #00e676; min-width: 60px; display: inline-block; margin-left: 10px; }
+    #numpad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: 95%; max-width: 320px; }
+    .num-btn { background: #444; color: white; border: none; font-size: 1.3rem; height: 52px; border-radius: 8px; cursor: pointer; }
+    .num-btn.enter { background: #2ecc71; grid-column: span 2; font-weight: bold; }
+    .num-btn.clear { background: #e74c3c; }
+    #overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.95); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 200; color: white; text-align: center; }
+    .overlay-btns { display: flex; flex-direction: column; gap: 15px; margin-top: 20px; width: 220px; }
+</style>
+</head>
+<body>
+
+<div id="title-screen" class="screen active">
+    <h1 style="color:white; font-size: 2.5rem; text-shadow: 2px 2px 0 #000; margin-bottom: 10px;">算数スプリント</h1>
+    <div id="medal-count-display">🏅 ゲットしたメダル: <span id="total-medals">0</span></div>
+    <div class="btn-container">
+        <button class="btn" onclick="_i(1)">1年生</button>
+        <button class="btn" onclick="_i(2)">2年生</button>
+        <button class="btn" onclick="_i(3)">3年生</button>
+        <button class="btn" onclick="_i(4)">4年生〜</button>
+        <button class="btn adult" onclick="_i(99)">大人</button>
+        <button class="btn math-dept" onclick="_i(100)">🔥 数学科</button>
+    </div>
+</div>
+
+<div id="game-screen" class="screen">
+    <header><span id="header-info">Round 1</span><button class="back-btn" onclick="location.reload()">タイトルへ</button></header>
+    <div id="track-area">
+        <div id="goal-line"></div>
+        <div id="player" class="character" style="top:20%"><div class="char-img">🏃</div></div>
+        <div id="rival" class="character" style="top:60%"><div id="rival-img" class="char-img">🐢</div></div>
+    </div>
+    <div id="control-panel">
+        <div id="q-display-row"><span id="question-text">---</span><span id="answer-preview"></span></div>
+        <div id="numpad">
+            <button class="num-btn" onclick="_a('7')">7</button><button class="num-btn" onclick="_a('8')">8</button><button class="num-btn" onclick="_a('9')">9</button>
+            <button class="num-btn" onclick="_a('4')">4</button><button class="num-btn" onclick="_a('5')">5</button><button class="num-btn" onclick="_a('6')">6</button>
+            <button class="num-btn" onclick="_a('1')">1</button><button class="num-btn" onclick="_a('2')">2</button><button class="num-btn" onclick="_a('3')">3</button>
+            <button class="num-btn clear" onclick="_c()">C</button><button class="num-btn" onclick="_a('0')">0</button><button class="num-btn" onclick="_a('.')">.</button>
+            <button class="num-btn enter" onclick="_k()">決定</button>
+        </div>
+    </div>
+    <div id="overlay">
+        <h2 id="res-msg" style="font-size: 3rem;">かち！🥇</h2>
+        <p id="res-detail" style="margin: 20px 0; font-size: 1.2rem;"></p>
+        <div class="overlay-btns">
+            <button class="btn" id="next-act-btn" onclick="_nx()" style="background:#2ecc71; color:white;">つぎの相手へ</button>
+            <button class="btn" id="back-to-title-btn" onclick="location.reload()" style="background:#444; color:white;">タイトルへもどる</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const _R = [
+        { n: "カメ", s: 0.038, i: "🐢" }, { n: "ウサギ", s: 0.046, i: "🐇" },
+        { n: "ウマ", s: 0.058, i: "🐎" }, { n: "チーター", s: 0.072, i: "🐆" },
+        { n: "ロケット", s: 0.088, i: "🚀" }
+    ];
+    let _s = { g: 1, r: 0, f: false, a: 0, p: 0, v: 0, s: 0.05, t: "", l: "" };
+
+    window.onload = () => { document.getElementById('total-medals').innerText = localStorage.getItem('totalMedals') || 0; };
+
+    function _i(g) { _s.g = g; _s.r = 0; document.getElementById('title-screen').classList.remove('active'); document.getElementById('game-screen').classList.add('active'); _st(); }
+
+    function _st() {
+        _s.p = 0; _s.v = 0; _s.t = ""; _s.s = 0.05; _s.f = true;
+        document.getElementById('header-info').innerText = `${_R[_s.r].n}と対決！`;
+        document.getElementById('rival-img').innerText = _R[_s.r].i;
+        document.getElementById('overlay').style.display = 'none';
+        _nq(); _lp();
+    }
+
+    function _rn(m, n=0){ return Math.floor(Math.random() * m) + n; }
+
+    function _gq() {
+        const r = _s.r, g = _s.g; let t = (Math.random() < 0.7 || r === 0) ? r : _rn(r);
+        if (g === 1) {
+            if (t === 0) return Math.random() < 0.5 ? `${_rn(6,1)}+${_rn(4,0)}` : `${_rn(6,4)}-${_rn(4,0)}`;
+            if (t === 1) { let a = _rn(10,1); return Math.random() < 0.5 ? `${a}+${10-a}` : `10-${a}`; }
+            if (t === 2) return `${_rn(6,5)}+${_rn(6,5)}`;
+            if (t === 3) { let a = _rn(9,2); return `${a+_rn(5,1)}-${a}`; }
+            return Math.random() < 0.5 ? `${_rn(6,1)*10}+${_rn(4,1)*10}` : `100-${_rn(9,1)*10}`;
+        } else if (g === 2) {
+            if (t === 0) return Math.random() < 0.5 ? `${_rn(70,11)}+${_rn(8,1)}` : `${_rn(70,11)}-${_rn(8,1)}`;
+            if (t === 1) return Math.random() < 0.5 ? `${_rn(50,15)}+${_rn(9,6)}` : `${_rn(50,15)}-${_rn(9,6)}`;
+            if (t === 2) return `${_rn(4,2)}×${_rn(9,1)}`;
+            if (t === 3) return `${_rn(4,6)}×${_rn(9,1)}`;
+            return `${_rn(30,11)}+${_rn(30,11)}`;
+        } else if (g === 3) {
+            if (t === 0) { let b = _rn(8,2); return `${b*_rn(9,1)}÷${b}`; }
+            if (t === 1) return `${_rn(8,2)*10}×${_rn(5,2)}`;
+            if (t === 2) return `${_rn(6,1)*100}+${_rn(4,1)*100}`;
+            if (t === 3) return `${_rn(20,11)}×${_rn(4,2)}`;
+            return `${(_rn(9,1)/10).toFixed(1)}+${(_rn(9,1)/10).toFixed(1)}`;
+        } else if (g === 4) {
+            if (t === 0) return `${(_rn(15,5)/10).toFixed(1)}+${(_rn(9,5)/10).toFixed(1)}`;
+            if (t === 1) { let b = _rn(5,2); return `${b*_rn(15,5)}÷${b}`; }
+            if (t === 2) { let b = _rn(4,2)*10; return `${b*_rn(5,2)}÷${b}`; }
+            if (t === 3) { let a = _rn(5,2); return `${a}×(${_rn(5,2)}+${_rn(5,1)})`; }
+            return `${_rn(8,2)}×25`;
+        } else if (g === 99) {
+            if (t === 0) return `${_rn(60,20)}+${_rn(60,20)}`;
+            if (t === 1) return `${_rn(16,4)}×${_rn(9,3)}`;
+            if (t === 2) return `${_rn(16,11)}×${_rn(16,11)}`;
+            if (t === 3) { let b = _rn(15,5); return `${b*_rn(15,5)}÷${b}`; }
+            return `1000-${_rn(850,150)}`;
+        } else if (g === 100) {
+            if (t === 0) return `${_rn(40,11)}×${_rn(19,11)}`;
+            if (t === 1) return `${_rn(200,50)}×${_rn(9,7)}`;
+            if (t === 2) return `2**${_rn(6,5)}`; 
+            if (t === 3) return `${_rn(99,11)}+${_rn(99,11)}-${_rn(50,10)}`;
+            let b = _rn(25,13); return `${b*_rn(20,11)}÷${b}`;
+        }
+        return "1+1";
+    }
+
+    function _nq() {
+        let q = ""; for(let i=0; i<15; i++) { let x = _gq(); if(x !== _s.l) { q = x; break; } }
+        _s.l = q; document.getElementById('question-text').innerText = q.replace('**','の').replace('*','×').replace('/','÷') + " =";
+        _s.a = eval(q.replace('×','*').replace('÷','/'));
+        if(!Number.isInteger(_s.a)) _s.a = parseFloat(_s.a.toFixed(1));
+        document.getElementById('answer-preview').innerText = "";
+    }
+
+    function _a(n){ _s.t += n; document.getElementById('answer-preview').innerText = _s.t; }
+    function _c(){ _s.t = ""; document.getElementById('answer-preview').innerText = ""; }
+
+    function _k(){
+        if(parseFloat(_s.t) === _s.a){
+            _s.p += 2.0; _s.s = Math.min(0.125, _s.s + 0.05);
+            document.getElementById('player').classList.add('boosting');
+            setTimeout(()=>document.getElementById('player').classList.remove('boosting'), 600);
+            _nq();
+        } else {
+            _s.s = 0.03; document.getElementById('player').classList.add('stunned');
+            setTimeout(()=>document.getElementById('player').classList.remove('stunned'), 800);
+        }
+        _c();
+    }
+
+    function _lp() {
+        if (!_s.f) return;
+        _s.p += _s.s; _s.v += _R[_s.r].s;
+        if (_s.s > 0.015) _s.s *= 0.996;
+        document.getElementById('player').style.left = _s.p + '%';
+        document.getElementById('rival').style.left = _s.v + '%';
+        if (_s.p >= 90) _ed(true); else if (_s.v >= 90) _ed(false); else requestAnimationFrame(_lp);
+    }
+
+    function _ed(w) {
+        _s.f = false; const o = document.getElementById('overlay'), n = document.getElementById('next-act-btn'), t = document.getElementById('back-to-title-btn');
+        o.style.display = 'flex';
+        if (w) {
+            let c = parseInt(localStorage.getItem('totalMedals') || 0) + 1;
+            localStorage.setItem('totalMedals', c);
+            document.getElementById('total-medals').innerText = c;
+            document.getElementById('res-msg').innerText = "かち！🥇";
+            document.getElementById('res-detail').innerText = "すばらしい スピード！";
+            if (_s.r < 4) { n.style.display = 'block'; t.style.display = 'none'; }
+            else { n.style.display = 'none'; t.style.display = 'block'; document.getElementById('res-msg').innerText = "完全制覇！🏆"; }
+        } else {
+            document.getElementById('res-msg').innerText = "まけ…🐢"; document.getElementById('res-detail').innerText = "つぎは もっと はやく！";
+            n.style.display = 'none'; t.style.display = 'block';
+        }
+    }
+
+    function _nx() { _s.r++; _st(); }
+</script>
+</body>
+</html>
