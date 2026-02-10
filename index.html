@@ -38,6 +38,22 @@
       margin: 32px auto;
       padding: 0 20px;
     }
+    .section-title {
+      margin: 40px 0 20px;
+      font-size: 22px;
+      display: flex;
+      align-items: center;
+      color: #2c3e50;
+    }
+    .section-title::before {
+      content: "";
+      display: inline-block;
+      width: 6px;
+      height: 24px;
+      background: #4a90e2;
+      margin-right: 12px;
+      border-radius: 3px;
+    }
     .grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
@@ -51,6 +67,8 @@
       color: #333;
       box-shadow: 0 6px 14px rgba(0,0,0,0.08);
       transition: transform 0.15s ease, box-shadow 0.15s ease;
+      display: flex;
+      flex-direction: column;
     }
     .card:hover {
       transform: translateY(-4px);
@@ -64,21 +82,11 @@
       margin: 0;
       font-size: 14px;
       color: #666;
+      line-height: 1.5;
     }
-    
-    /* --- 追加したスタイル：仕切り用 --- */
-    .section-separator {
-      margin: 60px 0 24px; /* 上に広めの余白 */
-      padding-bottom: 10px;
-      border-bottom: 2px dashed #cbd5e0; /* 点線のライン */
-      color: #555;
-      font-size: 20px;
-    }
-    /* ---------------------------------- */
-
     footer {
       text-align: center;
-      padding: 32px 16px;
+      padding: 48px 16px;
       font-size: 12px;
       color: #888;
     }
@@ -98,115 +106,100 @@
 </header>
 
 <main>
+  
+  <h2 class="section-title">算数学習ツール</h2>
   <div class="grid">
-
     <a class="card" href="tools/tasizannhikizannrennsyuu/">
-      <h2>たしざん・ひきざんチャレンジ</h2>
+      <h2>たしざん・ひきざん</h2>
       <p>たしざん・ひきざんをくりかえしれんしゅうしよう</p>
     </a>
-
     <a class="card" href="tools/kurisagari/">
       <h2>くりさがり</h2>
       <p>くりさがりのけいさんをさわってやってみよう</p>
     </a>
-
     <a class="card" href="tools/kuraidori/">
       <h2>おおきなかず</h2>
       <p>ブロックをならべて、かずのしくみをマスターしよう</p>
     </a>
-
-     <a class="card" href="tools/numberrush/">
-      <h2>ナンバーラッシュ</h2>
-      <p>数の感覚と論理をきたえよう（ゲーム）</p>
-    </a>
-
-    <a class="card" href="tools/mathsprint/">
-      <h2>算数スプリント</h2>
-      <p>計算スピードを高めよう（ゲーム）</p>
-    </a>
-    
     <a class="card" href="tools/tokei/">
       <h2>とけい</h2>
       <p>とけいををうごかしておぼえよう</p>
     </a>
-
     <a class="card" href="tools/kuku/">
       <h2>九九のいみ</h2>
       <p>九九をいみをみてみよう</p>
     </a>
-    
     <a class="card" href="tools/kukurennsyuu/">
       <h2>九九チャレンジ</h2>
       <p>九九をくりかえしれんしゅうしよう</p>
     </a>
-
     <a class="card" href="tools/tape/">
       <h2>テープ図</h2>
       <p>テープ図をそうさしてりかいしよう</p>
     </a>
-
     <a class="card" href="tools/warizannwomitemiyou/">
       <h2>わりざん</h2>
       <p>わりざんのいみをみてみよう</p>
     </a>
-    
     <a class="card" href="tools/warizanrennsyuu/">
       <h2>わり算チャレンジ</h2>
       <p>わり算をくりかえしれんしゅうしよう</p>
     </a>
-
-    <a class="card" href="tools/soinsuubunnkai/">
-      <h2>わり算クエスト（素因数分解）</h2>
-      <p>てきをたおしてレベルアップしよう(ゲーム）</p>
-    </a>
-
-     <a class="card" href="tools/numlock/">
-      <h2>NUMｰLOCK（ナムｰロック）</h2>
-      <p>あんごうをかいどくしよう(ゲーム）</p>
-    </a>
-    
     <a class="card" href="tools/kabunsuutaibunsuu/">
       <h2>仮分数と帯分数</h2>
       <p>等しい仮分数と帯分数を見てみよう</p>
     </a>
-
     <a class="card" href="tools/bunsuunokahougennpou/">
       <h2>分数の足し算・引き算</h2>
       <p>分数の足し算・引き算を見てみよう</p>
     </a>
-
-     <a class="card" href="tools/blockhunt/">
-      <h2>ブロック・ハント</h2>
-      <p>空間認知能力をゲームで鍛えよう（ゲーム）</p>
-    </a>
-
     <a class="card" href="tools/saikoro/">
       <h2>サイコロの出る目</h2>
       <p>大数の法則（試行を増やすと理論値に近づく）</p>
     </a>
-    
-   <a class="card" href="tools/pi/">
-      <h2>π</h2>
+    <a class="card" href="tools/pi/">
+      <h2>π（円周率）</h2>
       <p>ビュフォンの針とモンテカルロ法による円周率の導出</p>
     </a>
-  
   </div>
-  <h2 class="section-separator">番外編（その他の教科）</h2>
 
+  <h2 class="section-title">算数ゲーム</h2>
   <div class="grid">
-     
+    <a class="card" href="tools/numberrush/">
+      <h2>ナンバーラッシュ</h2>
+      <p>数の感覚と論理をきたえよう</p>
+    </a>
+    <a class="card" href="tools/mathsprint/">
+      <h2>算数スプリント</h2>
+      <p>計算スピードを高めよう</p>
+    </a>
+    <a class="card" href="tools/soinsuubunnkai/">
+      <h2>わり算クエスト</h2>
+      <p>素因数分解で敵をたおしてレベルアップしよう</p>
+    </a>
+    <a class="card" href="tools/numlock/">
+      <h2>NUMｰLOCK</h2>
+      <p>あんごうをかいどくしよう</p>
+    </a>
+    <a class="card" href="tools/blockhunt/">
+      <h2>ブロック・ハント</h2>
+      <p>空間認知能力をゲームで鍛えよう</p>
+    </a>
+  </div>
+
+  <h2 class="section-title">番外編（その他の教科）</h2>
+  <div class="grid">
     <a class="card" href="tools/hiragana/">
       <h2>ひらがなパーク</h2>
       <p>ゲームでひらがなをおぼえよう</p>
     </a>
-    
     <a class="card" href="tools/ti/">
       <h2>天動説と地動説</h2>
       <p>地球の運動について（理科）</p>
     </a>
+  </div>
 
-    </div>
-  </main>
+</main>
 
 <footer>
   <p>© 2024 mathmiru. All Rights Reserved.</p>
