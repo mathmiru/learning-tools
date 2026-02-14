@@ -5,117 +5,121 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
 <title>Division Challenge</title>
 <style>
-  body{font-family:"Hiragino Maru Gothic ProN",sans-serif;background:linear-gradient(#f5fbff,#e0f2ff);text-align:center;margin:0;padding:10px}h1{color:#4caf50;font-size:1.8em;margin:10px 0}.card{background:#fff;border-radius:24px;box-shadow:0 6px 12px rgba(0,0,0,.15);padding:20px;max-width:420px;margin:auto;position:relative;min-height:420px}.question{font-size:2.6em;margin:15px 0}input{font-size:2em;width:90px;text-align:center;border-radius:12px;border:2px solid #ccc;margin:4px}button,select{font-size:1.2em;margin:6px;padding:10px 18px;border-radius:20px;border:none;cursor:pointer}.btn-submit{background:#4caf50;color:#fff;width:80%;font-weight:700;box-shadow:0 4px #388e3c;margin-top:10px}.btn-submit:active{box-shadow:none;transform:translateY(4px)}.btn-start{background:#ff7a00;color:#fff;font-size:1.5em;padding:20px 40px;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10;width:80%;box-shadow:0 6px #d35400}.btn-reset{background:#999;color:#fff;font-size:.9em;margin-top:30px;padding:8px 15px}.bear{font-size:3.5em;margin:10px 0}.growth{font-size:.85em;margin-bottom:10px}.stages span{opacity:.3;font-weight:700;margin:0 2px}.stages .active{opacity:1;color:#4caf50;font-size:1.2em}.bar{background:#eee;border-radius:10px;height:16px;margin-top:8px;overflow:hidden;border:1px solid #ddd}.bar-inner{height:100%;width:0;background:linear-gradient(90deg,#a5d6a7,#4caf50);transition:width .4s ease-out}.result{font-size:1.4em;height:1.6em;margin-top:10px;font-weight:700}.status{margin-top:10px;font-size:1.1em}.hidden{display:none}
+body{font-family:"Hiragino Maru Gothic ProN",sans-serif;background:linear-gradient(#f5fbff,#e0f2ff);text-align:center;margin:0;padding:10px;display:flex;flex-direction:column;align-items:center;min-height:100vh}h1{color:#4caf50;font-size:1.8em;margin:10px 0}.card{background:#fff;border-radius:24px;box-shadow:0 6px 12px rgba(0,0,0,.15);padding:20px;width:100%;max-width:400px;min-height:420px;display:flex;flex-direction:column;justify-content:center;position:relative}.hidden{display:none!important}.setup-group{margin-bottom:20px}label{display:block;margin-bottom:8px;font-weight:700;color:#555;font-size:1em}select{font-size:1.2em;padding:10px;border-radius:12px;border:2px solid #4caf50;width:85%;margin-bottom:15px;background:#fff}.question{font-size:2.6em;margin:15px 0;font-weight:700;color:#333}input{font-size:2em;width:80px;text-align:center;border-radius:12px;border:2px solid #ccc;margin:4px;outline:0}input:focus{border-color:#4caf50}button{font-size:1.2em;padding:12px 24px;border-radius:50px;border:none;cursor:pointer;font-weight:700;transition:.2s}.btn-start{background:#ff7a00;color:#fff;font-size:1.5em;width:80%;box-shadow:0 6px #d35400}.btn-start:active{transform:translateY(4px);box-shadow:none}.btn-submit{background:#4caf50;color:#fff;width:80%;box-shadow:0 4px #388e3c}.btn-submit:disabled{background:#ccc;box-shadow:none;cursor:not-allowed}.result{font-size:1.4em;height:1.6em;margin-top:10px;font-weight:700}.bear{font-size:3.5em;margin:10px 0}.stages span{opacity:.2;font-weight:700;margin:0 3px;font-size:1.2em}.stages .active{opacity:1;color:#4caf50;transform:scale(1.2);display:inline-block}.bar{background:#eee;border-radius:10px;height:16px;margin:8px auto;width:80%;overflow:hidden;border:1px solid #ddd}.bar-inner{height:100%;width:0;background:linear-gradient(90deg,#a5d6a7,#4caf50);transition:width .4s}.status{margin-top:15px;font-size:1.1em;color:#666}.btn-reset{background:#999;color:#fff;font-size:.9em;margin-top:20px;padding:8px 15px}
 </style>
 </head>
 <body>
-
-<h1 id="x_h1"></h1>
-
+<h1 id="_0x4f2a"></h1>
 <div class="card">
-  <button id="s_btn" class="btn-start" onclick="window._sg()"></button>
-  <div id="g_a">
-    <span id="x_gr"></span><br />
-    <select id="gr_s" onchange="window._nq()"></select>
-
-    <div class="bear" id="b_i">🥚</div>
-    <div class="growth">
-      <div class="stages" id="st_l"></div>
-      <div class="bar"><div class="bar-inner" id="b_in"></div></div>
+    <div id="_0x1a2b">
+        <div class="bear">🐻</div>
+        <div class="setup-group">
+            <label id="_0x3d4e"></label>
+            <select id="_0x5c6d"></select>
+        </div>
+        <button class="btn-start" id="_0x7e8f" onclick="window['_0x9a1b']()"></button>
     </div>
-
-    <div class="question" id="qs">？</div>
-    <div>
-      <input id="an_q" type="text" inputmode="numeric" placeholder="?">
-      <span id="l_am"></span>
-      <input id="an_r" type="text" inputmode="numeric" placeholder="?">
+    <div id="_0x2b3c" class="hidden">
+        <div class="bear" id="_0x4d5e">🥚</div>
+        <div class="growth">
+            <div class="stages" id="_0x6f7a"></div>
+            <div class="bar"><div class="bar-inner" id="_0x8b9c"></div></div>
+        </div>
+        <div class="question" id="_0x0e1f">?</div>
+        <div>
+            <input type="text" id="_0x1c2d" inputmode="numeric" placeholder="?">
+            <span id="_0x3a4b"></span>
+            <input type="text" id="_0x5e6f" inputmode="numeric" placeholder="?">
+        </div>
+        <br>
+        <button id="_0x7a8b" class="btn-submit" onclick="window['_0x2f3d']()"></button>
+        <div class="result" id="_0x9c0d"></div>
+        <div id="_0x1d2e" style="font-size:1.2em;color:#4caf50;font-weight:700"></div>
     </div>
-
-    <button class="btn-submit" onclick="window._ck()" id="sb_btn"></button>
-    <div class="result" id="rs_d"></div>
-  </div>
 </div>
-
-<div class="status" id="st_tx"></div>
-<button id="r_btn" class="btn-reset" onclick="window._rg()"></button>
+<div class="status" id="_0x3f4e"></div>
+<button id="_0x5b6c" class="btn-reset hidden" onclick="window['_0x7c8d']()"></button>
 
 <script>
 (function(){
-  const _d=document, _w=window, _M=Math, _ge='getElementById', _tc='textContent', _ih='innerHTML';
-  let _a=0, _b=0, _q=0, _r=0, _cc=0, _tn=0, _st=0;
+    const _0x4821 = [
+        '\u308f\u308a\u7b97\u7121\u9650\u30c1\u30e3\u30ec\u30f3\u30b8', // 0: Title
+        '\u5b66\u5e74\u3092\u0020\u3048\u3089\u3093\u3067\u306d', // 1: Label
+        '\u306f\u3058\u3081\u308b\uff01', // 2: Start
+        '\u3053\u305f\u3048\u308b', // 3: Submit
+        '\u0020\u3042\u307e\u308a\u0020', // 4: Rest text
+        '\u2b55\u0020\u305b\u3044\u304b\u3044\uff01', // 5: OK
+        '\u274c\u0020\u3053\u305f\u3048\uff1a', // 6: NG
+        '\u26a0\u0020\u3059\u3046\u3058\u3092\u0020\u3044\u308c\u3066\u306d', // 7: Warn
+        '\u308c\u3093\u305e\u304f\u0020\u305b\u3044\u304b\u3044\uff01\u3059\u3054\u3044\uff01', // 8: Combo
+        '\u30bf\u30a4\u30c8\u30eb\u306b\u3082\u3069\u308b', // 9: Reset
+        '\u305b\u3044\u304b\u3044\uff1a', // 10
+        '\u0020\uff0f\u0020\u3082\u3093\u3060\u3044\uff1a' // 11
+    ];
+    const _0x1a2b = (i) => _0x4821[i];
+    const _d=document; let _vA,_vB,_vQ,_vR,_cc=0,_tn=0,_st=0,_lk=false;
 
-  const _u = {
-    h1: '\u308f\u308a\u7b97\u0020\u7121\u9650\u30c1\u30e3\u30ec\u30f3\u30b8',
-    st: '\u25b6\u0020\u306f\u3058\u3081\u308b\uff01',
-    gr: '\u5b66\u5e74\uff1a',
-    g_opt: [
-      ['3', '3\u5e74\u751f\u0020(\u3042\u307e\u308a\u306a\u3057)'],
-      ['4', '4\u5e74\u751f\u0020(\u3042\u307e\u308a\u3042\u308a)'],
-      ['56', '5\u30fb\u3016\u5e74\u751f\u0020(\u3061\u3087\u3063\u3068\u3080\u305a\u304b\u3057\u3044)']
-    ],
-    am: '\u0020\u3042\u307e\u308a\u0020',
-    sb: '\u3053\u305f\u3048\u308b',
-    ok: '\u2b55\u0020\u305b\u3044\u304b\u3044\uff01',
-    ng: '\u274c\u0020\u3053\u305f\u3048\uff1a',
-    rst: '\u6700\u521d\uff08\u3055\u3044\u3057\u3087\uff09\u304b\u3089\u0020\u3084\u308a\u306a\u304a\u3059',
-    tx: '\u305b\u3044\u304b\u3044\uff1a<span id="c_c">0</span>\u0020\uff0f\u0020\u3082\u3093\u3060\u3044\uff1a<span id="t_c">0</span>',
-    stages: [['\ud83e\udd5a0~','s1'],['\ud83d\udc2310~','s2'],['\ud83d\udc2420~','s3'],['\ud83d\udc3b30~','s4'],['\ud83e\uddfb40','s5']]
-  };
+    // UI Initializing
+    _d.getElementById('_0x4f2a').textContent=_0x1a2b(0);
+    _d.getElementById('_0x3d4e').textContent=_0x1a2b(1);
+    _d.getElementById('_0x7e8f').textContent=_0x1a2b(2);
+    _d.getElementById('_0x7a8b').textContent=_0x1a2b(3);
+    _d.getElementById('_0x3a4b').textContent=_0x1a2b(4);
+    _d.getElementById('_0x5b6c').textContent=_0x1a2b(9);
+    _d.getElementById('_0x3f4e').textContent=_0x1a2b(10)+'0'+_0x1a2b(11)+'0';
 
-  _d[_ge]('x_h1')[_tc]=_u.h1; _d[_ge]('s_btn')[_tc]=_u.st; _d[_ge]('x_gr')[_tc]=_u.gr;
-  _d[_ge]('l_am')[_tc]=_u.am; _d[_ge]('sb_btn')[_tc]=_u.sb; _d[_ge]('r_btn')[_tc]=_u.rst;
-  _d[_ge]('st_tx')[_ih]=_u.tx;
+    const _gs=_d.getElementById('_0x5c6d'), _stg=_d.getElementById('_0x6f7a');
+    [['3','3\u5e74\u751f (\u3042\u307e\u308a\u306a\u3057)'],['4','4\u5e74\u751f (\u3042\u307e\u308a\u3042\u308a)'],['56','5\u30fb6\u5e74\u751f (\u3080\u305a\u304b\u3057\u3044)']].forEach(o=>{let e=_d.createElement('option');e.value=o[0];e.textContent=o[1];_gs.appendChild(e)});
+    [['🥚','s1'],['🐣','s2'],['🐤','s3'],['🐻','s4'],['🧸','s5']].forEach(x=>{let s=_d.createElement('span');s.id=x[1];s.textContent=x[0];_stg.appendChild(s)});
 
-  const _gs=_d[_ge]('gr_s');
-  _u.g_opt.forEach(o=>{ let e=_d.createElement('option'); e.value=o[0]; e[_tc]=o[1]; _gs.appendChild(e)});
-  const _sl=_d[_ge]('st_l');
-  _u.stages.forEach(s=>{ let e=_d.createElement('span'); e.id=s[1]; e[_tc]=s[0]; _sl.appendChild(e)});
+    const _th=s=>s.replace(/[\uff10-\uff19]/g,x=>String.fromCharCode(x.charCodeAt(0)-0xfee0));
 
-  _w._nq = function() {
-    const v=_gs.value, lv=(v==='3')?{mB:9,r:0}:(v==='4')?{mB:9,r:1}:{mB:12,r:1};
-    if(!lv.r){ _d[_ge]('an_r').classList.add('hidden'); _d[_ge]('l_am').classList.add('hidden') }
-    else{ _d[_ge]('an_r').classList.remove('hidden'); _d[_ge]('l_am').classList.remove('hidden') }
-    _b=_M.floor(_M.random()*(lv.mB-1))+2; _q=_M.floor(_M.random()*9)+1;
-    _r=lv.r?_M.floor(_M.random()*_b):0; _a=_b*_q+_r;
-    _d[_ge]('qs')[_tc]=`${_a} \u00f7 ${_b} = ?`;
-    _d[_ge]('an_q').value=''; _d[_ge]('an_r').value=''; _d[_ge]('an_q').focus();
-  };
+    const _nq=()=>{
+        _lk=false;_d.getElementById('_0x7a8b').disabled=false;
+        const v=_gs.value, lv=(v==='3')?{mB:9,r:0}:(v==='4')?{mB:9,r:1}:{mB:12,r:1};
+        if(!lv.r){_d.getElementById('_0x5e6f').classList.add('hidden');_d.getElementById('_0x3a4b').classList.add('hidden')}
+        else{_d.getElementById('_0x5e6f').classList.remove('hidden');_d.getElementById('_0x3a4b').classList.remove('hidden')}
+        _vB=Math.floor(Math.random()*(lv.mB-1))+2;_vQ=Math.floor(Math.random()*9)+1;
+        _vR=lv.r?Math.floor(Math.random()*_vB):0;_vA=_vB*_vQ+_vR;
+        _d.getElementById('_0x0e1f').textContent=`${_vA} \u00f7 ${_vB} = ?`;
+        _d.getElementById('_0x1c2d').value='';_d.getElementById('_0x5e6f').value='';_d.getElementById('_0x1c2d').focus();
+    };
 
-  const _th=s=>s.replace(/[\uff10-\uff19]/g, x=>String.fromCharCode(x.charCodeAt(0)-0xfee0));
+    window['_0x2f3d']=()=>{
+        if(_lk)return;const sq=_d.getElementById('_0x1c2d').value, sr=_d.getElementById('_0x5e6f').value;
+        const uq=Number(_th(sq.trim())), ur=Number(_th(sr.trim()||'0')), res=_d.getElementById('_0x9c0d');
+        if(sq.trim()===''||isNaN(uq)||(sr.trim()===''&&!_d.getElementById('_0x5e6f').classList.contains('hidden'))){res.textContent=_0x1a2b(7);res.style.color='#e67e22';return}
+        _lk=true;_d.getElementById('_0x7a8b').disabled=true;_tn++;
+        if(uq===_vQ && ur===_vR){_cc++;_st++;res.textContent=_0x1a2b(5);res.style.color='#ff4500'}
+        else{_st=0;res.textContent=_0x1a2b(6)+_vQ+_0x1a2b(4)+_vR;res.style.color='#555'}
+        _d.getElementById('_0x3f4e').innerHTML=`${_0x1a2b(10)}<b style="color:#4caf50">${_cc}</b>${_0x1a2b(11)}${_tn}`;
+        _ub();_um();setTimeout(_nq,1000);
+    };
 
-  _w._ck = function() {
-    const uq=Number(_th(_d[_ge]('an_q').value.trim())), ur=Number(_th(_d[_ge]('an_r').value.trim()||'0'));
-    _tn++; const res=_d[_ge]('rs_d');
-    if(uq===_q && ur===_r){ _cc++; _st++; res[_tc]=_u.ok; res.style.color='#ff4500' }
-    else{ _st=0; res[_tc]=`${_u.ng}${_q}${_u.am}${_r}`; res.style.color='#555' }
-    _d[_ge]('c_c')[_tc]=_cc; _d[_ge]('t_c')[_tc]=_tn;
-    _ug(); setTimeout(_w._nq, 800);
-  };
+    const _ub=()=>{
+        const bar=_d.getElementById('_0x8b9c'),ids=['s1','s2','s3','s4','s5'];
+        ids.forEach(id=>_d.getElementById(id).classList.remove('active'));
+        let p=(_st/40)*100;bar.style.width=(p>100?100:p)+'%';
+        let ic='🥚',ai='s1';
+        if(_st>=40){ic='🧸';ai='s5'}else if(_st>=30){ic='🐻';ai='s4'}
+        else if(_st>=20){ic='🐤';ai='s3'}else if(_st>=10){ic='🐣';ai='s2'}
+        _d.getElementById('_0x4d5e').textContent=ic;_d.getElementById(ai).classList.add('active');
+    };
 
-  const _ug = function() {
-    const bar=_d[_ge]('b_in'), ids=['s1','s2','s3','s4','s5'];
-    ids.forEach(id=>_d[_ge](id).classList.remove('active'));
-    let p=(_st/40)*100; if(p>100)p=100; bar.style.width=p+'%';
-    let icon='🥚', act='s1';
-    if(_st<10){icon='🥚';act='s1'}else if(_st<20){icon='🐣';act='s2'}
-    else if(_st<30){icon='🐤';act='s3'}else if(_st<40){icon='🐻';act='s4'}else{icon='🧸';act='s5'}
-    _d[_ge]('b_i')[_tc]=icon; _d[_ge](act).classList.add('active');
-  };
+    const _um=()=>{const m=_d.getElementById('_0x1d2e');m.textContent=(_st>0&&_st%10===0)?`🎊 ${_st}${_0x1a2b(8)}`:'';};
 
-  _w._rg = function() {
-    _cc=0; _tn=0; _st=0;
-    _d[_ge]('c_c')[_tc]=0; _d[_ge]('t_c')[_tc]=0;
-    _d[_ge]('rs_d')[_tc]=''; _ug(); _w._nq();
-  };
+    window['_0x9a1b']=()=>{
+        _d.getElementById('_0x1a2b').classList.add('hidden');
+        _d.getElementById('_0x2b3c').classList.remove('hidden');
+        _d.getElementById('_0x5b6c').classList.remove('hidden');
+        _cc=0;_tn=0;_st=0;_nq();_ub();
+    };
 
-  _w._sg = function() { _d[_ge]('s_btn').classList.add('hidden'); _w._rg() };
+    window['_0x7c8d']=()=>location.reload();
 
-  _w.onload=()=>{
-    _ug();
-    ['an_q','an_r'].forEach(id=>{
-      _d[_ge](id).onkeydown=e=>{if(e.key==='Enter')_w._ck()}
-    });
-  };
+    _d.getElementById('_0x1c2d').onkeydown=e=>{if(e.key==='Enter')window['_0x2f3d']()};
+    _d.getElementById('_0x5e6f').onkeydown=e=>{if(e.key==='Enter')window['_0x2f3d']()};
+    _ub();
 })();
 </script>
 </body>
