@@ -1,117 +1,126 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Math Challenge</title>
-    <style>body{font-family:"Hiragino Maru Gothic ProN",sans-serif;background:linear-gradient(#f5fbff,#e0f2ff);text-align:center;margin:0;padding:10px}h1{color:#ff7a00;font-size:1.8em;margin:10px 0}.card{background:#fff;border-radius:24px;box-shadow:0 6px 12px rgba(0,0,0,.15);padding:20px;max-width:420px;margin:auto;position:relative;min-height:400px}.question{font-size:2.6em;margin:15px 0}input{font-size:2em;width:120px;text-align:center;border-radius:12px;border:2px solid #ccc;margin-bottom:15px}button,select{font-size:1.2em;margin:6px;padding:10px 18px;border-radius:20px;border:none;cursor:pointer}.btn-submit{background:#4cafef;color:#fff;width:80%;font-weight:700;box-shadow:0 4px #2a87c5}.btn-submit:active{box-shadow:none;transform:translateY(4px)}.btn-start{background:#ff7a00;color:#fff;font-size:1.5em;padding:20px 40px;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10;width:80%;box-shadow:0 6px #d35400}.btn-reset{background:#999;color:#fff;font-size:.9em;margin-top:30px;padding:8px 15px}.result{font-size:1.4em;height:1.6em;margin-top:10px;font-weight:700}.status{margin-top:10px;font-size:1.1em}.bear{font-size:3.5em;margin:10px 0}.growth{font-size:.85em;margin-bottom:10px}.stages span{opacity:.3;font-weight:700;margin:0 2px}.stages .active{opacity:1;color:#ff7a00;font-size:1.2em}.bar{background:#eee;border-radius:10px;height:16px;margin-top:8px;overflow:hidden;border:1px solid #ddd}.bar-inner{height:100%;width:0;background:linear-gradient(90deg,#ffd54f,#ff8a65);transition:width .4s ease-out}.hidden{display:none}</style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>算数無限チャレンジ</title>
+<style>
+body{font-family:"Hiragino Maru Gothic ProN",sans-serif;background:linear-gradient(#f5fbff,#e0f2ff);text-align:center;margin:0;padding:10px;display:flex;flex-direction:column;align-items:center;min-height:100vh}h1{color:#ff7a00;font-size:1.8em;margin:10px 0}.card{background:#fff;border-radius:24px;box-shadow:0 6px 12px rgba(0,0,0,.15);padding:20px;width:100%;max-width:400px;min-height:420px;display:flex;flex-direction:column;justify-content:center;position:relative}.hidden{display:none!important}.setup-group{margin-bottom:20px}label{display:block;margin-bottom:5px;font-weight:700;color:#555;font-size:.9em}select{font-size:1.2em;padding:10px;border-radius:12px;border:2px solid #4cafef;width:85%;margin-bottom:15px;background:#fff}.question{font-size:2.6em;margin:15px 0;font-weight:700}input{font-size:2em;width:120px;text-align:center;border-radius:12px;border:2px solid #ccc;margin-bottom:15px;outline:0}input:focus{border-color:#4cafef}button{font-size:1.2em;padding:12px 24px;border-radius:50px;border:none;cursor:pointer;font-weight:700}.btn-start{background:#ff7a00;color:#fff;font-size:1.5em;width:80%;box-shadow:0 6px #d35400}.btn-start:active{transform:translateY(4px);box-shadow:none}.btn-submit{background:#4cafef;color:#fff;width:80%;box-shadow:0 4px #2a87c5}.btn-submit:disabled{background:#ccc;box-shadow:none;cursor:not-allowed}.result{font-size:1.4em;height:1.6em;margin-top:10px;font-weight:700}.bear{font-size:3.5em;margin:10px 0}.stages span{opacity:.3;font-weight:700;margin:0 2px}.stages .active{opacity:1;color:#ff7a00;font-size:1.2em}.bar{background:#eee;border-radius:10px;height:16px;margin:8px auto;width:80%;overflow:hidden;border:1px solid #ddd}.bar-inner{height:100%;width:0;background:linear-gradient(90deg,#ffd54f,#ff8a65);transition:width .4s}.status{margin-top:15px;font-size:1.1em}.btn-reset{background:#999;color:#fff;font-size:.9em;margin-top:20px;padding:8px 15px}
+</style>
 </head>
 <body>
-    <h1 id="x_h1"></h1>
-    <div class="card">
-        <button id="s_btn" class="btn-start"></button>
-        <div id="g_a">
-            <div>
-                <select id="op_s"></select>
-                <select id="gr_s"></select>
-            </div>
-            <div class="bear" id="b_i">🥚</div>
-            <div class="growth">
-                <div class="stages" id="st_l"></div>
-                <div class="bar"><div class="bar-inner" id="b_in"></div></div>
-            </div>
-            <div class="question" id="qs">?</div>
-            <input type="text" id="ans_i" inputmode="numeric" pattern="[0-9]*" placeholder="?">
-            <br>
-            <button id="sb_btn" class="btn-submit" onclick="window._ck()"></button>
-            <div class="result" id="rs_d"></div>
-            <div id="mdl_d" style="font-size: 1.3em;"></div>
+<h1 id="_0x1f2a"></h1>
+<div class="card">
+    <div id="_0x4a21">
+        <div class="bear">🐻</div>
+        <div class="setup-group">
+            <label id="_0x9b12"></label>
+            <select id="_0x2c15"></select>
+            <label id="_0x8e34"></label>
+            <select id="_0x5d62"></select>
         </div>
+        <button class="btn-start" id="_0x0a1b"></button>
     </div>
-    <div class="status" id="st_tx"></div>
-    <button id="r_btn" class="btn-reset" onclick="window._rg()"></button>
+    <div id="_0x7f3e" class="hidden">
+        <div class="bear" id="_0x3d2c">🥚</div>
+        <div class="growth">
+            <div class="stages" id="_0x1b4a"></div>
+            <div class="bar"><div class="bar-inner" id="_0x6f5e"></div></div>
+        </div>
+        <div class="question" id="_0x2b3c">?</div>
+        <input type="text" id="_0x8d9e" inputmode="numeric" pattern="[0-9]*" placeholder="?">
+        <br>
+        <button id="_0x5f2a" class="btn-submit"></button>
+        <div class="result" id="_0x9a8b"></div>
+        <div id="_0x4d5e" style="font-size:1.2em;color:#ff7a00"></div>
+    </div>
+</div>
+<div class="status" id="_0x3f2a"></div>
+<button id="_0x1e2d" class="btn-reset hidden"></button>
 
 <script>
 (function(){
-    const _d=document, _w=window, _M=Math, _ge='\x67\x65\x74\x45\x6c\x65\x6d\x65\x6e\x74\x42\x79\x49\x64', _ih='\x69\x6e\x6e\x65\x72\x48\x54\x4d\x4c', _tc='\x74\x65\x78\x74\x43\x6f\x6e\x74\x65\x6e\x74';
-    let _a=1, _b=1, _cc=0, _tn=0, _st=0;
+    // 日本語テキストを難読化（16進数エスケープ）
+    const _0x59a2 = [
+        '\u305b\u3044\u304b\u3044\uff1a\u003c\u0073\u0070\u0061\u006e\u0020\u0069\u0064\u003d\u0022\u0063\u005f\u0063\u0022\u003e\u0030\u003c\u002f\u0073\u0070\u0061\u006e\u003e\u0020\uff0f\u0020\u3082\u3093\u3060\u3044\uff1a\u003c\u0073\u0070\u0061\u006e\u0020\u0069\u0064\u003d\u0022\u0074\u005f\u0063\u0022\u003e\u0030\u003c\u002f\u0073\u0070\u0061\u006e\u003e', // 0: ステータス
+        '\u7b97\u6570\u7121\u9650\u30c1\u30e3\u30ec\u30f3\u30b8', // 1: タイトル
+        '\u0061\u0064\u0064', '\u8db3\u3057\u7b97', // 2,3: 足し算
+        '\u0073\u0075\u0062', '\u5f15\u304d\u7b97', // 4,5: 引き算
+        '\u0031\u5e74\u751f', '\u0032\u5e74\u751f', '\u0033\u5e74\u751f', '\u0034\u5e74\u751f', '\u0035\u5e74\u751f', '\u0036\u5e74\u751f', // 6-11: 学年
+        '\u3053\u305f\u3048\u308b', // 12: 回答ボタン
+        '\u2b55\u0020\u305b\u3044\u304b\u3044\uff01', // 13: 正解
+        '\u274c\u0020\u3053\u305f\u3048\u306f\u0020', // 14: 不正解
+        '\u26a0\u0020\u3059\u3046\u3058\u3092\u0020\u3044\u308c\u3066\u306d', // 15: エラー
+        '\u308c\u3093\u305e\u304f\u305b\u3044\u304b\u3044\uff01\u3059\u3054\u3044\uff01', // 16: コンボ
+        '\u30bf\u30a4\u30c8\u30eb\u306b\u3082\u3069\u308b', // 17: リセット
+        '\u30e2\u30fc\u30c9', // 18: モードラベル
+        '\u304c\u304f\u306d\u3093', // 19: 学年ラベル
+        '\u25b6\u0020\u306f\u3058\u3081\u308b\uff01' // 20: 開始ボタン
+    ];
+    const _0x2e1a = (i) => _0x59a2[i];
+    const _d=document; let _a,_b,_cc=0,_tn=0,_st=0,_lk=false;
 
-    const _u = {
-        h1: '\u8db3\u3057\u7b97\u30fb\u5f15\u304d\u7b97\u0020\u7121\u9650\u30c1\u30e3\u30ec\u30f3\u30b8',
-        st: '\u25b6\u0020\u306f\u3058\u3081\u308b\uff01',
-        add: '\u8db3\u3057\u7b97',
-        sub: '\u5f15\u304d\u7b97',
-        g16: ['1\u5e74\u751f','2\u5e74\u751f','3\u5e74\u751f','4\u5e74\u751f','5\u5e74\u751f','6\u5e74\u751f'],
-        subm: '\u3053\u305f\u3048\u308b',
-        ok: '\u2b55\u0020\u305b\u3044\u304b\u3044\uff01',
-        ng: '\u274c\u0020\u3053\u305f\u3048\u306f\u0020',
-        err: '\u26a0\u0020\u3059\u3046\u3058\u3092\u0020\u3044\u308c\u3066\u306d',
-        ren: '\u308c\u3093\u305e\u304f\u0020\u305b\u3044\u304b\u3044\uff01\u3059\u3054\u3044\uff01',
-        rst: '\u6700\u521d\uff08\u3055\u3044\u3057\u3087\uff09\u304b\u3089\u0020\u3084\u308a\u306a\u304a\u3059',
-        stx: '\u305b\u3044\u304b\u3044\uff1a<span id="c_c">0</span>\u0020\uff0f\u0020\u3082\u3093\u3060\u3044\uff1a<span id="t_c">0</span>',
-        stgs: [['\ud83e\udd5a0~','s1'],['\ud83d\udc2310~','s2'],['\ud83d\udc2420~','s3'],['\ud83d\udc3b30~','s4'],['\ud83e\uddfb40','s5']]
-    };
+    // UI初期テキストセット
+    _d.getElementById('_0x1f2a').textContent=_0x2e1a(1);
+    _d.getElementById('_0x9b12').textContent=_0x2e1a(18);
+    _d.getElementById('_0x8e34').textContent=_0x2e1a(19);
+    _d.getElementById('_0x0a1b').textContent=_0x2e1a(20);
+    _d.getElementById('_0x5f2a').textContent=_0x2e1a(12);
+    _d.getElementById('_0x1e2d').textContent=_0x2e1a(17);
+    _d.getElementById('_0x3f2a').innerHTML=_0x2e1a(0);
 
-    // UI設定
-    _d[_ge]('x_h1')[_tc]=_u.h1; _d[_ge]('s_btn')[_tc]=_u.st; _d[_ge]('sb_btn')[_tc]=_u.subm; 
-    _d[_ge]('r_btn')[_tc]=_u.rst; _d[_ge]('st_tx')[_ih]=_u.stx;
+    // セレクトボックス生成
+    const _o=_d.getElementById('_0x2c15'),_g=_d.getElementById('_0x5d62');
+    [[_0x2e1a(2),_0x2e1a(3)],[_0x2e1a(4),_0x2e1a(5)]].forEach(x=>{let e=_d.createElement('option');e.value=x[0];e.textContent=x[1];_o.appendChild(e)});
+    [_0x2e1a(6),_0x2e1a(7),_0x2e1a(8),_0x2e1a(9),_0x2e1a(10),_0x2e1a(11)].forEach((x,i)=>{let e=_d.createElement('option');e.value=i+1;e.textContent=x;_g.appendChild(e)});
 
-    const _ops=_d[_ge]('op_s'), _grs=_d[_ge]('gr_s');
-    [['add',_u.add],['sub',_u.sub]].forEach(o=>{let e=_d.createElement('option');e.value=o[0];e[_tc]=o[1];_ops.appendChild(e)});
-    _u.g16.forEach((g,i)=>{let e=_d.createElement('option');e.value=i+1;e[_tc]=g;_grs.appendChild(e)});
-
-    const _sl=_d[_ge]('st_l');
-    _u.stgs.forEach(s=>{let e=_d.createElement('span');e.id=s[1];e[_tc]=s[0];_sl.appendChild(e)});
+    // ステージアイコン
+    const _sl=_d.getElementById('_0x1b4a');
+    [['🥚','s1'],['🐣','s2'],['🐤','s3'],['🐻','s4'],['🧸','s5']].forEach(x=>{let s=_d.createElement('span');s.id=x[1];s.textContent=x[0];_sl.appendChild(s)});
 
     const _nq=()=>{
-        const g=Number(_grs.value), op=_ops.value, lv={1:10,2:20,3:30,4:40,5:50,6:100}[g]||10;
-        if(op==='add'){
-            _a=_M.floor(_M.random()*lv)+1; _b=_M.floor(_M.random()*lv)+1;
-            _d[_ge]('qs')[_tc]=`${_a} + ${_b} = ?`;
-        }else{
-            _a=_M.floor(_M.random()*lv)+1; _b=_M.floor(_M.random()*_a)+1;
-            _d[_ge]('qs')[_tc]=`${_a} - ${_b} = ?`;
-        }
-        const i=_d[_ge]('ans_i');i.value='';i.focus();
+        _lk=false;_d.getElementById('_0x5f2a').disabled=false;
+        const g=Number(_g.value),op=_o.value,lv={1:10,2:20,3:30,4:40,5:50,6:100}[g]||10;
+        if(op===_0x2e1a(2)){_a=Math.floor(Math.random()*lv)+1;_b=Math.floor(Math.random()*lv)+1;_d.getElementById('_0x2b3c').textContent=`${_a} + ${_b} = ?`}
+        else{_a=Math.floor(Math.random()*lv)+1;_b=Math.floor(Math.random()*_a)+1;_d.getElementById('_0x2b3c').textContent=`${_a} - ${_b} = ?`}
+        const i=_d.getElementById('_0x8d9e');i.value='';i.focus();
     };
 
-    _w._ck=()=>{
-        const raw=_d[_ge]('ans_i').value, fix=raw.replace(/[\uff10-\uff19]/g,s=>String.fromCharCode(s.charCodeAt(0)-0xfee0)).trim();
-        const ans=Number(fix), op=_ops.value, res=_d[_ge]('rs_d');
-        if(fix===''||isNaN(ans)){res[_tc]=_u.err;return}
-        _tn++;
-        const cor=(op==='add')?(_a+_b):(_a-_b), is=(ans===cor);
-        if(is){_cc++;_st++;res[_tc]=_u.ok;res.style.color='#ff4500'}
-        else{_st=0;res[_tc]=_u.ng+cor;res.style.color='#555'}
-        _d[_ge]('c_c')[_tc]=_cc;_d[_ge]('t_c')[_tc]=_tn;
-        _ub();_um();setTimeout(_nq,800);
+    const _ck=()=>{
+        if(_lk)return;const raw=_d.getElementById('_0x8d9e').value;
+        const fix=raw.replace(/[\uff10-\uff19]/g,s=>String.fromCharCode(s.charCodeAt(0)-0xfee0)).trim();
+        const ans=Number(fix),res=_d.getElementById('_0x9a8b');
+        if(fix===''||isNaN(ans)){res.textContent=_0x2e1a(15);res.style.color='#e67e22';return}
+        _lk=true;_d.getElementById('_0x5f2a').disabled=true;_tn++;
+        const cor=(_o.value===_0x2e1a(2))?(_a+_b):(_a-_b);
+        if(ans===cor){_cc++;_st++;res.textContent=_0x2e1a(13);res.style.color='#ff4500'}
+        else{_st=0;res.textContent=_0x2e1a(14)+cor;res.style.color='#555'}
+        _d.getElementById('c_c').textContent=_cc;_d.getElementById('t_c').textContent=_tn;
+        _ub();_um();setTimeout(_nq,1000);
     };
 
     const _ub=()=>{
-        const bar=_d[_ge]('b_in'), ids=['s1','s2','s3','s4','s5'];
-        ids.forEach(id=>_d[_ge](id).classList.remove('active'));
-        let p=(_st/40)*100; if(p>100)p=100; bar.style.width=p+'%';
-        let icon='🥚', act='s1';
-        if(_st<10){icon='🥚';act='s1'}else if(_st<20){icon='🐣';act='s2'}
-        else if(_st<30){icon='🐤';act='s3'}else if(_st<40){icon='🐻';act='s4'}else{icon='🧸';act='s5'}
-        _d[_ge]('b_i')[_tc]=icon;_d[_ge](act).classList.add('active');
+        const bar=_d.getElementById('_0x6f5e'),ids=['s1','s2','s3','s4','s5'];
+        ids.forEach(id=>_d.getElementById(id).classList.remove('active'));
+        let p=(_st/40)*100;bar.style.width=(p>100?100:p)+'%';
+        let ic='🥚',ai='s1';
+        if(_st>=40){ic='🧸';ai='s5'}else if(_st>=30){ic='🐻';ai='s4'}
+        else if(_st>=20){ic='🐤';ai='s3'}else if(_st>=10){ic='🐣';ai='s2'}
+        _d.getElementById('_0x3d2c').textContent=ic;_d.getElementById(ai).classList.add('active');
     };
 
-    const _um=()=>{
-        const m=_d[_ge]('mdl_d');
-        m[_tc]=(_st>0&&_st%10===0)?`\ud83c\udfc5 ${_st}${_u.ren}`:(_st===0?'':'');
+    const _um=()=>{const m=_d.getElementById('_0x4d5e');m.textContent=(_st>0&&_st%10===0)?`🎊 ${_st}${_0x2e1a(16)}`:'';};
+
+    _d.getElementById('_0x0a1b').onclick=()=>{
+        _d.getElementById('_0x4a21').classList.add('hidden');
+        _d.getElementById('_0x7f3e').classList.remove('hidden');
+        _d.getElementById('_0x1e2d').classList.remove('hidden');
+        _cc=0;_tn=0;_st=0;_nq();_ub();
     };
 
-    _w._rg=()=>{
-        _cc=0;_tn=0;_st=0;
-        _d[_ge]('c_c')[_tc]=0;_d[_ge]('t_c')[_tc]=0;
-        _d[_ge]('rs_d')[_tc]='';_d[_ge]('mdl_d')[_tc]='';
-        _ub();_nq();
-    };
-
-    _d[_ge]('s_btn').onclick=function(){this.classList.add('hidden');_w._rg()};
-    _d[_ge]('ans_i').onkeydown=e=>{if(e.key==='Enter')_w._ck()};
-    _ub();
+    _d.getElementById('_0x1e2d').onclick=()=>location.reload();
+    _d.getElementById('_0x5f2a').onclick=_ck;
+    _d.getElementById('_0x8d9e').onkeydown=e=>{if(e.key==='Enter')_ck()};
 })();
 </script>
 </body>
