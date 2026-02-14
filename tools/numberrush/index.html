@@ -8,19 +8,24 @@
 :root{--b:#0f172a;--p:#1e293b;--t:#f8fafc;--a:#22d3ee}body{font-family:sans-serif;background:var(--b);color:var(--t);margin:0;padding:0;min-height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;touch-action:none}.s{display:none;flex-direction:column;align-items:center;justify-content:center;width:100%;height:100%;padding:5px;box-sizing:border-box}.active{display:flex}h1{font-size:32px;color:var(--a);margin:0 0 8px 0}.r{background:rgba(255,255,255,0.03);padding:10px;border-radius:12px;margin-bottom:12px;font-size:12px;color:#94a3b8;text-align:left;line-height:1.5;width:90%;max-width:320px;border:1px solid rgba(255,255,255,0.1)}b{color:var(--a)}.btn{background:var(--a);color:var(--b);border:none;padding:10px 0;margin:4px;width:260px;font-size:16px;font-weight:bold;border-radius:10px;cursor:pointer}#ea{width:95%;max-width:360px;height:75px;background:var(--p);border-radius:12px;margin-bottom:6px;display:flex;align-items:center;padding:8px;position:relative;box-sizing:border-box;border:1px solid #334155}#ei{font-size:38px;width:55px;text-align:center}#ef{flex-grow:1;margin-left:10px}#en{font-weight:bold;font-size:15px;margin-bottom:3px;color:#cbd5e1}#hb{width:100%;height:8px;background:#020617;border-radius:4px;overflow:hidden}#hf{width:100%;height:100%;background:#10b981;transition:width .3s}#ct{position:absolute;right:10px;top:5px;font-size:15px;color:#f59e0b;font-weight:bold;opacity:0}#tm{font-size:26px;font-weight:bold;color:#fff;margin-bottom:2px;text-align:center}#cs{font-size:13px;color:#64748b;margin-bottom:6px;height:16px;text-align:center;font-weight:bold}#g{display:grid;grid-template-columns:repeat(6,46px);gap:4px;padding:6px;background:rgba(0,0,0,0.3);border-radius:10px;touch-action:none;margin-bottom:6px}.c{width:46px;height:46px;background:#f1f5f9;color:#1e293b;font-size:20px;font-weight:bold;display:flex;align-items:center;justify-content:center;border-radius:6px}.n{background:#334155;color:#f43f5e}.sl{background:var(--a)!important;color:#white;transform:scale(0.9)}.ls{outline:3px solid #f59e0b}.sb{background:transparent;color:#94a3b8;border:1px solid #475569;padding:5px 18px;border-radius:20px;font-weight:bold;font-size:12px;cursor:pointer;margin-bottom:4px}.f{font-size:11px;color:#475569}.ex{background:none;border:none;color:#475569;margin-top:2px;text-decoration:underline;font-size:11px;cursor:pointer;padding:4px}.d,.h{position:absolute;font-size:26px;font-weight:bold;animation:da .7s forwards;pointer-events:none}.d{color:#f43f5e}.h{color:#10b981}@keyframes da{0%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(-40px)}}
 </style>
 </head>
-<body>
-<div id="s1" class="s active">
+<body onkeydown="return false;"> <div id="s1" class="s active">
 <h1>ナンバーラッシュ</h1>
-<div class="r">・すうじを <b>なぞって つなげて</b>、もくひょうの かずを つくろう！<br>・<b>ながく つなげるほど</b> ダメージが すごく あがるよ！<br>・まちがえると <b>ペナルティ</b> で てきの たいりょくが ふえるよ！<br>・<b>できないとき</b> は じどうで シャッフル されるよ。<br>・ボタンで シャッフル すると、てきが 1つ もどるよ。</div>
-<button class="btn" onclick="_x.s(1)">レベル 1 (10 を つくる)</button>
-<button class="btn" onclick="_x.s(2)">レベル 2 (いろいろな かず)</button>
-<button class="btn" onclick="_x.s(3)">レベル 3 (マイナス あり)</button>
+<div class="r">
+・すうじを <b>なぞって つなげて</b>、もくひょうの かずを つくろう！<br>
+・<b>ながく つなげるほど</b> ダメージが すごく あがるよ！<br>
+・まちがえると <b>ペナルティ</b> で てきの たいりょくが ふえるよ！<br>
+・<b>できないとき</b> は じどうで シャッフル されるよ。<br>
+・ボタンで <b>シャッフル</b> すると、てきが 1つ もどるよ。
+</div>
+<button class="btn" onclick="_x.s(1);this.blur()">レベル 1 (10 を つくる)</button>
+<button class="btn" onclick="_x.s(2);this.blur()">レベル 2 (いろいろな かず)</button>
+<button class="btn" onclick="_x.s(3);this.blur()">レベル 3 (マイナス あり)</button>
 </div>
 <div id="s2" class="s">
 <div id="ea"><div id="ei">💧</div><div id="ef"><div id="en">スライム</div><div id="hb"><div id="hf"></div></div></div><div id="ct">0 コンボ</div></div>
 <div id="tm">10</div><div id="cs">じゅんびは いい？</div>
 <div id="g"></div>
-<button class="sb" onclick="_x.ms()">🔄 シャッフル (ペナルティ)</button>
+<button class="sb" onclick="_x.ms();this.blur()">🔄 シャッフル (ペナルティ)</button>
 <div class="f">てんすう: <span id="sv">0</span></div>
 <button onclick="location.reload()" class="ex">やめる</button>
 </div>
@@ -39,8 +44,8 @@ uh(){let p=(this.eh/this.mh)*100;document.getElementById('hf').style.width=Math.
 nt(){this.tg=this.m===1?10:11+Math.floor(Math.random()*14);document.getElementById('tm').innerText=this.tg;document.getElementById('cs').innerText=this.tg+" を つくってね";setTimeout(()=>this.cd(),50)},
 cd(){let s=!1;for(let y=0;y<6;y++){for(let x=0;x<6;x++){if(this.df(x,y,0,this.cl[y][x].v,[`${x},${y}`])){s=!0;break}}if(s)break}if(!s)setTimeout(()=>this.as(),500)},
 df(x,y,d,c,v){if(c===this.tg&&d>=1)return!0;if(this.m!==3&&c>this.tg)return!1;if(d>6)return!1;const dr=[[0,1],[0,-1],[1,0],[-1,0],[1,1],[1,-1],[-1,1],[-1,-1]];for(let r of dr){let nx=x+r[0],ny=y+r[1];if(nx>=0&&nx<6&&ny>=0&&ny<6){let k=`${nx},${ny}`;if(!v.includes(k)){if(this.df(nx,ny,d+1,c+this.cl[ny][nx].v,[...v,k]))return!0}}}return!1},
-hm(e){if(!this.id)return;const t=e.touches?e.touches[0]:e;const l=document.elementFromPoint(t.clientX,t.clientY);if(l&&l.classList.contains('c')){const x=parseInt(l.dataset.x),y=parseInt(l.dataset.y),c=this.cl[y][x];if(this.sl.includes(c)){if(this.sl.length>1&&this.sl[this.sl.length-2]===c){this.sl.pop().e.classList.remove('sl','ls');if(this.sl.length>0)this.sl[this.sl.length-1].e.classList.add('ls')}return}if(this.sl.length>0){const a=this.sl[this.sl.length-1];if(Math.abs(a.x-x)>1||Math.abs(a.y-y)>1)return;a.e.classList.remove('ls')}this.sl.push(c);c.e.classList.add('sl','ls');let u=this.sl.reduce((a,b)=>a+b.v,0);document.getElementById('cs').innerText="いまの ごうけい: "+u}},
-re(){if(!this.id)return;this.id=!1;if(this.sl.length===0)return;let s=this.sl.reduce((a,b)=>a+b.v,0);if(s===this.tg&&this.sl.length>=2){this.cb++;let d=s*(this.sl.length*this.sl.length)*8*(1+(this.cb-1)*.5);this.eh-=d;this.sc+=Math.floor(d);document.getElementById('sv').innerText=this.sc;this.pe(Math.floor(d),'d');this.uc();this.uh();if(this.eh<=0){this.ei++;setTimeout(()=>this.sp(),500)}this.sl.forEach(c=>{c.e.style.transform="scale(0)";setTimeout(()=>{let n=this.cc(c.x,c.y);c.v=n.v;c.e.innerText=n.v;c.e.className=n.e.className;c.e.style.transform="scale(1)"},300)});this.mg("せいかい！");setTimeout(()=>this.nt(),600)}else{this.cb=0;this.uc();let h=Math.floor(this.mh*.1);this.eh=Math.min(this.mh,this.eh+h);this.uh();this.pe(h,'h');this.mg(s===this.tg?"2つ いじょう つなげて！（ペナルティ）":"ちがうよ: "+s+"（ペナルティ）")}this.sl.forEach(c=>c.e.classList.remove('sl','ls'));this.sl=[]},
+hm(e){if(!this.id)return;const t=e.touches?e.touches[0]:e;const l=document.elementFromPoint(t.clientX,t.clientY);if(l&&l.classList.contains('c')){const x=parseInt(l.dataset.x),y=parseInt(l.dataset.y),c=this.cl[y][x];if(this.sl.includes(c)){if(this.sl.length>1&&this.sl[this.sl.length-2]===c){this.sl.pop().e.classList.remove('sl','ls');if(this.sl.length>0)this.sl[this.sl.length-1].e.classList.add('ls')}return}if(this.sl.length>0){const a=this.sl[this.sl.length-1];if(Math.abs(a.x-x)>1||Math.abs(a.y-y)>1)return;a.e.classList.remove('ls')}this.sl.push(c);c.e.classList.add('sl','ls');document.getElementById('cs').innerText="なにを えらんだかな？"}},
+re(){if(!this.id)return;this.id=!1;if(this.sl.length===0)return;let s=this.sl.reduce((a,b)=>a+b.v,0);if(s===this.tg&&this.sl.length>=2){this.cb++;let d=s*(this.sl.length*this.sl.length)*8*(1+(this.cb-1)*.5);this.eh-=d;this.sc+=Math.floor(d);document.getElementById('sv').innerText=this.sc;this.pe(Math.floor(d),'d');this.uc();this.uh();if(this.eh<=0){this.ei++;setTimeout(()=>this.sp(),500)}this.sl.forEach(c=>{c.e.style.transform="scale(0)";setTimeout(()=>{let n=this.cc(c.x,c.y);c.v=n.v;c.e.innerText=n.v;c.e.className=n.e.className;c.e.style.transform="scale(1)"},300)});this.mg("せいかい！");setTimeout(()=>this.nt(),600)}else{this.cb=0;this.uc();let h=Math.floor(this.mh*.1);this.eh=Math.min(this.mh,this.eh+h);this.uh();this.pe(h,'h');this.mg("ざんねん！ まちがいだよ");}this.sl.forEach(c=>c.e.classList.remove('sl','ls'));this.sl=[]},
 uc(){const c=document.getElementById('ct');if(this.cb>1){c.innerText=this.cb+" コンボ！";c.style.opacity=1}else c.style.opacity=0},
 pe(v,t){const d=document.createElement('div');d.className=t;d.innerText=(t==='d'?"-":"+")+v;d.style.left="140px";d.style.top="20px";document.getElementById('ea').appendChild(d);setTimeout(()=>d.remove(),700)}
 };
