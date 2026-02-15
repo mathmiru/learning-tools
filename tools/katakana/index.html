@@ -1,0 +1,576 @@
+ああ<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>カタカナパーク</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <style>
+        body { 
+            font-family: 'Hiragino Kaku Gothic ProN', 'M PLUS Rounded 1c', sans-serif; 
+            text-align: center; 
+            background-color: #d35400; /* オレンジベース */
+            margin: 0; padding: 0; 
+            overflow-x: hidden; 
+            touch-action: manipulation; 
+            color: #333; 
+        }
+        
+        .game-wrapper {
+            max-width: 600px; 
+            margin: 0 auto; 
+            background: #fff5e6; /* 薄いオレンジ */
+            min-height: 100vh;
+            display: flex; 
+            flex-direction: column; 
+            position: relative;
+            box-shadow: 0 0 20px rgba(0,0,0,0.3);
+        }
+
+        .hud {
+            background: #e67e22; 
+            color: white; 
+            padding: 10px 20px;
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center;
+            font-size: 20px; 
+            font-weight: bold; 
+            border-bottom: 5px solid #d35400;
+        }
+        .score-box { color: #fff; font-size: 24px; text-shadow: 1px 1px 0 #a04000; }
+        .combo-box { color: #ffeaa7; font-size: 20px; opacity: 0; transition: opacity 0.2s; }
+        .combo-box.show { opacity: 1; transform: scale(1.2); }
+
+        .container { 
+            padding: 20px; 
+            flex: 1; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+        }
+        
+        .illust-area { 
+            position: relative; 
+            width: 100%; 
+            margin-bottom: 10px; 
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 200px;
+        }
+        #illust-display { 
+            font-size: 100px; 
+            line-height: 1.2; 
+            transition: transform 0.2s; 
+            cursor: default; 
+            margin-bottom: 5px;
+        }
+        #hiragana-hint {
+            font-size: 24px;
+            color: #e67e22;
+            font-weight: bold;
+            background: #fff;
+            padding: 4px 16px;
+            border-radius: 20px;
+            border: 2px solid #e67e22;
+        }
+        
+        .voice-btn {
+            position: absolute; right: 10px; bottom: 0;
+            background: #2ecc71; color: white; border: none;
+            border-radius: 50px; padding: 8px 16px; font-size: 16px; font-weight: bold;
+            cursor: pointer; box-shadow: 0 4px 0 #27ae60;
+        }
+        .voice-btn:active { transform: translateY(4px); box-shadow: none; }
+
+        .word-area { 
+            display: flex; 
+            justify-content: center; 
+            gap: 6px; 
+            margin-bottom: 25px; 
+            flex-wrap: wrap; 
+        }
+        .slot { 
+            width: 48px; height: 48px; 
+            line-height: 48px; 
+            font-size: 26px; 
+            font-weight: bold; 
+            background: #fff; 
+            border: 3px dashed #f39c12; 
+            border-radius: 10px; 
+            color: transparent; 
+            transition: all 0.2s; 
+        }
+        .slot.filled { 
+            background: #ffeaa7; 
+            border: 3px solid #d35400; 
+            color: #d35400; 
+            transform: scale(1.1); 
+            box-shadow: 0 4px 0 rgba(0,0,0,0.1); 
+        }
+        .static-char { 
+            font-size: 26px; 
+            font-weight: bold; 
+            color: #7f8c8d; 
+            width: 48px; 
+            line-height: 48px; 
+        }
+
+        .choices { 
+            display: grid; 
+            grid-template-columns: repeat(3, 1fr); 
+            gap: 10px; 
+            width: 100%; 
+            max-width: 380px; 
+        }
+        .choice-btn { 
+            font-size: 26px; 
+            padding: 15px 0; 
+            cursor: pointer; 
+            border: 4px solid #fad390; 
+            border-radius: 12px; 
+            background: #fff; 
+            box-shadow: 0 5px 0 #f39c12; 
+            transition: all 0.1s; 
+            color: #d35400; 
+            font-weight: bold;
+            user-select: none; 
+            -webkit-tap-highlight-color: transparent;
+        }
+        .choice-btn:active { transform: translateY(4px); box-shadow: 0 2px 0 #f39c12; }
+
+        .shake { animation: shake-ani 0.4s; background-color: #e74c3c !important; border-color: #c0392b !important; color: white !important; box-shadow:none !important; }
+        @keyframes shake-ani { 0% {transform: translateX(0);} 25% {transform: translateX(-5px);} 50% {transform: translateX(5px);} 75% {transform: translateX(-5px);} 100% {transform: translateX(0);} }
+        .jump { animation: jump-ani 0.6s infinite; }
+        @keyframes jump-ani { 0%, 100% {transform: scale(1);} 50% {transform: scale(1.2) rotate(5deg);} }
+
+        #menu-screen { text-align: center; padding-top: 40px; }
+        .level-btn { 
+            display: block; width: 85%; margin: 15px auto; padding: 18px; 
+            font-size: 18px; background: white; border: 4px solid #e67e22; 
+            color: #d35400; border-radius: 50px; cursor: pointer; 
+            box-shadow: 0 6px 0 #d35400; transition: transform 0.1s; font-weight: bold;
+        }
+        .level-btn:active { transform: translateY(6px); box-shadow: none; }
+        
+        .back-btn { margin-top: auto; background: none; border: none; color: #7f8c8d; text-decoration: underline; cursor: pointer; padding: 20px; }
+        #message { height: 30px; font-size: 18px; font-weight: bold; color: #e74c3c; margin: 5px 0; }
+    </style>
+</head>
+<body>
+
+<div class="game-wrapper">
+    <div id="menu-screen">
+        <h1 style="color:#d35400; margin:0 0 10px 0; font-size: 36px;">カタカナ・シティ</h1>
+        <p style="color:#e67e22; margin-bottom: 30px; font-weight:bold;">めざせ！ コンプリート！</p>
+        
+        <button class="level-btn" onclick="startGame(1)">Lv.1 １もじアナ（ア〜ン）</button>
+        <button class="level-btn" onclick="startGame(2)">Lv.2 ２もじアナ（ア〜ン）</button>
+        <button class="level-btn" onclick="startGame(3)">Lv.3 ぜんぶ（ア〜ン）</button>
+        <button class="level-btn" onclick="startGame(4)">Lv.4 だくおん・ちいさいもじ</button>
+    </div>
+
+    <div id="game-screen" style="display:none; flex-direction:column; height:100%;">
+        <div class="hud">
+            <div>スコア: <span id="score-val" class="score-box">0</span></div>
+            <div id="combo-display" class="combo-box">0 コンボ！</div>
+        </div>
+
+        <div class="container">
+            <div id="message"></div>
+            
+            <div class="illust-area">
+                <div id="illust-display"></div>
+                <div id="hiragana-hint"></div> <button class="voice-btn" onclick="playCurrentWord()">🔊 きく</button>
+            </div>
+
+            <div class="word-area" id="word-slots"></div>
+            <div class="choices" id="choices-area"></div>
+            
+            <button class="back-btn" onclick="location.reload()">メニューにもどる</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ---------------------------------------------------------
+    // カタカナ辞書データ
+    // ---------------------------------------------------------
+    
+    // 【基本の音（清音）】
+    const easyWords = [
+        // ア行
+        {hira:'あいす', word:'アイス', icon:'🍨'},
+        {hira:'いちご', word:'イチゴ', icon:'🍓'},
+        {hira:'うし', word:'ウシ', icon:'🐄'},
+        {hira:'えび', word:'エビ', icon:'🦐'},
+        {hira:'おに', word:'オニ', icon:'👹'},
+        // カ行
+        {hira:'かめ', word:'カメ', icon:'🐢'},
+        {hira:'きりん', word:'キリン', icon:'🦒'},
+        {hira:'くるま', word:'クルマ', icon:'🚗'},
+        {hira:'けーき', word:'ケーキ', icon:'🍰'},
+        {hira:'こあら', word:'コアラ', icon:'🐨'},
+        // サ行
+        {hira:'さかな', word:'サカナ', icon:'🐟'},
+        {hira:'しか', word:'シカ', icon:'🦌'},
+        {hira:'すいか', word:'スイカ', icon:'🍉'},
+        {hira:'せんす', word:'センス', icon:'🪭'},
+        {hira:'そふとくりーむ', word:'ソフトクリーム', icon:'🍦'},
+        // タ行
+        {hira:'たこ', word:'タコ', icon:'🐙'},
+        {hira:'ちーず', word:'チーズ', icon:'🧀'},
+        {hira:'つき', word:'ツキ', icon:'🌙'},
+        {hira:'て', word:'テ', icon:'✋'},
+        {hira:'とまと', word:'トマト', icon:'🍅'},
+        // ナ行
+        {hira:'なす', word:'ナス', icon:'🍆'},
+        {hira:'にく', word:'ニク', icon:'🍖'},
+        {hira:'ぬーどる', word:'ヌードル', icon:'🍜'},
+        {hira:'ねこ', word:'ネコ', icon:'🐈'},
+        {hira:'のーと', word:'ノート', icon:'📓'},
+        // ハ行
+        {hira:'はむ', word:'ハム', icon:'🥓'},
+        {hira:'ひこうき', word:'ヒコーキ', icon:'✈️'},
+        {hira:'ふね', word:'フネ', icon:'🚢'},
+        {hira:'へび', word:'ヘビ', icon:'🐍'},
+        {hira:'ほし', word:'ホシ', icon:'⭐'},
+        // マ行
+        {hira:'ますく', word:'マスク', icon:'😷'},
+        {hira:'みかん', word:'ミカン', icon:'🍊'},
+        {hira:'むし', word:'ムシ', icon:'🐛'},
+        {hira:'めがね', word:'メガネ', icon:'👓'},
+        {hira:'もも', word:'モモ', icon:'🍑'},
+        // ヤ行
+        {hira:'やきゅう', word:'ヤキュウ', icon:'⚾'},
+        {hira:'ゆき', word:'ユキ', icon:'☃️'},
+        {hira:'よっと', word:'ヨット', icon:'⛵'},
+        // ラ行
+        {hira:'らいおん', word:'ライオン', icon:'🦁'},
+        {hira:'りんご', word:'リンゴ', icon:'🍎'},
+        {hira:'るーれっと', word:'ルーレット', icon:'🎰'},
+        {hira:'れもん', word:'レモン', icon:'🍋'},
+        {hira:'ろぼっと', word:'ロボット', icon:'🤖'},
+        // ワ行・ン
+        {hira:'わに', word:'ワニ', icon:'🐊'},
+        {hira:'わっふる', word:'ワッフル', icon:'🧇'},
+        {hira:'ぱん', word:'パン', icon:'🍞'} 
+    ];
+
+    // 【発展の音】 濁音、半濁音、拗音など全て網羅
+    const hardWords = [
+        // --- ガ行 ---
+        {hira:'がそりん', word:'ガソリン', icon:'⛽'}, 
+        {hira:'ぎたー', word:'ギター', icon:'🎸'},
+        {hira:'ぐろーぶ', word:'グローブ', icon:'🧤'},
+        {hira:'げーむ', word:'ゲーム', icon:'🎮'},
+        {hira:'ごりら', word:'ゴリラ', icon:'🦍'},
+
+        // --- ザ行 ---
+        {hira:'ざりがに', word:'ザリガニ', icon:'🦞'},
+        {hira:'じーぱん', word:'ジーパン', icon:'👖'},
+        {hira:'じどうしゃ', word:'ジドウシャ', icon:'🚙'}, 
+        {hira:'ずぼん', word:'ズボン', icon:'🩳'}, 
+        {hira:'ぜぶら', word:'ゼブラ', icon:'🦓'}, 
+        {hira:'ぞう', word:'ゾウ', icon:'🐘'},
+
+        // --- ダ行 ---
+        {hira:'だいや', word:'ダイヤ', icon:'💎'},
+        {hira:'でんしゃ', word:'デンシャ', icon:'🚃'},
+        {hira:'どーなつ', word:'ドーナツ', icon:'🍩'},
+
+        // --- バ行 ---
+        {hira:'ばなな', word:'バナナ', icon:'🍌'},
+        {hira:'びる', word:'ビル', icon:'🏢'},
+        {hira:'ぶどう', word:'ブドウ', icon:'🍇'},
+        {hira:'べっど', word:'ベッド', icon:'🛏️'},
+        {hira:'ぼーる', word:'ボール', icon:'⚽'},
+
+        // --- パ行 ---
+        {hira:'ぱんだ', word:'パンダ', icon:'🐼'},
+        {hira:'ぴあの', word:'ピアノ', icon:'🎹'},
+        {hira:'ぷりん', word:'プリン', icon:'🍮'},
+        {hira:'ぺんぎん', word:'ペンギン', icon:'🐧'},
+        {hira:'ぽすと', word:'ポスト', icon:'📮'},
+
+        // --- 拗音 (小さいヤ・ユ・ヨ) ---
+        // キャ行
+        {hira:'きゃんぷ', word:'キャンプ', icon:'⛺'}, 
+        {hira:'きゅうり', word:'キュウリ', icon:'🥒'}, 
+        {hira:'きょうりゅう', word:'キョウリュウ', icon:'🦖'},
+        
+        // ギャ行
+        {hira:'ぎゃぐ', word:'ギャグ', icon:'🤡'}, 
+        {hira:'ぎゅうにゅう', word:'ギュウニュウ', icon:'🥛'}, 
+        {hira:'ぎょうざ', word:'ギョーザ', icon:'🥟'}, 
+
+        // シャ行
+        {hira:'しゃつ', word:'シャツ', icon:'👕'}, 
+        {hira:'しゅうまい', word:'シュウマイ', icon:'🥟'}, 
+        {hira:'しょうぼうしゃ', word:'ショウボウシャ', icon:'🚒'}, 
+        
+        // ジャ行
+        {hira:'じゃがいも', word:'ジャガイモ', icon:'🥔'}, 
+        {hira:'じゅーす', word:'ジュース', icon:'🍹'}, 
+        {hira:'じょーかー', word:'ジョーカー', icon:'🃏'}, 
+        
+        // チャ行
+        {hira:'ちゃっく', word:'チャック', icon:'🤐'}, 
+        {hira:'ちゅーりっぷ', word:'チューリップ', icon:'🌷'}, 
+        {hira:'ちょこ', word:'チョコ', icon:'🍫'}, 
+
+        // ニャ・ニュ・ニョ
+        {hira:'にゅーす', word:'ニュース', icon:'📰'}, 
+
+        // ヒャ・ヒュ・ヒョ
+        {hira:'ひゃく', word:'ヒャク', icon:'💯'},     
+        {hira:'ひゅーまん', word:'ヒューマン', icon:'🧑'}, 
+        {hira:'ひょう', word:'ヒョウ', icon:'🐆'}, 
+
+        // ビャ・ビュ・ビョ
+        {hira:'びょういん', word:'ビョウイン', icon:'🏥'}, 
+        {hira:'いんたびゅー', word:'インタビュー', icon:'🎤'}, 
+
+        // ピャ・ピュ・ピョ
+        {hira:'はっぴょう', word:'ハッピョウ', icon:'🗣️'}, 
+        {hira:'ちゃんぴおん', word:'チャンピオン', icon:'🏆'},
+        {hira:'こんぴゅーたー', word:'コンピューター', icon:'💻'}, 
+        
+        // ミュ
+        {hira:'みゅーじっく', word:'ミュージック', icon:'🎵'}, 
+
+        // リャ・リュ・リョ
+        {hira:'りゃま', word:'リャマ', icon:'🦙'},
+        {hira:'りゅっく', word:'リュック', icon:'🎒'},   
+        {hira:'りょうり', word:'リョウリ', icon:'🍳'}, 
+
+        // --- 促音 (小さいッ) と その他 ---
+        {hira:'ろけっと', word:'ロケット', icon:'🚀'},
+        {hira:'こっぷ', word:'コップ', icon:'🥤'},
+        {hira:'らっこ', word:'ラッコ', icon:'🦦'},
+
+        // --- 難しい文字 ---
+        {hira:'はなぢ', word:'ハナヂ', icon:'🩸'},
+        {hira:'みかづき', word:'ミカヅキ', icon:'🌙'},
+        {hira:'ゔぁいおりん', word:'ヴァイオリン', icon:'🎻'}
+    ];
+
+    // ゲーム内変数
+    let currentLevel = 1;
+    let quizDeck = [];
+    let currentQuiz = null;
+    let fillIndex = 0; 
+    let holes = []; 
+    let score = 0;
+    let combo = 0;
+
+    // 起動時
+    window.addEventListener('DOMContentLoaded', () => {
+        document.body.addEventListener('touchstart', function() {}, {passive: true});
+    });
+
+    // 配列シャッフル
+    function shuffle(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
+    }
+
+    // ゲーム開始
+    function startGame(level) {
+        currentLevel = level;
+        score = 0;
+        combo = 0;
+        updateScoreBoard();
+        
+        // デッキ作成
+        quizDeck = [];
+        if (level <= 3) {
+            quizDeck = JSON.parse(JSON.stringify(easyWords));
+        } else {
+            quizDeck = JSON.parse(JSON.stringify(hardWords));
+        }
+        shuffle(quizDeck);
+
+        document.getElementById('menu-screen').style.display = 'none';
+        document.getElementById('game-screen').style.display = 'flex';
+        
+        const uttr = new SpeechSynthesisUtterance("");
+        window.speechSynthesis.speak(uttr);
+
+        nextQuiz();
+    }
+
+    function updateScoreBoard() {
+        document.getElementById('score-val').innerText = score;
+        const comboEl = document.getElementById('combo-display');
+        if (combo > 1) {
+            comboEl.innerText = combo + " コンボ！";
+            comboEl.classList.add('show');
+        } else {
+            comboEl.classList.remove('show');
+        }
+    }
+
+    // 次の問題へ
+    function nextQuiz() {
+        if (quizDeck.length === 0) {
+            if (currentLevel <= 3) quizDeck = JSON.parse(JSON.stringify(easyWords));
+            else quizDeck = JSON.parse(JSON.stringify(hardWords));
+            shuffle(quizDeck);
+        }
+
+        currentQuiz = quizDeck.shift();
+        
+        document.getElementById('illust-display').innerText = currentQuiz.icon;
+        document.getElementById('illust-display').classList.remove('jump');
+        document.getElementById('hiragana-hint').innerText = currentQuiz.hira; 
+        document.getElementById('message').innerText = "";
+
+        holes = [];
+        const wordLen = currentQuiz.word.length;
+        const slotsEl = document.getElementById('word-slots');
+        slotsEl.innerHTML = "";
+
+        if (currentLevel === 1) {
+            holes = [Math.floor(Math.random() * wordLen)];
+        } else if (currentLevel === 2) {
+            if (wordLen <= 2) {
+                holes = [0, 1].slice(0, wordLen);
+            } else {
+                let first = Math.floor(Math.random() * wordLen);
+                let second = (first + 1) % wordLen;
+                holes = [first, second].sort((a,b)=>a-b);
+            }
+        } else {
+            for(let i=0; i<wordLen; i++) holes.push(i);
+        }
+
+        fillIndex = 0; 
+
+        for (let i = 0; i < wordLen; i++) {
+            let div = document.createElement('div');
+            if (holes.includes(i)) {
+                div.className = 'slot';
+                div.id = 'slot-' + i;
+            } else {
+                div.className = 'static-char';
+                div.innerText = currentQuiz.word[i];
+            }
+            slotsEl.appendChild(div);
+        }
+
+        setupChoices();
+    }
+
+    // 選択肢生成
+    function setupChoices() {
+        const choicesEl = document.getElementById('choices-area');
+        choicesEl.innerHTML = "";
+
+        let targetCharPos = holes[fillIndex]; 
+        let correctChar = currentQuiz.word[targetCharPos];
+
+        const kanaPool = "アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲンガギグゲゴザジズゼゾダヂヅデドバビブベボパピプペポッーャュョ";
+        
+        let pool = [correctChar];
+
+        // 似た文字リスト (漢数字の「一」は紛らわしいので排除済)
+        const similarMap = {
+            'シ':['ツ','ソ','ン'], 'ツ':['シ','ソ','ン','ッ'], 'ソ':['ン','シ','ツ'], 'ン':['ソ','シ','ツ'],
+            'ア':['マ','ヤ'], 'マ':['ア','ム'], 'ク':['ワ','ケ'], 'ワ':['ク','ウ'],
+            'ル':['レ'], 'レ':['ル'], 'ナ':['メ'], 'メ':['ナ'],
+            'ー':['ッ'], 'ッ':['ー','ツ'], 'コ':['ユ'], 'ユ':['コ'],
+            'ヤ':['マ'], 'ヨ':['コ'], 'チ':['テ'], 'テ':['チ'],
+            'ギ':['キ'], 'ジ':['シ','チ'], 'ビ':['ピ','ヒ']
+        };
+
+        if (similarMap[correctChar]) {
+            similarMap[correctChar].forEach(c => {
+                if(!pool.includes(c)) pool.push(c);
+            });
+        }
+
+        while (pool.length < 6) {
+            const r = kanaPool[Math.floor(Math.random() * kanaPool.length)];
+            if (!pool.includes(r)) pool.push(r);
+        }
+
+        shuffle(pool);
+
+        pool.slice(0, 6).forEach(char => {
+            let btn = document.createElement('button');
+            btn.className = 'choice-btn';
+            btn.innerText = char;
+            
+            btn.onclick = () => {
+                if (char === correctChar) {
+                    handleCorrect(char);
+                } else {
+                    handleWrong(btn);
+                }
+            };
+            choicesEl.appendChild(btn);
+        });
+    }
+
+    function handleCorrect(char) {
+        let targetPos = holes[fillIndex];
+        let slot = document.getElementById('slot-' + targetPos);
+        slot.innerText = char;
+        slot.classList.add('filled');
+
+        fillIndex++; 
+
+        if (fillIndex >= holes.length) {
+            quizComplete();
+        } else {
+            setupChoices();
+        }
+    }
+
+    function handleWrong(btn) {
+        btn.classList.add('shake');
+        document.getElementById('message').innerText = "ちがうかな？";
+        
+        if (combo > 0) {
+            combo = 0;
+            updateScoreBoard();
+        }
+
+        setTimeout(() => {
+            btn.classList.remove('shake');
+            document.getElementById('message').innerText = "";
+        }, 500);
+    }
+
+    function quizComplete() {
+        document.getElementById('illust-display').classList.add('jump');
+        document.getElementById('choices-area').innerHTML = ""; 
+
+        let base = 100;
+        let bonus = combo * 10;
+        score += (base + bonus);
+        combo++;
+        
+        updateScoreBoard();
+        playCurrentWord();
+
+        setTimeout(nextQuiz, 2000);
+    }
+
+    function playCurrentWord() {
+        if (!currentQuiz) return;
+        window.speechSynthesis.cancel();
+        const uttr = new SpeechSynthesisUtterance(currentQuiz.word);
+        uttr.lang = 'ja-JP';
+        window.speechSynthesis.speak(uttr);
+    }
+
+</script>
+</body>
+</html>
+
