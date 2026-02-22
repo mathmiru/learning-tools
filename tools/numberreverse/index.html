@@ -49,12 +49,13 @@
                 <button class="lv-btn lv2" onclick="S(1,2)">Lv2 (ふつう)</button>
                 <button class="lv-btn lv3" onclick="S(1,3)">Lv3 (しっかり)</button>
                 <button class="lv-btn lv4" onclick="S(1,4)">Lv4 (てごわい)</button>
-                <button class="lv-btn lv5" onclick="S(1,5)">Lv5（かなりてごわい)</button>
+                <button class="lv-btn lv5" onclick="S(1,5)">Lv5 (究極・逆算の王)</button>
             </div>
             <button class="btn" onclick="S(0,0)">ふたりで あそぶ</button>
             <button class="btn btn-sub" onclick="W('rules')">あそびかた</button>
         </div>
     </div>
+
     <div id="rules" class="screen">
         <div class="title-panel">
             <h2>あそびかた</h2>
@@ -69,6 +70,7 @@
             <button class="btn btn-sub" onclick="W('title')" style="margin-top:15px;">タイトルに もどる</button>
         </div>
     </div>
+
     <div id="game" class="screen">
         <div style="display:flex; justify-content:space-between; width:95%; margin-bottom:10px;">
             <button class="btn-sub" style="border:none; padding:5px 15px; border-radius:15px; cursor:pointer;" onclick="location.reload()">やめる</button>
@@ -89,6 +91,7 @@
         <div id="msg" style="height:25px; color:var(--accent); margin:10px 0; font-weight:bold; text-align:center;"></div>
         <div id="hand"></div>
     </div>
+
     <div id="info-modal" class="modal-bg" onclick="C()">
         <div class="modal-content">
             <h2 style="color:var(--accent);">スタート！</h2>
@@ -96,6 +99,7 @@
             <p style="font-size: 0.8rem; color:#bdc3c7;">(がめんを おしてね)</p>
         </div>
     </div>
+
     <div id="result-modal" class="modal-bg">
         <div class="modal-content">
             <h2 style="font-size:2rem; color:var(--accent);">しゅうりょう！</h2>
@@ -108,7 +112,135 @@
     <button id="rev-btn" onclick="V(0)">けっかに もどる</button>
 
 <script>
-(function(){let _0x1a=null,_0x2b='black',_0x3c=[],_0x4d={},_0x5e=null,_0x6f=0,_0x7a=0,_0x8b=6,_0x9c=[],_0xad=-1,_0xbe=0,_0xce=0;const _0xd1=i=>document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"))||document.getElementById(i).classList.add("active");window.T=()=>{let m=document.getElementById("diff-menu");m.style.display=m.style.display=="flex"?"none":"flex"};window.A=()=>{_0xbe=!_0xbe;let n=document.getElementById("ab");n.innerText=`アシスト: ${_0xbe?"ON":"OFF"}`;n.style.background=_0xbe?"#e74c3c":"#8e44ad";_0xf3()};window.S=(c,l)=>{_0x6f=c;_0xce=l;_0x1a=Array(_0x8b).fill().map(()=>Array(_0x8b).fill(null));_0x1a[2][2]={c:'white',v:5};_0x1a[2][3]={c:'black',v:6};_0x1a[3][2]={c:'black',v:5};_0x1a[3][3]={c:'white',v:6};let n=[0,1,1,2,2,3,3,4,4,5,5,6,6,7,7,8,8,9,9];_0x4d={black:[...n],white:[...n]};_0x2b='black';_0x5e=null;_0x7a=0;_0x9c=[];_0xe2();if(_0x6f){_0x3c=Math.random()<.5?'black':'white';document.getElementById('im').innerHTML=`あなたは<br><span style="color:var(--accent);font-size:2rem">${_0x3c=='black'?'せんこう（くろ）':'こうこう（しろ）'}</span>です！`;document.getElementById('info-modal').style.display='flex'}_0xd1('game');_0xf3()};window.C=()=>(document.getElementById('info-modal').style.display='none')||(_0x6f&&_0x2b!=_0x3c&&setTimeout(_0x1b4,800));window.H=d=>{let n=_0xad+d;if(n>=0&&n<_0x9c.length){_0xad=n;_0x1a=JSON.parse(JSON.stringify(_0x9c[_0xad]));_0xf3(1)}};const _0xe2=()=>_0x9c.push(JSON.parse(JSON.stringify(_0x1a)))&&(_0xad=_0x9c.length-1);const _0xf3=(isH=0)=>{let e=document.getElementById('board');e.innerHTML='';let vm=[];if(!_0x7a&&!isH&&_0xbe&&_0x5e!==null&&(!_0x6f||_0x2b==_0x3c)){let vV=_0x4d[_0x2b][_0x5e];for(let r=0;r<_0x8b;r++)for(let c=0;c<_0x8b;c++)if(!_0x1a[r][c]&&_0x2a5(r,c,vV,_0x2b,_0x1a).length>0)vm.push(`${r},${c}`)}for(let r=0;r<_0x8b;r++)for(let c=0;c<_0x8b;c++){let d=document.createElement('div');d.className='cell';if(vm.includes(`${r},${c}`))d.classList.add('valid-move');d.onclick=()=>_0x3b6(r,c);if(_0x1a[r][c]){let pO=document.createElement('div');pO.className=`piece ${_0x1a[r][c].c}`;pO.innerText=_0x1a[r][c].v;d.appendChild(pO)}e.appendChild(d)}if(!_0x7a){let hl=document.getElementById('hand');hl.innerHTML='';let d=_0x6f&&_0x2b!=_0x3c?_0x3c:_0x2b;_0x4d[d].sort((x,y)=>x-y).forEach((vV,i)=>{let pI=document.createElement('div');pI.className=`hand-p ${_0x5e==i?"sel":""}`;pI.innerText=vV;pI.onclick=()=>{if(_0x6f&&_0x2b!=_0x3c||isH)return;_0x5e=i;_0xf3()};hl.appendChild(pI)});let bk=0,wt=0;_0x1a.flat().forEach(p=>{if(p?.c=='black')bk+=p.v;if(p?.c=='white')wt+=p.v});document.getElementById('sb').innerText=bk;document.getElementById('sw').innerText=wt;document.getElementById('tt').innerText=isH?"リプレイ中":(_0x6f?(_0x2b==_0x3c?"あなたのばん":"CPUのばん"):(_0x2b=='black'?"くろのばん":"しろのばん"))}};const _0x2a5=(r,c,vV,cl,bd)=>{let dr=[[0,1],[0,-1],[1,0],[-1,0],[1,1],[1,-1],[-1,1],[-1,-1]],res=[];dr.forEach(([y,x])=>{let tL=[],cy=r+y,cx=c+x;while(cy>=0&&cy<_0x8b&&cx>=0&&cx<_0x8b){let tg=bd[cy][cx];if(!tg)break;if(tg.c!=cl)tL.push({r:cy,c:cx,v:tg.v});else{if(tL.length>0&&(vV+tg.v)>tL.reduce((a,o)=>a+o.v,0))res=res.concat(tL);break}cy+=y;cx+=x}});return res};const _0x3b6=(r,c)=>{if(_0x6f&&_0x2b!=_0x3c||_0xad!=_0x9c.length-1)return;if(_0x5e==null){document.getElementById('msg').innerText="すうじを えらんでね！";return}let f=_0x2a5(r,c,_0x4d[_0x2b][_0x5e],_0x2b,_0x1a);if(!f.length||_0x1a[r][c]){document.getElementById('msg').innerText="そこには おけません";return}_0x4c7(r,c,_0x4d[_0x2b][_0x5e],f)};const _0x4c7=(r,c,vV,f)=>{_0x1a[r][c]={c:_0x2b,v:vV};f.forEach(p=>_0x1a[p.r][p.c].c=_0x2b);_0x4d[_0x2b].splice(_0x5e,1);_0x5e=null;_0xe2();document.getElementById('msg').innerText="";_0x2b=_0x2b=='black'?'white':'black';_0xf3();_0x5d8()};const _0x5d8=()=>{if(_0x7a)return;if(!_0x6e9(_0x2b,_0x1a,_0x4d[_0x2b])){let pN=(_0x6f&&_0x2b!=_0x3c)?"CPU":(_0x2b=='black'?"くろ":"しろ");document.getElementById('msg').innerText=`${pN} は パスします`;setTimeout(()=>{document.getElementById('msg').innerText="";_0x2b=_0x2b=='black'?'white':'black';_0xf3();if(!_0x6e9(_0x2b,_0x1a,_0x4d[_0x2b]))_0x7f1();else if(_0x6f&&_0x2b!=_0x3c)setTimeout(_0x1b4,800)},1200)}else if(_0x6f&&_0x2b!=_0x3c)setTimeout(_0x1b4,800)};const _0x6e9=(cl,bd,hd)=>{for(let r=0;r<_0x8b;r++)for(let c=0;c<_0x8b;c++)if(!bd[r][c])for(let vV of new Set(hd))if(_0x2a5(r,c,vV,cl,bd).length>0)return 1;return 0};const _0x1b4=()=>{let m=[];_0x4d[_0x2b].forEach((vV,i)=>{for(let r=0;r<_0x8b;r++)for(let c=0;c<_0x8b;c++){if(!_0x1a[r][c]){let f=_0x2a5(r,c,vV,_0x2b,_0x1a);if(f.length){let s=_0x8d2(r,c,vV,f,_0x2b,_0x1a,_0x4d,_0xce);m.push({r,c,vV,i,s,f})}}}});if(m.length){m.sort((a,b)=>b.s-a.s);let f=m[0];_0x5e=f.i;_0x4c7(f.r,f.c,f.vV,f.f)}};const _0x8d2=(r,c,vV,f,cl,bd,hd,lv)=>{let tF=f.reduce((a,o)=>a+o.v,0),op=cl=='black'?'white':'black',om=Math.max(...hd[op],0),s=tF;if(lv>=3){if((r==0||r==5)&&(c==0||c==5))s+=(lv==5?10000:lv==4?2000:500);let sB=JSON.parse(JSON.stringify(bd));sB[r][c]={c:cl,v:vV};f.forEach(p=>sB[p.r][p.c].c=cl);let d=0;hd[op].forEach(ov=>{for(let nr=0;nr<_0x8b;nr++)for(let nc=0;nc<_0x8b;nc++)if(!sB[nr][nc]){let of=_0x2a5(nr,nc,ov,op,sB);if(of.length){let v=of.reduce((a,o)=>a+o.v,0);if((nr==0||nr==5)&&(nc==0||nc==5))v+=(lv==5?15000:3000);d=Math.max(d,v)}}});if(lv==5)s=(s*3)-(d*5)-(vV*50);if(lv==4)s=(s*2)-(d*2);if(lv==3)s=s-d}return lv<=2?(lv==2?tF:Math.random()*100):s};const _0x7f1=()=>{_0x7a=1;let bk=0,wt=0;_0x1a.flat().forEach(p=>{if(p?.c=='black')bk+=p.v;if(p?.c=='white')wt+=p.v});document.getElementById('rs').innerHTML=`くろ: ${bk}点 / しろ: ${wt}点`;let rT=bk==wt?"ひきわけ！":((_0x3c=='black'&&bk>wt)||(_0x3c=='white'&&wt>bk)?"あなたのかち！":"CPUのかち！");document.getElementById('rw').innerText=rT;document.getElementById('result-modal').style.display='flex'};window.V=s=>{document.getElementById('result-modal').style.display=s?'none':'flex';document.getElementById('rev-btn').style.display=s?'block':'none';document.getElementById('hc').style.display=s?'flex':'none'};window.W=_0xd1})()
+let b,t,h,si,v,cL,p,as=0,g=0,SZ=6,hi=[],hI=-1;
+const W=i=>{document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));document.getElementById(i).classList.add("active")};
+const T=()=>{let m=document.getElementById("diff-menu");m.style.display=m.style.display=="flex"?"none":"flex"};
+const A=()=>{as=!as;let n=document.getElementById("ab");n.innerText=`アシスト: ${as?"ON":"OFF"}`;n.style.background=as?"#e74c3c":"#8e44ad";U()};
+const S=(c,l)=>{v=c;cL=l;b=Array(SZ).fill().map(()=>Array(SZ).fill(null));b[2][2]={c:'white',v:5};b[2][3]={c:'black',v:6};b[3][2]={c:'black',v:5};b[3][3]={c:'white',v:6};let n=[0,1,1,2,2,3,3,4,4,5,5,6,6,7,7,8,8,9,9];h={black:[...n],white:[...n]};t='black';si=null;g=0;hi=[];hS();if(v){p=Math.random()<.5?'black':'white';document.getElementById('im').innerHTML=`あなたは<br><span style="color:var(--accent);font-size:2rem">${p=='black'?'せんこう（くろ）':'こうこう（しろ）'}</span>です！`;document.getElementById('info-modal').style.display='flex'}W('game');U()};
+const C=()=>{document.getElementById('info-modal').style.display='none';if(v&&t!=p)setTimeout(CP,800)};
+const H=d=>{let n=hI+d;if(n>=0&&n<hi.length){hI=n;b=JSON.parse(JSON.stringify(hi[hI]));U(1)}};
+const hS=()=>{hi.push(JSON.parse(JSON.stringify(b)));hI=hi.length-1};
+
+const U=(isH=0)=>{
+    let e=document.getElementById('board');e.innerHTML='';
+    let vm=[];if(!g&&!isH&&as&&si!==null&&(!v||t==p)){let vV=h[t][si];for(let r=0;r<SZ;r++)for(let c=0;c<SZ;c++)if(!b[r][c]&&G(r,c,vV,t,b).length>0)vm.push(`${r},${c}`)}
+    for(let r=0;r<SZ;r++)for(let c=0;c<SZ;c++){
+        let d=document.createElement('div');d.className='cell';
+        if(vm.includes(`${r},${c}`))d.classList.add('valid-move');
+        d.onclick=()=>K(r,c);
+        if(b[r][c]){let pO=document.createElement('div');pO.className=`piece ${b[r][c].c}`;pO.innerText=b[r][c].v;d.appendChild(pO)}
+        e.appendChild(d)
+    }
+    if(!g){
+        let hl=document.getElementById('hand');hl.innerHTML='';let d=v&&t!=p?p:t;
+        h[d].sort((x,y)=>x-y).forEach((vV,i)=>{
+            let pI=document.createElement('div');pI.className=`hand-p ${si==i?"sel":""}`;pI.innerText=vV;
+            pI.onclick=()=>{if(v&&t!=p||isH)return;si=i;U()};hl.appendChild(pI)
+        });
+        let bk=0,wt=0;b.flat().forEach(p=>{if(p?.c=='black')bk+=p.v;if(p?.c=='white')wt+=p.v});
+        document.getElementById('sb').innerText=bk;document.getElementById('sw').innerText=wt;
+        document.getElementById('tt').innerText=isH?"リプレイ中":(v?(t==p?"あなたのばん":"CPUのばん"):(t=='black'?"くろのばん":"しろのばん"));
+    }
+};
+
+const G=(r,c,vV,cl,bd)=>{
+    let dr=[[0,1],[0,-1],[1,0],[-1,0],[1,1],[1,-1],[-1,1],[-1,-1]],res=[];
+    dr.forEach(([y,x])=>{
+        let tL=[],cy=r+y,cx=c+x;
+        while(cy>=0&&cy<SZ&&cx>=0&&cx<SZ){
+            let tg=bd[cy][cx];if(!tg)break;
+            if(tg.c!=cl)tL.push({r:cy,c:cx,v:tg.v});
+            else{if(tL.length>0&&(vV+tg.v)>tL.reduce((a,o)=>a+o.v,0))res=res.concat(tL);break}
+            cy+=y;cx+=x
+        }
+    });return res
+};
+
+const K=(r,c)=>{if(v&&t!=p||hI!=hi.length-1)return;if(si==null){document.getElementById('msg').innerText="すうじを えらんでね！";return}let f=G(r,c,h[t][si],t,b);if(!f.length||b[r][c]){document.getElementById('msg').innerText="そこには おけません";return}M(r,c,h[t][si],f)};
+const M=(r,c,vV,f)=>{b[r][c]={c:t,v:vV};f.forEach(p=>b[p.r][p.c].c=t);h[t].splice(si,1);si=null;hS();document.getElementById('msg').innerText="";t=t=='black'?'white':'black';U();checkPass()};
+
+const checkPass=()=>{
+    if(g)return;
+    if(!P(t,b,h[t])){
+        let pName = (v && t!=p) ? "CPU" : (t=='black'?"くろ":"しろ");
+        document.getElementById('msg').innerText = `${pName} は パスします`;
+        setTimeout(()=>{
+            document.getElementById('msg').innerText = "";
+            t=t=='black'?'white':'black';
+            U();
+            if(!P(t,b,h[t])) E();
+            else if(v && t!=p) setTimeout(CP,800);
+        },1200);
+    } else if(v && t!=p) {
+        setTimeout(CP,800);
+    }
+};
+
+const P=(cl,bd,hd)=>{for(let r=0;r<SZ;r++)for(let c=0;c<SZ;c++)if(!bd[r][c])for(let vV of new Set(hd))if(G(r,c,vV,cl,bd).length>0)return 1;return 0};
+
+const CP=()=>{
+    let m=[];
+    h[t].forEach((vV,i)=>{
+        for(let r=0;r<SZ;r++)for(let c=0;c<SZ;c++){
+            if(!b[r][c]){
+                let f=G(r,c,vV,t,b);
+                if(f.length){
+                    let s = evalLogic(r,c,vV,f,t,b,h,cL);
+                    m.push({r,c,vV,i,s,f});
+                }
+            }
+        }
+    });
+    if(m.length){m.sort((a,b)=>b.s-a.s);let f=m[0];si=f.i;M(f.r,f.c,f.vV,f.f)}
+};
+
+const evalLogic=(r,c,vV,f,cl,bd,hd,lv)=>{
+    let totalF = f.reduce((a,o)=>a+o.v,0);
+    let opp = cl=='black'?'white':'black';
+    let oppMax = Math.max(...h[opp], 0);
+    let s = totalF;
+
+    if(lv >= 3) {
+        // 共通：角の重要性
+        if((r==0||r==5)&&(c==0||c==5)) s += (lv == 5 ? 10000 : lv == 4 ? 2000 : 500);
+        
+        // 逆算シミュレーション
+        let simB = JSON.parse(JSON.stringify(bd));
+        simB[r][c] = {c:cl, v:vV}; f.forEach(p=>simB[p.r][p.c].c=cl);
+        let danger = 0;
+        h[opp].forEach(ov => {
+            for(let nr=0;nr<SZ;nr++)for(let nc=0;nc<SZ;nc++) if(!simB[nr][nc]) {
+                let of=G(nr,nc,ov,opp,simB);
+                if(of.length) {
+                    let val = of.reduce((a,o)=>a+o.v,0);
+                    if((nr==0||nr==5)&&(nc==0||nc==5)) val += (lv == 5 ? 15000 : 3000);
+                    danger = Math.max(danger, val);
+                }
+            }
+        });
+        
+        // レベル5は「絶対に角を渡さない」かつ「逆算重視」
+        if(lv == 5) s = (s * 3) - (danger * 5) - (vV * 50);
+        // レベル4は「バランス型だが強い」
+        if(lv == 4) s = (s * 2) - (danger * 2);
+        // レベル3は「少し先を読む」
+        if(lv == 3) s = s - danger;
+    }
+
+    if(lv <= 2) {
+        s = (lv == 2 ? totalF : Math.random() * 100);
+    }
+    
+    return s;
+};
+
+const E=()=>{
+    g=1;let bk=0,wt=0;b.flat().forEach(p=>{if(p?.c=='black')bk+=p.v;if(p?.c=='white')wt+=p.v});
+    document.getElementById('rs').innerHTML=`くろ: ${bk}点 / しろ: ${wt}点`;
+    let resTxt=bk==wt?"ひきわけ！":((p=='black'&&bk>wt)||(p=='white'&&wt>bk)?"あなたのかち！":"CPUのかち！");
+    document.getElementById('rw').innerText=resTxt;document.getElementById('result-modal').style.display='flex';
+};
+const V=s=>{document.getElementById('result-modal').style.display=s?'none':'flex';document.getElementById('rev-btn').style.display=s?'block':'none';document.getElementById('hc').style.display=s?'flex':'none'};
 </script>
 </body>
 </html>
