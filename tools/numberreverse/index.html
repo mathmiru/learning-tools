@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ナンバーリバシー</title>
+    <style>
+        :root { --bg: #2c3e50; --board: #27ae60; --black: #333; --white: #fff; --accent: #f1c40f; }
+        body { font-family: sans-serif; background: var(--bg); color: white; display: flex; flex-direction: column; align-items: center; padding: 10px; margin: 0; min-height: 100vh; overflow-x: hidden; }
+        .screen { display: none; flex-direction: column; align-items: center; width: 100%; max-width: 500px; animation: f 0.5s; box-sizing: border-box; }
+        .active { display: flex; }
+        @keyframes f { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .title-panel { background: rgba(0,0,0,0.2); padding: 30px 15px; border-radius: 20px; box-shadow: 0 15px 30px rgba(0,0,0,0.4); text-align: center; border-bottom: 5px solid var(--accent); width: 95%; box-sizing: border-box; }
+        h1 { color: var(--accent); text-shadow: 2px 2px 4px rgba(0,0,0,0.5); font-size: 2.2rem; margin: 0; line-height: 1.2; }
+        .subtitle { color: #bdc3c7; font-size: 1rem; margin: 15px 0 25px; font-weight: bold; }
+        .btn { background: var(--accent); color: #2c3e50; border: none; padding: 15px; margin: 8px; font-weight: bold; font-size: 1.1rem; border-radius: 50px; cursor: pointer; width: 90%; max-width: 280px; box-shadow: 0 5px 0 #c7a008; transition: 0.2s; }
+        .btn:active { transform: translateY(3px); box-shadow: 0 2px 0 #c7a008; }
+        .btn-sub { background: #95a5a6; color: white; box-shadow: 0 5px 0 #7f8c8d; }
+        #diff-menu { display: none; flex-direction: column; align-items: center; width: 100%; padding: 10px 0; }
+        .lv-btn { border: none; padding: 10px; margin: 4px; border-radius: 8px; color: white; font-weight: bold; width: 85%; max-width: 250px; cursor: pointer; }
+        .lv1{background:#2ecc71}.lv2{background:#3498db}.lv3{background:#f39c12}.lv4{background:#e67e22}.lv5{background:#e74c3c}
+        .info { display: flex; width: 95%; justify-content: space-around; align-items: center; background: rgba(0,0,0,0.25); padding: 12px; border-radius: 15px; margin-bottom: 10px; box-sizing: border-box; }
+        .turn-txt { padding: 6px 15px; border-radius: 20px; font-weight: bold; background: #fff; color:#2c3e50; font-size: 0.9rem; }
+        #board { display: grid; grid-template-columns: repeat(6, min(14vw, 55px)); grid-template-rows: repeat(6, min(14vw, 55px)); gap: 4px; background: #145a32; padding: 8px; border-radius: 10px; box-shadow: 0 8px 20px rgba(0,0,0,0.5); }
+        .cell { background: var(--board); display: flex; align-items: center; justify-content: center; border-radius: 4px; cursor: pointer; }
+        .valid-move { box-shadow: inset 0 0 10px var(--accent); border: 2px solid var(--accent); background: #2ecc71; }
+        .piece { width: 80%; height: 80%; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: min(5vw, 20px); box-shadow: inset -1px -2px 3px rgba(0,0,0,0.4); }
+        .black { background: #2c3e50; color: white; border: 1px solid #111; }
+        .white { background: #ecf0f1; color: #2c3e50; border: 1px solid #ccc; }
+        #hand { display: flex; flex-wrap: wrap; gap: 5px; justify-content: center; width: 100%; margin-top: 10px; }
+        .hand-p { width: 38px; height: 38px; background: #95a5a6; display: flex; align-items: center; justify-content: center; border-radius: 6px; cursor: pointer; font-weight: bold; border: 2px solid #7f8c8d; }
+        .sel { background: var(--accent); color: #2c3e50; transform: scale(1.1); border-color: #fff; box-shadow: 0 0 10px var(--accent); }
+        .modal-bg { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); align-items: center; justify-content: center; z-index: 100; padding: 15px; box-sizing: border-box; }
+        .modal-content { background: var(--bg); padding: 25px; border-radius: 20px; text-align: center; border: 4px solid var(--accent); width: 100%; max-width: 380px; box-sizing: border-box; }
+    </style>
+</head>
+<body>
+    <div id="title" class="screen active">
+        <div class="title-panel">
+            <h1>ナンバー<br>リバシー</h1>
+            <p class="subtitle">かずの パワーで はさみうち！</p>
+            <button class="btn" onclick="T()">ひとりで あそぶ</button>
+            <div id="diff-menu">
+                <button class="lv-btn lv1" onclick="S(1,1)">Lv1 (とっても やさしい)</button>
+                <button class="lv-btn lv2" onclick="S(1,2)">Lv2 (ふつう)</button>
+                <button class="lv-btn lv3" onclick="S(1,3)">Lv3 (すこし つよい)</button>
+                <button class="lv-btn lv4" onclick="S(1,4)">Lv4 (かなり つよい)</button>
+                <button class="lv-btn lv5" onclick="S(1,5)">Lv5 (ぜったい かてない)</button>
+            </div>
+            <button class="btn" onclick="S(0,0)">ふたりで あそぶ</button>
+            <button class="btn btn-sub" onclick="W('rules')">あそびかた</button>
+        </div>
+    </div>
+
+    <div id="rules" class="screen">
+        <div class="title-panel" style="border-color:#95a5a6">
+            <h2>あそびかた</h2>
+            <div style="text-align:left; font-size:0.9rem; line-height:1.7; background:rgba(255,255,255,0.1); padding:15px; border-radius:15px;">
+                １．てふだ から すうじを えらぶ。<br>
+                ２．あいてを はさめる ばしょに おく。<br>
+                ３．<b>[じぶんの ２まいの ごうけい]</b> が<br>
+                　　<b>[あいだの あいての ごうけい]</b> より<br>
+                　　おおきければ ひっくりかえせるよ！<br>
+                ４．さいごに すうじのごうけい が おおいほうが かち！<br><br>
+                <b>★アシストボタン★</b><br>
+                「ON」にすると、えらんだ すうじが おける ばしょが ぴかぴか ひかるよ！
+            </div>
+            <button class="btn btn-sub" onclick="W('title')" style="margin-top:15px;">タイトルに もどる</button>
+        </div>
+    </div>
+
+    <div id="game" class="screen">
+        <div style="display:flex; justify-content:space-between; width:95%; margin-bottom:10px;">
+            <button class="btn-sub" style="border:none; padding:5px 15px; border-radius:15px; cursor:pointer;" onclick="location.reload()">やめる</button>
+            <button id="ab" class="btn" style="width:120px; padding:5px; margin:0; font-size:0.85rem; background:#8e44ad; color:#fff; box-shadow:none;" onclick="A()">アシスト: OFF</button>
+        </div>
+        <div class="info">
+            <div><small id="lb">くろ</small><br><b id="sb" style="font-size:1.4rem;">0</b></div>
+            <div id="tt" class="turn-txt">くろ の ばん</div>
+            <div><small id="lw">しろ</small><br><b id="sw" style="font-size:1.4rem;">0</b></div>
+        </div>
+        <div id="board"></div>
+        <div id="msg" style="height:25px; color:var(--accent); margin:10px 0; font-weight:bold; font-size:1rem;"></div>
+        <div id="hand"></div>
+    </div>
+
+    <div id="info-modal" class="modal-bg" onclick="C()">
+        <div class="modal-content">
+            <h2 style="color:var(--accent); margin-top:0;">スタート！</h2>
+            <p id="im" style="font-size: 1.5rem; font-weight: bold; margin: 20px 0; line-height:1.6;"></p>
+            <p style="font-size: 0.8rem; color:#bdc3c7;">(がめんを おしてね)</p>
+        </div>
+    </div>
+
+    <div id="result-modal" class="modal-bg">
+        <div class="modal-content">
+            <h2 style="font-size:2rem; color:var(--accent); margin:0;">しゅうりょう！</h2>
+            <p id="rs" style="font-size:1.4rem; margin:20px 0; font-weight:bold;"></p>
+            <h3 id="rw" style="font-size:1.8rem;"></h3>
+            <button class="btn" style="width:100%;" onclick="location.reload()">タイトルへ</button>
+        </div>
+    </div>
+
+<script>
+let b,t,h,si,v,cL,p,as=0,g=0,SZ=6;function W(i){document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));document.getElementById(i).classList.add("active")}function T(){let m=document.getElementById("diff-menu");m.style.display=m.style.display=="flex"?"none":"flex"}function A(){as=!as;let n=document.getElementById("ab");n.innerText=`アシスト: ${as?"ON":"OFF"}`;n.style.background=as?"#e74c3c":"#8e44ad";U()}function S(c,l){v=c;cL=l;b=Array(SZ).fill().map(()=>Array(SZ).fill(null));b[2][2]={c:'white',v:5};b[2][3]={c:'black',v:6};b[3][2]={c:'black',v:5};b[3][3]={c:'white',v:6};let n=[0,1,1,2,2,3,3,4,4,5,5,6,6,7,7,8,8,9,9];h={black:[...n],white:[...n]};t='black';si=null;g=0;if(v){p=Math.random()<.5?'black':'white';document.getElementById('im').innerHTML=`あなたは<br><span style="color:var(--accent);font-size:2rem">${p=='black'?'せんこう（くろ）':'こうこう（しろ）'}</span><br>です！`;document.getElementById('info-modal').style.display='flex'}W('game');U()}function C(){document.getElementById('info-modal').style.display='none';if(v&&t!=p)setTimeout(CP,800)}function U(){let e=document.getElementById('board');e.innerHTML='';let vm=[];if(!g&&as&&si!==null&&(!v||t==p)){let vV=h[t][si];for(let r=0;r<SZ;r++)for(let c=0;c<SZ;c++)if(!b[r][c]&&G(r,c,vV,t).length>0)vm.push(`${r},${c}`)}for(let r=0;r<SZ;r++)for(let c=0;c<SZ;c++){let d=document.createElement('div');d.className='cell';if(vm.includes(`${r},${c}`))d.classList.add('valid-move');d.onclick=()=>K(r,c);if(b[r][c]){let pO=document.createElement('div');pO.className=`piece ${b[r][c].c}`;pO.innerText=b[r][c].v;d.appendChild(pO)}e.appendChild(d)}if(!g){let hl=document.getElementById('hand');hl.innerHTML='';let d=v&&t!=p?p:t;h[d].forEach((vV,i)=>{let pI=document.createElement('div');pI.className=`hand-p ${si==i?"sel":""}`;pI.innerText=vV;pI.onclick=()=>{if(v&&t!=p)return;si=i;U()};hl.appendChild(pI)});let bk=0,wt=0;b.flat().forEach(p=>{if(p?.c=='black')bk+=p.v;if(p?.c=='white')wt+=p.v});document.getElementById('sb').innerText=bk;document.getElementById('sw').innerText=wt;document.getElementById('tt').innerText=v?(t==p?"あなたのばん":"CPUのばん"): (t=='black'?"くろのばん":"しろのばん");document.getElementById('lb').innerText=v&&p=='black'?"くろ(あなた)":"くろ";document.getElementById('lw').innerText=v&&p=='white'?"しろ(あなた)":"しろ"}}function K(r,c){if(v&&t!=p)return;if(si==null){document.getElementById('msg').innerText="すうじを えらんでね！";return}let f=G(r,c,h[t][si],t);if(!f.length||b[r][c]){document.getElementById('msg').innerText="そこには おけません";return}M(r,c,h[t][si],f)}function G(r,c,vV,cl){let dr=[[0,1],[0,-1],[1,0],[-1,0],[1,1],[1,-1],[-1,1],[-1,-1]],res=[];dr.forEach(([y,x])=>{let tL=[],cy=r+y,cx=c+x;while(cy>=0&&cy<SZ&&cx>=0&&cx<SZ){let tg=b[cy][cx];if(!tg)break;if(tg.c!=cl)tL.push({r:cy,c:cx,v:tg.v});else{if(tL.length>0&&(vV+tg.v)>tL.reduce((a,b)=>a+b.v,0))res=res.concat(tL);break}cy+=y;cx+=x}});return res}function M(r,c,vV,f){b[r][c]={c:t,v:vV};f.forEach(p=>b[p.r][p.c].c=t);h[t].splice(si,1);si=null;document.getElementById('msg').innerText="";t=t=='black'?'white':'black';U();if(!P(t)){t=t=='black'?'white':'black';if(!P(t))E()}if(v&&t!=p&&!g)setTimeout(CP,1000)}function P(p){for(let r=0;r<SZ;r++)for(let c=0;c<SZ;c++)if(!b[r][c])for(let vV of new Set(h[p]))if(G(r,c,vV,p).length>0)return 1;return 0}function CP(){let m=[];h[t].forEach((vV,i)=>{for(let r=0;r<SZ;r++)for(let c=0;c<SZ;c++)if(!b[r][c]){let f=G(r,c,vV,t);if(f.length){let s=f.reduce((a,b)=>a+b.v,0);if(cL==1)s=-s-vV;else if(cL==2)s=Math.random();else{if(cL>=4&&((r==0||r==5)&&(c==0||c==5)))s+=100;if(cL==5&&vV>=8)s+=50}m.push({r,c,vV,i,s})}}});if(m.length){m.sort((a,b)=>b.s-a.s);si=m[0].i;M(m[0].r,m[0].c,m[0].vV,G(m[0].r,m[0].c,m[0].vV,t))}}function E(){g=1;let bk=0,wt=0;b.flat().forEach(p=>{if(p?.c=='black')bk+=p.v;if(p?.c=='white')wt+=p.v});document.getElementById('rs').innerHTML=`くろ: ${bk}点 / しろ: ${wt}点`;let win=document.getElementById('rw');win.innerText=bk>wt?"くろの かち！":wt>bk?"しろの かち！":"ひきわけ！";document.getElementById('result-modal').style.display='flex'}
+</script>
+</body>
+</html>
