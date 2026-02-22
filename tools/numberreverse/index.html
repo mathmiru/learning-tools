@@ -21,17 +21,22 @@
         .lv1{background:#2ecc71}.lv2{background:#3498db}.lv3{background:#f39c12}.lv4{background:#e67e22}.lv5{background:#e74c3c}
         .info { display: flex; width: 95%; justify-content: space-around; align-items: center; background: rgba(0,0,0,0.25); padding: 12px; border-radius: 15px; margin-bottom: 10px; box-sizing: border-box; }
         .turn-txt { padding: 6px 15px; border-radius: 20px; font-weight: bold; background: #fff; color:#2c3e50; font-size: 0.9rem; }
+        #board-container { position: relative; display: flex; flex-direction: column; align-items: center; }
         #board { display: grid; grid-template-columns: repeat(6, min(14vw, 55px)); grid-template-rows: repeat(6, min(14vw, 55px)); gap: 4px; background: #145a32; padding: 8px; border-radius: 10px; box-shadow: 0 8px 20px rgba(0,0,0,0.5); }
         .cell { background: var(--board); display: flex; align-items: center; justify-content: center; border-radius: 4px; cursor: pointer; }
         .valid-move { box-shadow: inset 0 0 10px var(--accent); border: 2px solid var(--accent); background: #2ecc71; }
         .piece { width: 80%; height: 80%; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: min(5vw, 20px); box-shadow: inset -1px -2px 3px rgba(0,0,0,0.4); }
-        .black { background: #2c3e50; color: white; border: 1px solid #111; }
-        .white { background: #ecf0f1; color: #2c3e50; border: 1px solid #ccc; }
+        .black { background: #2c3e50; color: white; }
+        .white { background: #ecf0f1; color: #2c3e50; }
         #hand { display: flex; flex-wrap: wrap; gap: 5px; justify-content: center; width: 100%; margin-top: 10px; }
         .hand-p { width: 38px; height: 38px; background: #95a5a6; display: flex; align-items: center; justify-content: center; border-radius: 6px; cursor: pointer; font-weight: bold; border: 2px solid #7f8c8d; }
-        .sel { background: var(--accent); color: #2c3e50; transform: scale(1.1); border-color: #fff; box-shadow: 0 0 10px var(--accent); }
+        .sel { background: var(--accent); color: #2c3e50; transform: scale(1.1); border-color: #fff; }
         .modal-bg { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); align-items: center; justify-content: center; z-index: 100; padding: 15px; box-sizing: border-box; }
-        .modal-content { background: var(--bg); padding: 25px; border-radius: 20px; text-align: center; border: 4px solid var(--accent); width: 100%; max-width: 380px; box-sizing: border-box; }
+        .modal-content { background: var(--bg); padding: 25px; border-radius: 20px; text-align: center; border: 4px solid var(--accent); width: 100%; max-width: 380px; }
+        #rev-btn { display: none; position: fixed; bottom: 20px; right: 20px; background: var(--accent); color: #2c3e50; padding: 10px 20px; border-radius: 30px; font-weight: bold; z-index: 90; }
+        .hist-controls { display: none; margin-top: 15px; gap: 20px; }
+        .h-btn { background: #34495e; color: white; border: none; padding: 8px 25px; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 1.2rem; }
+        .h-btn:disabled { opacity: 0.3; }
     </style>
 </head>
 <body>
@@ -43,9 +48,9 @@
             <div id="diff-menu">
                 <button class="lv-btn lv1" onclick="S(1,1)">Lv1 (とっても やさしい)</button>
                 <button class="lv-btn lv2" onclick="S(1,2)">Lv2 (ふつう)</button>
-                <button class="lv-btn lv3" onclick="S(1,3)">Lv3 (すこし つよい)</button>
-                <button class="lv-btn lv4" onclick="S(1,4)">Lv4 (かなり つよい)</button>
-                <button class="lv-btn lv5" onclick="S(1,5)">Lv5 (ぜったい かてない)</button>
+                <button class="lv-btn lv3" onclick="S(1,3)">Lv3 (しっかり)</button>
+                <button class="lv-btn lv4" onclick="S(1,4)">Lv4 (てごわい)</button>
+                <button class="lv-btn lv5" onclick="S(1,5)">Lv5 (ちょう・最強)</button>
             </div>
             <button class="btn" onclick="S(0,0)">ふたりで あそぶ</button>
             <button class="btn btn-sub" onclick="W('rules')">あそびかた</button>
@@ -61,9 +66,7 @@
                 ３．<b>[じぶんの ２まいの ごうけい]</b> が<br>
                 　　<b>[あいだの あいての ごうけい]</b> より<br>
                 　　おおきければ ひっくりかえせるよ！<br>
-                ４．さいごに すうじのごうけい が おおいほうが かち！<br><br>
-                <b>★アシストボタン★</b><br>
-                「ON」にすると、えらんだ すうじが おける ばしょが ぴかぴか ひかるよ！
+                ４．さいごに すうじのごうけい が おおいほうが かち！
             </div>
             <button class="btn btn-sub" onclick="W('title')" style="margin-top:15px;">タイトルに もどる</button>
         </div>
@@ -72,37 +75,178 @@
     <div id="game" class="screen">
         <div style="display:flex; justify-content:space-between; width:95%; margin-bottom:10px;">
             <button class="btn-sub" style="border:none; padding:5px 15px; border-radius:15px; cursor:pointer;" onclick="location.reload()">やめる</button>
-            <button id="ab" class="btn" style="width:120px; padding:5px; margin:0; font-size:0.85rem; background:#8e44ad; color:#fff; box-shadow:none;" onclick="A()">アシスト: OFF</button>
+            <button id="ab" class="btn" style="width:120px; padding:5px; margin:0; font-size:0.85rem; background:#8e44ad; color:#fff;" onclick="A()">アシスト: OFF</button>
         </div>
         <div class="info">
             <div><small id="lb">くろ</small><br><b id="sb" style="font-size:1.4rem;">0</b></div>
             <div id="tt" class="turn-txt">くろ の ばん</div>
             <div><small id="lw">しろ</small><br><b id="sw" style="font-size:1.4rem;">0</b></div>
         </div>
-        <div id="board"></div>
-        <div id="msg" style="height:25px; color:var(--accent); margin:10px 0; font-weight:bold; font-size:1rem;"></div>
+        <div id="board-container">
+            <div id="board"></div>
+            <div id="hc" class="hist-controls">
+                <button id="prev-h" class="h-btn" onclick="H(-1)">◀</button>
+                <button id="next-h" class="h-btn" onclick="H(1)">▶</button>
+            </div>
+        </div>
+        <div id="msg" style="height:25px; color:var(--accent); margin:10px 0; font-weight:bold; text-align:center;"></div>
         <div id="hand"></div>
     </div>
 
     <div id="info-modal" class="modal-bg" onclick="C()">
         <div class="modal-content">
-            <h2 style="color:var(--accent); margin-top:0;">スタート！</h2>
-            <p id="im" style="font-size: 1.5rem; font-weight: bold; margin: 20px 0; line-height:1.6;"></p>
+            <h2 style="color:var(--accent);">スタート！</h2>
+            <p id="im" style="font-size: 1.5rem; font-weight: bold; margin: 20px 0;"></p>
             <p style="font-size: 0.8rem; color:#bdc3c7;">(がめんを おしてね)</p>
         </div>
     </div>
 
     <div id="result-modal" class="modal-bg">
         <div class="modal-content">
-            <h2 style="font-size:2rem; color:var(--accent); margin:0;">しゅうりょう！</h2>
-            <p id="rs" style="font-size:1.4rem; margin:20px 0; font-weight:bold;"></p>
+            <h2 style="font-size:2rem; color:var(--accent);">しゅうりょう！</h2>
+            <p id="rs" style="font-size:1.4rem; margin:20px 0;"></p>
             <h3 id="rw" style="font-size:1.8rem;"></h3>
-            <button class="btn" style="width:100%;" onclick="location.reload()">タイトルへ</button>
+            <button class="btn" style="width:100%" onclick="V(1)">ばんめんを みる</button>
+            <button class="btn btn-sub" style="width:100%" onclick="location.reload()">タイトルへ</button>
         </div>
     </div>
+    <button id="rev-btn" onclick="V(0)">けっかに もどる</button>
 
 <script>
-let b,t,h,si,v,cL,p,as=0,g=0,SZ=6;function W(i){document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));document.getElementById(i).classList.add("active")}function T(){let m=document.getElementById("diff-menu");m.style.display=m.style.display=="flex"?"none":"flex"}function A(){as=!as;let n=document.getElementById("ab");n.innerText=`アシスト: ${as?"ON":"OFF"}`;n.style.background=as?"#e74c3c":"#8e44ad";U()}function S(c,l){v=c;cL=l;b=Array(SZ).fill().map(()=>Array(SZ).fill(null));b[2][2]={c:'white',v:5};b[2][3]={c:'black',v:6};b[3][2]={c:'black',v:5};b[3][3]={c:'white',v:6};let n=[0,1,1,2,2,3,3,4,4,5,5,6,6,7,7,8,8,9,9];h={black:[...n],white:[...n]};t='black';si=null;g=0;if(v){p=Math.random()<.5?'black':'white';document.getElementById('im').innerHTML=`あなたは<br><span style="color:var(--accent);font-size:2rem">${p=='black'?'せんこう（くろ）':'こうこう（しろ）'}</span><br>です！`;document.getElementById('info-modal').style.display='flex'}W('game');U()}function C(){document.getElementById('info-modal').style.display='none';if(v&&t!=p)setTimeout(CP,800)}function U(){let e=document.getElementById('board');e.innerHTML='';let vm=[];if(!g&&as&&si!==null&&(!v||t==p)){let vV=h[t][si];for(let r=0;r<SZ;r++)for(let c=0;c<SZ;c++)if(!b[r][c]&&G(r,c,vV,t).length>0)vm.push(`${r},${c}`)}for(let r=0;r<SZ;r++)for(let c=0;c<SZ;c++){let d=document.createElement('div');d.className='cell';if(vm.includes(`${r},${c}`))d.classList.add('valid-move');d.onclick=()=>K(r,c);if(b[r][c]){let pO=document.createElement('div');pO.className=`piece ${b[r][c].c}`;pO.innerText=b[r][c].v;d.appendChild(pO)}e.appendChild(d)}if(!g){let hl=document.getElementById('hand');hl.innerHTML='';let d=v&&t!=p?p:t;h[d].forEach((vV,i)=>{let pI=document.createElement('div');pI.className=`hand-p ${si==i?"sel":""}`;pI.innerText=vV;pI.onclick=()=>{if(v&&t!=p)return;si=i;U()};hl.appendChild(pI)});let bk=0,wt=0;b.flat().forEach(p=>{if(p?.c=='black')bk+=p.v;if(p?.c=='white')wt+=p.v});document.getElementById('sb').innerText=bk;document.getElementById('sw').innerText=wt;document.getElementById('tt').innerText=v?(t==p?"あなたのばん":"CPUのばん"): (t=='black'?"くろのばん":"しろのばん");document.getElementById('lb').innerText=v&&p=='black'?"くろ(あなた)":"くろ";document.getElementById('lw').innerText=v&&p=='white'?"しろ(あなた)":"しろ"}}function K(r,c){if(v&&t!=p)return;if(si==null){document.getElementById('msg').innerText="すうじを えらんでね！";return}let f=G(r,c,h[t][si],t);if(!f.length||b[r][c]){document.getElementById('msg').innerText="そこには おけません";return}M(r,c,h[t][si],f)}function G(r,c,vV,cl){let dr=[[0,1],[0,-1],[1,0],[-1,0],[1,1],[1,-1],[-1,1],[-1,-1]],res=[];dr.forEach(([y,x])=>{let tL=[],cy=r+y,cx=c+x;while(cy>=0&&cy<SZ&&cx>=0&&cx<SZ){let tg=b[cy][cx];if(!tg)break;if(tg.c!=cl)tL.push({r:cy,c:cx,v:tg.v});else{if(tL.length>0&&(vV+tg.v)>tL.reduce((a,b)=>a+b.v,0))res=res.concat(tL);break}cy+=y;cx+=x}});return res}function M(r,c,vV,f){b[r][c]={c:t,v:vV};f.forEach(p=>b[p.r][p.c].c=t);h[t].splice(si,1);si=null;document.getElementById('msg').innerText="";t=t=='black'?'white':'black';U();if(!P(t)){t=t=='black'?'white':'black';if(!P(t))E()}if(v&&t!=p&&!g)setTimeout(CP,1000)}function P(p){for(let r=0;r<SZ;r++)for(let c=0;c<SZ;c++)if(!b[r][c])for(let vV of new Set(h[p]))if(G(r,c,vV,p).length>0)return 1;return 0}function CP(){let m=[];h[t].forEach((vV,i)=>{for(let r=0;r<SZ;r++)for(let c=0;c<SZ;c++)if(!b[r][c]){let f=G(r,c,vV,t);if(f.length){let s=f.reduce((a,b)=>a+b.v,0);if(cL==1){s=vV*100-s;if((r==0||r==5)&&(c==0||c==5))s-=500}else if(cL==2)s=Math.random();else{if(cL>=4&&((r==0||r==5)&&(c==0||c==5)))s+=100;if(cL==5&&vV>=8)s+=50}m.push({r,c,vV,i,s})}}});if(m.length){m.sort((a,b)=>b.s-a.s);si=m[0].i;M(m[0].r,m[0].c,m[0].vV,G(m[0].r,m[0].c,m[0].vV,t))}}function E(){g=1;let bk=0,wt=0;b.flat().forEach(p=>{if(p?.c=='black')bk+=p.v;if(p?.c=='white')wt+=p.v});document.getElementById('rs').innerHTML=`くろ: ${bk}点 / しろ: ${wt}点`;let win=document.getElementById('rw');win.innerText=bk>wt?"くろの かち！":wt>bk?"しろの かち！":"ひきわけ！";document.getElementById('result-modal').style.display='flex'}
+let b,t,h,si,v,cL,p,as=0,g=0,SZ=6,hi=[],hI=-1;
+const W=i=>{document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));document.getElementById(i).classList.add("active")};
+const T=()=>{let m=document.getElementById("diff-menu");m.style.display=m.style.display=="flex"?"none":"flex"};
+const A=()=>{as=!as;let n=document.getElementById("ab");n.innerText=`アシスト: ${as?"ON":"OFF"}`;n.style.background=as?"#e74c3c":"#8e44ad";U()};
+const S=(c,l)=>{v=c;cL=l;b=Array(SZ).fill().map(()=>Array(SZ).fill(null));b[2][2]={c:'white',v:5};b[2][3]={c:'black',v:6};b[3][2]={c:'black',v:5};b[3][3]={c:'white',v:6};let n=[0,1,1,2,2,3,3,4,4,5,5,6,6,7,7,8,8,9,9];h={black:[...n],white:[...n]};t='black';si=null;g=0;hi=[];hS();if(v){p=Math.random()<.5?'black':'white';document.getElementById('im').innerHTML=`あなたは<br><span style="color:var(--accent);font-size:2rem">${p=='black'?'せんこう（くろ）':'こうこう（しろ）'}</span>です！`;document.getElementById('info-modal').style.display='flex'}W('game');U()};
+const C=()=>{document.getElementById('info-modal').style.display='none';if(v&&t!=p)setTimeout(CP,800)};
+const H=d=>{let n=hI+d;if(n>=0&&n<hi.length){hI=n;b=JSON.parse(JSON.stringify(hi[hI]));U(1)}};
+const hS=()=>{hi.push(JSON.parse(JSON.stringify(b)));hI=hi.length-1};
+
+const U=(isH=0)=>{
+    let e=document.getElementById('board');e.innerHTML='';
+    let vm=[];if(!g&&!isH&&as&&si!==null&&(!v||t==p)){let vV=h[t][si];for(let r=0;r<SZ;r++)for(let c=0;c<SZ;c++)if(!b[r][c]&&G(r,c,vV,t,b).length>0)vm.push(`${r},${c}`)}
+    for(let r=0;r<SZ;r++)for(let c=0;c<SZ;c++){
+        let d=document.createElement('div');d.className='cell';
+        if(vm.includes(`${r},${c}`))d.classList.add('valid-move');
+        d.onclick=()=>K(r,c);
+        if(b[r][c]){let pO=document.createElement('div');pO.className=`piece ${b[r][c].c}`;pO.innerText=b[r][c].v;d.appendChild(pO)}
+        e.appendChild(d)
+    }
+    document.getElementById('prev-h').disabled=hI<=0;document.getElementById('next-h').disabled=hI>=hi.length-1;
+    if(!g){
+        let hl=document.getElementById('hand');hl.innerHTML='';let d=v&&t!=p?p:t;
+        h[d].sort((x,y)=>x-y).forEach((vV,i)=>{
+            let pI=document.createElement('div');pI.className=`hand-p ${si==i?"sel":""}`;pI.innerText=vV;
+            pI.onclick=()=>{if(v&&t!=p||isH)return;si=i;U()};hl.appendChild(pI)
+        });
+        let bk=0,wt=0;b.flat().forEach(p=>{if(p?.c=='black')bk+=p.v;if(p?.c=='white')wt+=p.v});
+        document.getElementById('sb').innerText=bk;document.getElementById('sw').innerText=wt;
+        document.getElementById('tt').innerText=isH?"きろくを かくにんちゅう":(v?(t==p?"あなたのばん":"CPUのばん"):(t=='black'?"くろのばん":"しろのばん"));
+    }
+};
+
+const G=(r,c,vV,cl,bd)=>{
+    let dr=[[0,1],[0,-1],[1,0],[-1,0],[1,1],[1,-1],[-1,1],[-1,-1]],res=[];
+    dr.forEach(([y,x])=>{
+        let tL=[],cy=r+y,cx=c+x;
+        while(cy>=0&&cy<SZ&&cx>=0&&cx<SZ){
+            let tg=bd[cy][cx];if(!tg)break;
+            if(tg.c!=cl)tL.push({r:cy,c:cx,v:tg.v});
+            else{if(tL.length>0&&(vV+tg.v)>tL.reduce((a,o)=>a+o.v,0))res=res.concat(tL);break}
+            cy+=y;cx+=x
+        }
+    });return res
+};
+
+const K=(r,c)=>{if(v&&t!=p||hI!=hi.length-1)return;if(si==null){document.getElementById('msg').innerText="すうじを えらんでね！";return}let f=G(r,c,h[t][si],t,b);if(!f.length||b[r][c]){document.getElementById('msg').innerText="そこには おけません";return}M(r,c,h[t][si],f)};
+
+const M=(r,c,vV,f)=>{
+    b[r][c]={c:t,v:vV};f.forEach(p=>b[p.r][p.c].c=t);
+    h[t].splice(si,1);si=null;hS();document.getElementById('msg').innerText="";
+    t=t=='black'?'white':'black';U();
+    checkPass();
+};
+
+const checkPass=()=>{
+    if(g)return;
+    if(!P(t,b,h[t])){
+        let pName = (v && t!=p) ? "CPU" : (t=='black'?"くろ":"しろ");
+        document.getElementById('msg').innerText = `${pName} は おける場所が ありません！ パスします`;
+        setTimeout(()=>{
+            document.getElementById('msg').innerText = "";
+            t=t=='black'?'white':'black';
+            U();
+            if(!P(t,b,h[t])) E();
+            else if(v && t!=p) setTimeout(CP,1000);
+        },1500);
+    } else if(v && t!=p) {
+        setTimeout(CP,1000);
+    }
+};
+
+const P=(cl,bd,hd)=>{for(let r=0;r<SZ;r++)for(let c=0;c<SZ;c++)if(!bd[r][c])for(let vV of new Set(hd))if(G(r,c,vV,cl,bd).length>0)return 1;return 0};
+
+const CP=()=>{
+    let m=[];
+    h[t].forEach((vV,i)=>{
+        for(let r=0;r<SZ;r++)for(let c=0;c<SZ;c++){
+            if(!b[r][c]){
+                let f=G(r,c,vV,t,b);
+                if(f.length){
+                    let s=0;
+                    if(cL===5) s = evalLv5(r,c,vV,f,t,b,h);
+                    else if(cL===4) s = evalLv4(r,c,vV,f,t,b,h);
+                    else if(cL===3) s = evalLv3(r,c,vV,f,t,b,h);
+                    else if(cL===2) s = Math.random()*100;
+                    else s = vV*10 - f.reduce((a,o)=>a+o.v,0);
+                    m.push({r,c,vV,i,s,f});
+                }
+            }
+        }
+    });
+    if(m.length){m.sort((a,b)=>b.s-a.s);let f=m[0];si=f.i;M(f.r,f.c,f.vV,f.f)}
+};
+
+const evalLv5=(r,c,vV,f,cl,bd,hd)=>{
+    let score = f.reduce((a,o)=>a+o.v,0);
+    let isC=((r==0||r==5)&&(c==0||c==5)), isX=((r==1||r==4)&&(c==1||c==4));
+    if(isC) score += (400 + vV * 20);
+    if(isX) score -= 300;
+    if(!isC) score -= vV * 5; // 毒まんじゅう戦略
+    let simB = JSON.parse(JSON.stringify(bd));
+    simB[r][c] = {c:cl, v:vV}; f.forEach(p=>simB[p.r][p.c].c=cl);
+    let ot = cl=='black'?'white':'black', maxO=0;
+    h[ot].forEach(ov=>{for(let nr=0;nr<SZ;nr++)for(let nc=0;nc<SZ;nc++)if(!simB[nr][nc]){
+        let of=G(nr,nc,ov,ot,simB);if(of.length)maxO=Math.max(maxO,of.reduce((a,o)=>a+o.v,0));
+    }});
+    return score - (maxO * 2.5);
+};
+
+const evalLv4=(r,c,vV,f,cl,bd,hd)=>{
+    let s = f.reduce((a,o)=>a+o.v,0) + vV;
+    if((r==0||r==5)&&(c==0||c==5)) s+=300;
+    if((r==1||r==4)&&(c==1||c==4)) s-=150;
+    return s;
+};
+
+const evalLv3=(r,c,vV,f,cl,bd,hd)=>{
+    let s = f.length * 10;
+    if((r==0||r==5)&&(c==0||c==5)) s+=100;
+    return s + (Math.random()*20);
+};
+
+const E=()=>{
+    g=1;let bk=0,wt=0;b.flat().forEach(p=>{if(p?.c=='black')bk+=p.v;if(p?.c=='white')wt+=p.v});
+    document.getElementById('rs').innerHTML=`くろ: ${bk}点 / しろ: ${wt}点`;
+    let resTxt="";
+    if(v){
+        if((p=='black'&&bk>wt)||(p=='white'&&wt>bk))resTxt="あなたのかち！";
+        else if(bk==wt)resTxt="ひきわけ！";
+        else resTxt="CPUのかち！";
+    }else{resTxt=bk>wt?"くろのかち！":wt>bk?"しろのかち！":"ひきわけ！"}
+    document.getElementById('rw').innerText=resTxt;document.getElementById('result-modal').style.display='flex';
+};
+const V=s=>{document.getElementById('result-modal').style.display=s?'none':'flex';document.getElementById('rev-btn').style.display=s?'block':'none';document.getElementById('hc').style.display=s?'flex':'none'};
 </script>
 </body>
 </html>
