@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ナンバーリバシー</title>
+    <title>ナンバーリバシー：決定版</title>
     <style>
         :root { --bg: #2c3e50; --board: #27ae60; --black: #333; --white: #fff; --accent: #f1c40f; }
         body { font-family: sans-serif; background: var(--bg); color: white; display: flex; flex-direction: column; align-items: center; padding: 10px; margin: 0; min-height: 100vh; overflow-x: hidden; }
@@ -18,13 +18,14 @@
         .btn-sub { background: #95a5a6; color: white; box-shadow: 0 5px 0 #7f8c8d; }
         #diff-menu { display: none; flex-direction: column; align-items: center; width: 100%; padding: 10px 0; }
         .lv-btn { border: none; padding: 10px; margin: 4px; border-radius: 8px; color: white; font-weight: bold; width: 85%; max-width: 250px; cursor: pointer; }
-        .lv1{background:#2ecc71}.lv2{background:#3498db}.lv3{background:#f39c12}.lv4{background:#e67e22}.lv5{background:#e74c3c}
+        .lv1{background:#2ecc71}.lv2{background:#3498db}.lv3{background:#f39c12}.lv4{background:#e67e22}.lv5{background:linear-gradient(45deg, #e74c3c, #c0392b);}
         .info { display: flex; width: 95%; justify-content: space-around; align-items: center; background: rgba(0,0,0,0.25); padding: 12px; border-radius: 15px; margin-bottom: 10px; box-sizing: border-box; }
         .turn-txt { padding: 6px 15px; border-radius: 20px; font-weight: bold; background: #fff; color:#2c3e50; font-size: 0.9rem; }
-        #board-container { position: relative; display: flex; flex-direction: column; align-items: center; }
         #board { display: grid; grid-template-columns: repeat(6, min(14vw, 55px)); grid-template-rows: repeat(6, min(14vw, 55px)); gap: 4px; background: #145a32; padding: 8px; border-radius: 10px; box-shadow: 0 8px 20px rgba(0,0,0,0.5); }
-        .cell { background: var(--board); display: flex; align-items: center; justify-content: center; border-radius: 4px; cursor: pointer; }
+        .cell { background: var(--board); display: flex; align-items: center; justify-content: center; border-radius: 4px; cursor: pointer; height: min(14vw, 55px); width: min(14vw, 55px); position: relative;}
         .valid-move { box-shadow: inset 0 0 10px var(--accent); border: 2px solid var(--accent); background: #2ecc71; }
+        .cpu-targeting { border: 4px solid #f1c40f; z-index: 5; animation: blink 0.3s infinite; }
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
         .piece { width: 80%; height: 80%; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: min(5vw, 20px); box-shadow: inset -1px -2px 3px rgba(0,0,0,0.4); }
         .black { background: #2c3e50; color: white; }
         .white { background: #ecf0f1; color: #2c3e50; }
@@ -33,9 +34,7 @@
         .sel { background: var(--accent); color: #2c3e50; transform: scale(1.1); border-color: #fff; }
         .modal-bg { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); align-items: center; justify-content: center; z-index: 100; padding: 15px; box-sizing: border-box; }
         .modal-content { background: var(--bg); padding: 25px; border-radius: 20px; text-align: center; border: 4px solid var(--accent); width: 100%; max-width: 380px; }
-        #rev-btn { display: none; position: fixed; bottom: 20px; right: 20px; background: var(--accent); color: #2c3e50; padding: 10px 20px; border-radius: 30px; font-weight: bold; z-index: 90; }
-        .hist-controls { display: none; margin-top: 15px; gap: 20px; }
-        .h-btn { background: #34495e; color: white; border: none; padding: 8px 25px; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 1.2rem; }
+        .hist-controls { display: none; margin-top: 15px; gap: 10px; }
     </style>
 </head>
 <body>
@@ -45,11 +44,12 @@
             <p class="subtitle">かずの パワーで はさみうち！</p>
             <button class="btn" onclick="T()">ひとりで あそぶ</button>
             <div id="diff-menu">
-                <button class="lv-btn lv1" onclick="S(1,1)">Lv1 (とっても やさしい)</button>
+                <button class="lv-btn lv1" onclick="S(1,1)">Lv1 (やさしい)</button>
                 <button class="lv-btn lv2" onclick="S(1,2)">Lv2 (ふつう)</button>
                 <button class="lv-btn lv3" onclick="S(1,3)">Lv3 (しっかり)</button>
                 <button class="lv-btn lv4" onclick="S(1,4)">Lv4 (てごわい)</button>
                 <button class="lv-btn lv5" onclick="S(1,5)">Lv5 (かなりてごわい)</button>
+                ※Lv4,Lv5はコンピューターがかんがえるじかんがあるよ！
             </div>
             <button class="btn" onclick="S(0,0)">ふたりで あそぶ</button>
             <button class="btn btn-sub" onclick="W('rules')">あそびかた</button>
@@ -59,15 +59,23 @@
     <div id="rules" class="screen">
         <div class="title-panel">
             <h2>あそびかた</h2>
-            <div style="text-align:left; font-size:0.9rem; line-height:1.7; background:rgba(255,255,255,0.1); padding:15px; border-radius:15px;">
-                １．てふだ から すうじを えらぶ。<br>
-                ２．あいてを はさめる ばしょに おく。<br>
-                ３．<b>[じぶんの ２まいの ごうけい]</b> が<br>
-                　　<b>[あいだの あいての ごうけい]</b> より<br>
-                　　おおきければ ひっくりかえせるよ！<br>
-                ４．さいごに すうじのごうけい が おおいほうが かち！
+            <div style="text-align:left; font-size:1.1rem; line-height:1.8; background:rgba(255,255,255,0.1); padding:20px; border-radius:15px; color:#fff;">
+                １．じぶんの <b>てふだ</b> から すうじを えらぶ。<br>
+                ２．あ相手の こまを <b>はさめる ばしょ</b> に おく。<br>
+                ３．<b>[じぶんが おく すうじ]</b> ＋ <b>[はさむ さきにある じぶんの すうじ]</b> が<br>
+                　　<b>[あいだに いる あいての すうじのごうけい]</b> より おおきければ<br>
+                　　ひっくり かえせるよ！<br>
+                ４．さいごに すうじの <b>ごうけい</b> が おおいほうが かち！
             </div>
-            <button class="btn btn-sub" onclick="W('title')" style="margin-top:15px;">タイトルに もどる</button>
+            <button class="btn btn-sub" onclick="W('title')" style="margin-top:15px;">もどる</button>
+        </div>
+    </div>
+
+    <div id="start-modal" class="modal-bg">
+        <div class="modal-content">
+            <h2 style="color:var(--accent);">じゅんびOK？</h2>
+            <p id="start-msg" style="font-size:1.5rem; font-weight:bold; margin:20px 0; line-height:1.6;"></p>
+            <button class="btn" onclick="closeStartModal()">かいし！</button>
         </div>
     </div>
 
@@ -77,170 +85,220 @@
             <button id="ab" class="btn" style="width:120px; padding:5px; margin:0; font-size:0.85rem; background:#8e44ad; color:#fff;" onclick="A()">アシスト: OFF</button>
         </div>
         <div class="info">
-            <div><small id="lb">くろ</small><br><b id="sb" style="font-size:1.4rem;">0</b></div>
+            <div><small id="label-black">くろ</small><br><b id="sb" style="font-size:1.4rem;">0</b></div>
             <div id="tt" class="turn-txt">くろ の ばん</div>
-            <div><small id="lw">しろ</small><br><b id="sw" style="font-size:1.4rem;">0</b></div>
+            <div><small id="label-white">しろ</small><br><b id="sw" style="font-size:1.4rem;">0</b></div>
         </div>
-        <div id="board-container">
-            <div id="board"></div>
-            <div id="hc" class="hist-controls">
-                <button id="prev-h" class="h-btn" onclick="H(-1)">◀</button>
-                <button id="next-h" class="h-btn" onclick="H(1)">▶</button>
-            </div>
-        </div>
-        <div id="msg" style="height:25px; color:var(--accent); margin:10px 0; font-weight:bold; text-align:center;"></div>
+        <div id="board"></div>
+        <div id="msg" style="height:30px; color:var(--accent); margin:10px 0; font-weight:bold; text-align:center; font-size:1.1rem;"></div>
         <div id="hand"></div>
-    </div>
-
-    <div id="info-modal" class="modal-bg" onclick="C()">
-        <div class="modal-content">
-            <h2 style="color:var(--accent);">スタート！</h2>
-            <p id="im" style="font-size: 1.5rem; font-weight: bold; margin: 20px 0;"></p>
-            <p style="font-size: 0.8rem; color:#bdc3c7;">(がめんを おしてね)</p>
+        <div id="hist-ctrl" class="hist-controls">
+            <button class="btn btn-sub" style="width:80px;" onclick="step(-1)">←前</button>
+            <button class="btn btn-sub" style="width:80px;" onclick="step(1)">次→</button>
         </div>
     </div>
 
     <div id="result-modal" class="modal-bg">
         <div class="modal-content">
-            <h2 style="font-size:2rem; color:var(--accent);">しゅうりょう！</h2>
+            <h2 id="rw" style="color:var(--accent); font-size:2rem;"></h2>
             <p id="rs" style="font-size:1.4rem; margin:20px 0;"></p>
-            <h3 id="rw" style="font-size:1.8rem;"></h3>
-            <button class="btn" style="width:100%" onclick="V(1)">ばんめんを みる</button>
-            <button class="btn btn-sub" style="width:100%" onclick="location.reload()">タイトルへ</button>
+            <button class="btn" onclick="showHistory()">ばんめんを みる</button>
+            <button class="btn btn-sub" onclick="location.reload()">タイトルへ</button>
         </div>
     </div>
-    <button id="rev-btn" onclick="V(0)">けっかに もどる</button>
 
 <script>
-let b,t,h,si,v,cL,p,as=0,g=0,SZ=6,hi=[],hI=-1;
+let b, t, h, si, v, cL, p, g=0, SZ=6, as=0, cpuWait=false, history=[], curStep=0;
+
 const W=i=>{document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));document.getElementById(i).classList.add("active")};
 const T=()=>{let m=document.getElementById("diff-menu");m.style.display=m.style.display=="flex"?"none":"flex"};
-const A=()=>{as=!as;let n=document.getElementById("ab");n.innerText=`アシスト: ${as?"ON":"OFF"}`;n.style.background=as?"#e74c3c":"#8e44ad";U()};
-const S=(c,l)=>{v=c;cL=l;b=Array(SZ).fill().map(()=>Array(SZ).fill(null));b[2][2]={c:'white',v:5};b[2][3]={c:'black',v:6};b[3][2]={c:'black',v:5};b[3][3]={c:'white',v:6};let n=[0,1,1,2,2,3,3,4,4,5,5,6,6,7,7,8,8,9,9];h={black:[...n],white:[...n]};t='black';si=null;g=0;hi=[];hS();if(v){p=Math.random()<.5?'black':'white';document.getElementById('im').innerHTML=`あなたは<br><span style="color:var(--accent);font-size:2rem">${p=='black'?'せんこう（くろ）':'こうこう（しろ）'}</span>です！`;document.getElementById('info-modal').style.display='flex'}W('game');U()};
-const C=()=>{document.getElementById('info-modal').style.display='none';if(v&&t!=p)setTimeout(CP,800)};
-const H=d=>{let n=hI+d;if(n>=0&&n<hi.length){hI=n;b=JSON.parse(JSON.stringify(hi[hI]));U(1)}};
-const hS=()=>{hi.push(JSON.parse(JSON.stringify(b)));hI=hi.length-1};
+const A=()=>{as=!as; document.getElementById("ab").innerText=`アシスト: ${as?"ON":"OFF"}`; U()};
 
-const U=(isH=0)=>{
-    let e=document.getElementById('board');e.innerHTML='';
-    let vm=[];if(!g&&!isH&&as&&si!==null&&(!v||t==p)){let vV=h[t][si];for(let r=0;r<SZ;r++)for(let c=0;c<SZ;c++)if(!b[r][c]&&G(r,c,vV,t,b).length>0)vm.push(`${r},${c}`)}
+const S=(c,l)=>{
+    v=c; cL=l; g=0; history=[];
+    b=Array(SZ).fill().map(()=>Array(SZ).fill(null));
+    b[2][2]={c:'white',v:5}; b[2][3]={c:'black',v:6};
+    b[3][2]={c:'black',v:5}; b[3][3]={c:'white',v:6};
+    let n=[0,1,1,2,2,3,3,4,4,5,5,6,6,7,7,8,8,9,9];
+    h={black:[...n],white:[...n]};
+    t='black'; si=null;
+    if(v){
+        p = Math.random() < 0.5 ? 'black' : 'white';
+        let pTxt = p=='black'?'せんこう（くろ）':'こうこう（しろ）';
+        document.getElementById('start-msg').innerHTML = `あなたは<br>${pTxt}<br>です！`;
+        document.getElementById('label-black').innerText = p=='black'?'あなた':'CPU';
+        document.getElementById('label-white').innerText = p=='white'?'あなた':'CPU';
+        document.getElementById('start-modal').style.display = 'flex';
+    }
+    W('game'); saveState(); U();
+};
+
+const closeStartModal=()=> { document.getElementById('start-modal').style.display='none'; checkEnd(); };
+const saveState=()=>{ history.push(JSON.parse(JSON.stringify({b,h,t}))); curStep = history.length -1; };
+
+const U=(targetCell=null)=>{
+    let e=document.getElementById('board'); e.innerHTML='';
+    let vm=[]; if(!g && as && si!==null && (t==p||!v)){
+        let vV=h[t][si];
+        for(let r=0;r<SZ;r++)for(let c=0;c<SZ;c++) if(!b[r][c] && G(r,c,vV,t,b).length>0) vm.push(`${r},${c}`);
+    }
     for(let r=0;r<SZ;r++)for(let c=0;c<SZ;c++){
-        let d=document.createElement('div');d.className='cell';
-        if(vm.includes(`${r},${c}`))d.classList.add('valid-move');
+        let d=document.createElement('div'); d.className='cell';
+        if(vm.includes(`${r},${c}`)) d.classList.add('valid-move');
+        if(targetCell && targetCell.r == r && targetCell.c == c) d.classList.add('cpu-targeting');
         d.onclick=()=>K(r,c);
-        if(b[r][c]){let pO=document.createElement('div');pO.className=`piece ${b[r][c].c}`;pO.innerText=b[r][c].v;d.appendChild(pO)}
-        e.appendChild(d)
+        if(b[r][c]){
+            let pO=document.createElement('div'); pO.className=`piece ${b[r][c].c}`; pO.innerText=b[r][c].v;
+            d.appendChild(pO);
+        }
+        e.appendChild(d);
     }
-    if(!g){
-        let hl=document.getElementById('hand');hl.innerHTML='';let d=v&&t!=p?p:t;
-        h[d].sort((x,y)=>x-y).forEach((vV,i)=>{
-            let pI=document.createElement('div');pI.className=`hand-p ${si==i?"sel":""}`;pI.innerText=vV;
-            pI.onclick=()=>{if(v&&t!=p||isH)return;si=i;U()};hl.appendChild(pI)
-        });
-        let bk=0,wt=0;b.flat().forEach(p=>{if(p?.c=='black')bk+=p.v;if(p?.c=='white')wt+=p.v});
-        document.getElementById('sb').innerText=bk;document.getElementById('sw').innerText=wt;
-        document.getElementById('tt').innerText=isH?"リプレイ中":(v?(t==p?"あなたのばん":"CPUのばん"):(t=='black'?"くろのばん":"しろのばん"));
-    }
+    let hl=document.getElementById('hand'); hl.innerHTML='';
+    let dispSide = (v && t!=p) ? p : t;
+    h[dispSide].sort((x,y)=>x-y).forEach((vV,i)=>{
+        let pI=document.createElement('div'); pI.className=`hand-p ${si==i?"sel":""}`; pI.innerText=vV;
+        pI.onclick=()=>{if(v && t!=p)return; si=i; U()};
+        hl.appendChild(pI);
+    });
+    let bk=0, wt=0; b.flat().forEach(x=>{if(x?.c=='black')bk+=x.v; if(x?.c=='white')wt+=x.v});
+    document.getElementById('sb').innerText=bk; document.getElementById('sw').innerText=wt;
+    document.getElementById('tt').innerText=v?(t==p?"あなたのばん":"CPUのばん"):(t=='black'?"くろのばん":"しろのばん");
 };
 
 const G=(r,c,vV,cl,bd)=>{
-    let dr=[[0,1],[0,-1],[1,0],[-1,0],[1,1],[1,-1],[-1,1],[-1,-1]],res=[];
+    let dr=[[0,1],[0,-1],[1,0],[-1,0],[1,1],[1,-1],[-1,1],[-1,-1]], res=[];
     dr.forEach(([y,x])=>{
-        let tL=[],cy=r+y,cx=c+x;
+        let tL=[], cy=r+y, cx=c+x;
         while(cy>=0&&cy<SZ&&cx>=0&&cx<SZ){
-            let tg=bd[cy][cx];if(!tg)break;
-            if(tg.c!=cl)tL.push({r:cy,c:cx,v:tg.v});
-            else{if(tL.length>0&&(vV+tg.v)>tL.reduce((a,o)=>a+o.v,0))res=res.concat(tL);break}
-            cy+=y;cx+=x
+            let tg=bd[cy][cx]; if(!tg) break;
+            if(tg.c!=cl) tL.push({r:cy,c:cx,v:tg.v});
+            else { if(tL.length>0 && (vV+tg.v)>tL.reduce((a,o)=>a+o.v,0)) res=res.concat(tL); break; }
+            cy+=y; cx+=x;
         }
-    });return res
+    }); return res;
 };
 
-const K=(r,c)=>{if(v&&t!=p||hI!=hi.length-1)return;if(si==null){document.getElementById('msg').innerText="すうじを えらんでね！";return}let f=G(r,c,h[t][si],t,b);if(!f.length||b[r][c]){document.getElementById('msg').innerText="そこには おけません";return}M(r,c,h[t][si],f)};
-const M=(r,c,vV,f)=>{b[r][c]={c:t,v:vV};f.forEach(p=>b[p.r][p.c].c=t);h[t].splice(si,1);si=null;hS();document.getElementById('msg').innerText="";t=t=='black'?'white':'black';U();checkPass()};
+const K=(r,c)=>{
+    if(g || (v && t!=p) || si==null || cpuWait) return;
+    let f=G(r,c,h[t][si],t,b);
+    if(!f.length || b[r][c]) return;
+    M(r,c,h[t][si],f,b,h,t);
+    t=t=='black'?'white':'black'; si=null; saveState(); U(); checkEnd();
+};
 
-const checkPass=()=>{
-    if(g)return;
-    if(!P(t,b,h[t])){
-        let pName = (v && t!=p) ? "CPU" : (t=='black'?"くろ":"しろ");
-        document.getElementById('msg').innerText = `${pName} は パスします`;
-        setTimeout(()=>{
-            document.getElementById('msg').innerText = "";
-            t=t=='black'?'white':'black';
-            U();
-            if(!P(t,b,h[t])) E();
-            else if(v && t!=p) setTimeout(CP,800);
-        },1200);
+const M=(r,c,vV,f,bd,hd,cl)=>{
+    bd[r][c]={c:cl,v:vV};
+    f.forEach(p=>bd[p.r][p.c].c=cl);
+    let idx = hd[cl].indexOf(vV);
+    hd[cl].splice(idx,1);
+};
+
+const checkEnd=()=>{
+    if(g || document.getElementById('start-modal').style.display == 'flex') return;
+    if(!canMove(t,b,h[t])){
+        if(!canMove(t=='black'?'white':'black',b,h[t=='black'?'white':'black'])){ E(); return; }
+        document.getElementById('msg').innerText = (t=='black'?'くろ':'しろ') + " は パスします";
+        setTimeout(()=>{ document.getElementById('msg').innerText=""; t=t=='black'?'white':'black'; saveState(); U(); checkEnd(); },800);
     } else if(v && t!=p) {
-        setTimeout(CP,800);
+        document.getElementById('msg').innerText = "CPUかんがえちゅう...";
+        setTimeout(CP, 300);
     }
 };
 
-const P=(cl,bd,hd)=>{for(let r=0;r<SZ;r++)for(let c=0;c<SZ;c++)if(!bd[r][c])for(let vV of new Set(hd))if(G(r,c,vV,cl,bd).length>0)return 1;return 0};
+const canMove=(cl,bd,hd)=>{
+    for(let r=0;r<SZ;r++)for(let c=0;c<SZ;c++) if(!bd[r][c])
+        for(let vV of new Set(hd)) if(G(r,c,vV,cl,bd).length>0) return true;
+    return false;
+};
 
 const CP=()=>{
     let m=[];
     h[t].forEach((vV,i)=>{
-        for(let r=0;r<SZ;r++)for(let c=0;c<SZ;c++){
-            if(!b[r][c]){
-                let f=G(r,c,vV,t,b);
-                if(f.length){
-                    let s = evalLogic(r,c,vV,f,t,b,h,cL);
-                    m.push({r,c,vV,i,s,f});
-                }
-            }
-        }
+        for(let r=0;r<SZ;r++)for(let c=0;c<SZ;c++)
+            if(!b[r][c]){ let f=G(r,c,vV,t,b); if(f.length) m.push({r,c,vV,i,f}); }
     });
-    if(m.length){m.sort((a,b)=>b.s-a.s);let f=m[0];si=f.i;M(f.r,f.c,f.vV,f.f)}
+    if(!m.length) { document.getElementById('msg').innerText = ""; return; }
+    let best;
+    if(cL >= 4){
+        let maxW = -1;
+        let trials = cL == 5 ? 250 : 100; // Lv5を250回に設定
+        m.forEach(move => {
+            let wins = 0;
+            for(let i=0; i<trials; i++) if(sim(b, h, t, move)) wins++;
+            let rate = wins / trials;
+            if(rate > maxW){ maxW = rate; best = move; }
+        });
+    } else {
+        m.forEach(move => {
+            let score = move.f.reduce((a,o)=>a+o.v,0);
+            if(cL >= 3){
+                if((move.r==0||move.r==5)&&(move.c==0||move.c==5)) score += 100;
+                if(move.r==0||move.r==5||move.c==0||move.c==5) score += 10;
+            }
+            if(cL == 1) score = Math.random() * 100;
+            move.s = score;
+        });
+        m.sort((a,b)=>b.s-a.s);
+        best = m[0];
+    }
+    cpuWait = true; U({r: best.r, c: best.c}); 
+    setTimeout(() => {
+        document.getElementById('msg').innerText = "";
+        M(best.r, best.c, best.vV, best.f, b, h, t);
+        t=p; cpuWait = false; saveState(); U(); checkEnd();
+    }, 800);
 };
 
-const evalLogic=(r,c,vV,f,cl,bd,hd,lv)=>{
-    let totalF = f.reduce((a,o)=>a+o.v,0);
-    let opp = cl=='black'?'white':'black';
-    let oppMax = Math.max(...h[opp], 0);
-    let s = totalF;
-
-    if(lv >= 3) {
-        // 共通：角の重要性
-        if((r==0||r==5)&&(c==0||c==5)) s += (lv == 5 ? 10000 : lv == 4 ? 2000 : 500);
-        
-        // 逆算シミュレーション
-        let simB = JSON.parse(JSON.stringify(bd));
-        simB[r][c] = {c:cl, v:vV}; f.forEach(p=>simB[p.r][p.c].c=cl);
-        let danger = 0;
-        h[opp].forEach(ov => {
-            for(let nr=0;nr<SZ;nr++)for(let nc=0;nc<SZ;nc++) if(!simB[nr][nc]) {
-                let of=G(nr,nc,ov,opp,simB);
-                if(of.length) {
-                    let val = of.reduce((a,o)=>a+o.v,0);
-                    if((nr==0||nr==5)&&(nc==0||nc==5)) val += (lv == 5 ? 15000 : 3000);
-                    danger = Math.max(danger, val);
-                }
+const sim=(bd, hd, cl, move)=>{
+    let sb = JSON.parse(JSON.stringify(bd));
+    let sh = JSON.parse(JSON.stringify(hd));
+    let cur = cl;
+    M(move.r, move.c, move.vV, move.f, sb, sh, cur);
+    cur = cur=='black'?'white':'black';
+    let pass = 0;
+    while(pass < 2){
+        let ms = [];
+        let uniqueH = Array.from(new Set(sh[cur]));
+        for(let r=0;r<SZ;r++)for(let c=0;c<SZ;c++){
+            if(!sb[r][c]) for(let vV of uniqueH){
+                let f=G(r,c,vV,cur,sb);
+                if(f.length){ ms.push({r,c,vV,f}); break; }
             }
-        });
-        
-        // レベル5は「絶対に角を渡さない」かつ「逆算重視」
-        if(lv == 5) s = (s * 3) - (danger * 5) - (vV * 50);
-        // レベル4は「バランス型だが強い」
-        if(lv == 4) s = (s * 2) - (danger * 2);
-        // レベル3は「少し先を読む」
-        if(lv == 3) s = s - danger;
+        }
+        if(ms.length){
+            let m = ms[Math.floor(Math.random()*ms.length)];
+            M(m.r, m.c, m.vV, m.f, sb, sh, cur);
+            pass = 0;
+        } else { pass++; }
+        cur = cur=='black'?'white':'black';
     }
-
-    if(lv <= 2) {
-        s = (lv == 2 ? totalF : Math.random() * 100);
-    }
-    
-    return s;
+    let bk=0, wt=0; sb.flat().forEach(x=>{if(x?.c=='black')bk+=x.v; if(x?.c=='white')wt+=x.v});
+    return cl=='black' ? bk > wt : wt > bk;
 };
 
 const E=()=>{
-    g=1;let bk=0,wt=0;b.flat().forEach(p=>{if(p?.c=='black')bk+=p.v;if(p?.c=='white')wt+=p.v});
-    document.getElementById('rs').innerHTML=`くろ: ${bk}点 / しろ: ${wt}点`;
-    let resTxt=bk==wt?"ひきわけ！":((p=='black'&&bk>wt)||(p=='white'&&wt>bk)?"あなたのかち！":"CPUのかち！");
-    document.getElementById('rw').innerText=resTxt;document.getElementById('result-modal').style.display='flex';
+    g=1; let bk=0, wt=0; b.flat().forEach(x=>{if(x?.c=='black')bk+=x.v; if(x?.c=='white')wt+=x.v});
+    document.getElementById('rw').innerText = bk==wt?"ひきわけ":((p=='black'&&bk>wt)||(p=='white'&&wt>bk)?"あなたのかち！":"CPUのかち！");
+    document.getElementById('rs').innerText = `くろ: ${bk} / しろ: ${wt}`;
+    document.getElementById('result-modal').style.display='flex';
 };
-const V=s=>{document.getElementById('result-modal').style.display=s?'none':'flex';document.getElementById('rev-btn').style.display=s?'block':'none';document.getElementById('hc').style.display=s?'flex':'none'};
+
+const showHistory=()=>{
+    document.getElementById('result-modal').style.display='none';
+    document.getElementById('hist-ctrl').style.display='flex';
+    document.getElementById('hand').style.display='none';
+    document.getElementById('msg').innerText = "きろくを かくにん中";
+};
+
+const step=(d)=>{
+    curStep = Math.max(0, Math.min(history.length - 1, curStep + d));
+    let s = history[curStep];
+    b = JSON.parse(JSON.stringify(s.b));
+    h = JSON.parse(JSON.stringify(s.h));
+    t = s.t;
+    U();
+    document.getElementById('msg').innerText = `${curStep}手目 / ${history.length-1}`;
+};
 </script>
 </body>
 </html>
