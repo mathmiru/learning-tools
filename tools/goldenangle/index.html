@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ひまわりの秘密と黄金角</title>
+<style>
+  body { text-align: center; font-family: sans-serif; background: #121212; color: #eee; margin: 0; padding: 0; }
+  #_top_scr { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle, #2a2a2a 0%, #000 100%); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 100; transition: 0.8s; padding: 20px; box-sizing: border-box; }
+  #_top_scr h1 { font-size: 2.2em; color: #f1c40f; margin-bottom: 10px; }
+  .btn-start { padding: 15px 40px; font-size: 1.2em; background: #f1c40f; border: none; border-radius: 30px; font-weight: bold; cursor: pointer; }
+  .wrapper { max-width: 500px; margin: 0 auto; padding: 15px; display: none; }
+  .card-exp { background: #252525; padding: 20px; border-radius: 15px; text-align: left; line-height: 1.7; margin-bottom: 20px; border: 1px solid #444; }
+  .card-exp h2, .card-exp h3 { color: #f1c40f; margin-top: 0; border-bottom: 1px solid #444; padding-bottom: 10px; }
+  .card-exp b { color: #f1c40f; }
+  .frac-box { display: inline-flex; flex-direction: column; vertical-align: middle; align-items: center; margin: 0 10px; }
+  .num { color: #ff6b6b; font-weight: bold; font-size: 1.3em; } /* 分子：赤 */
+  .line { width: 130%; height: 2px; background-color: #eee; margin: 4px 0; }
+  .den { color: #4dabf7; font-weight: bold; font-size: 1.3em; } /* 分母：青 */
+  canvas { background: #000; border-radius: 50%; width: 100%; max-width: 380px; height: auto; margin: 15px 0; box-shadow: 0 0 30px rgba(255, 215, 0, 0.4); }
+  .ctrl-panel { background: #2a2a2a; padding: 15px; border-radius: 15px; text-align: left; }
+  .inp-group { margin-bottom: 10px; display: flex; align-items: center; gap: 10px; }
+  input[type="number"] { background: #1a1a1a; color: #f1c40f; border: 1px solid #444; padding: 8px; border-radius: 5px; width: 120px; font-size: 1em; }
+  .btn-main { width: 100%; padding: 15px; border-radius: 30px; border: none; background: #f1c40f; font-weight: bold; cursor: pointer; font-size: 1.1em; margin-top: 10px; }
+  .btn-row { display: flex; gap: 5px; margin-top: 10px; }
+  .btn-sub { flex: 1; padding: 10px; border-radius: 10px; border: none; background: #444; color: #fff; cursor: pointer; font-size: 0.9em; }
+  .btn-gold { background: #2980b9; }
+  input[type="range"] { width: 100%; cursor: pointer; height: 30px; }
+  label { font-size: 0.85em; color: #bbb; display: block; margin-top: 5px; }
+</style>
+</head>
+<body>
+
+<div id="_top_scr">
+  <h1>🌻 ひまわりの秘密</h1>
+  <p style="color: #bbb; text-align: center; margin-bottom: 30px;">~ 数学がつくる自然の美しさ ~</p>
+  <button class="btn-start" onclick="ui_start()">はじめる</button>
+</div>
+
+<div id="_main_ui" class="wrapper">
+  <div id="_exp_ui" class="card-exp">
+    <h2>ひまわりの種と黄金角</h2>
+    <p>ひまわりの種がなぜあんなにギッシリ詰まっているか、不思議に思ったことはありませんか？</p>
+    <p>植物が種を置くとき、一番大切なのは<b>「前の種と重ならないこと」</b>です。そのために、1周（360度）をある特別な分数で分けた角度を使います。</p>
+    
+    <div style="text-align: center; margin: 20px 0; background: #1a1a1a; padding: 15px; border-radius: 10px;">
+      360度 × 
+      <div class="frac-box">
+        <div class="num">1</div>
+        <div class="line"></div>
+        <div class="den">2.6180...</div>
+      </div>
+    </div>
+
+    <p>この約137.5度を「黄金角」と呼びます。この数字は、どんな分数を使っても絶対にピッタリ割り切れない性質を持っています。<b>割り切れない ＝ 隙間ができない</b> ということなのです。</p>
+
+    <h3>なぜ 1.618 ではなく 2.618 なの？</h3>
+    <p>数学で習う黄金比は <b>1.618...</b> ですが、ひまわりの計算ではこれに「1」を足した <b>2.618...</b> を使います。この数こそが、世界で最も割り切りにくい「究極の数字」だからです。</p>
+    
+    <button class="btn-main" onclick="ui_sim()">シミュレーターへ進む</button>
+  </div>
+
+  <div id="_sim_ui" style="display:none;">
+    <div class="ctrl-panel">
+      <div style="text-align:center; margin-bottom: 15px; font-size: 1.1em;">
+        360° × 
+        <div class="frac-box">
+          <div class="num">1</div>
+          <div class="line"></div>
+          <div id="v_den" class="den" style="font-size: 0.9em; min-width: 70px;">2.6180</div>
+        </div>
+      </div>
+      <div class="inp-group">
+        <label style="margin:0; flex:1;">分母(小数第4位まで):</label>
+        <input type="number" id="i_den" value="2.6180" step="0.0001" oninput="logic_upd()">
+      </div>
+      <label>配置スピード</label>
+      <input type="range" id="i_spd" min="1" max="100" value="20">
+      <button id="i_act" class="btn-main" onclick="logic_play()">アニメーション開始</button>
+      <div class="btn-row">
+        <button class="btn-sub" onclick="logic_res()">リセット</button>
+        <button class="btn-sub btn-gold" onclick="logic_gold()">黄金角にする</button>
+      </div>
+    </div>
+    <canvas id="_cvs" width="600" height="600"></canvas>
+    <p style="font-size: 0.8em; color: #777;">現在の種: <span id="v_cnt">0</span> / 1000</p>
+    <button onclick="location.reload()" style="background:none; border:none; color:#777; margin:10px 0; cursor:pointer;">← 最初から読み直す</button>
+  </div>
+</div>
+
+<script>
+/* ここから下のプログラム（JavaScript）だけを難読化しています。
+   表側のデザインやテキストには影響しません。
+*/
+(function(){const _0x51=document,_0x12=_0x51.getElementById('_cvs'),_0x34=_0x12.getContext('2d'),_0x88=_0x51.getElementById('i_den'),_0x99=_0x51.getElementById('i_spd'),_0x76=_0x51.getElementById('v_den'),_0x45=_0x51.getElementById('v_cnt'),_0x11=_0x51.getElementById('i_act');let _0xPL=!1,_0xSC=0,_0xFC=0,_0xAF=null;const _0xMX=1000;window.ui_start=function(){_0x51.getElementById('_top_scr').style.opacity='0';setTimeout(()=>{_0x51.getElementById('_top_scr').style.display='none';_0x51.getElementById('_main_ui').style.display='block';},800)};window.ui_sim=function(){_0x51.getElementById('_exp_ui').style.display='none';_0x51.getElementById('_sim_ui').style.display='block';_0xDR();};function _0xDR(){const d=parseFloat(_0x88.value)||2;_0x76.innerText=d.toFixed(4);_0x45.innerText=_0xSC;_0x34.clearRect(0,0,600,600);const a=(1/d)*Math.PI*2,c=8;for(let n=0;n<_0xSC;n++){const r=c*Math.sqrt(n),t=n*a,x=300+r*Math.cos(t),y=300+r*Math.sin(t);_0x34.beginPath();_0x34.arc(x,y,3,0,Math.PI*2);if(n===_0xSC-1){_0x34.fillStyle="#ff6b6b";}else{_0x34.fillStyle=`hsl(50,100%,${35+(n/_0xMX)*45}%)`;}_0x34.fill();}}function _0xTK(){if(!_0xPL)return;_0xFC++;const s=parseInt(_0x99.value),l=Math.floor((101-s)/3);if(_0xFC%Math.max(1,l)===0){if(_0xSC<_0xMX){_0xSC++;_0xDR();}else{_0xST();}}_0xAF=requestAnimationFrame(_0xTK);}window.logic_play=function(){if(_0xPL){_0xST();}else{if(_0xSC>=_0xMX)_0xSC=0;_0xPL=!0;_0x11.innerText="ストップ";_0xTK();}};function _0xST(){_0xPL=!1;_0x11.innerText="アニメーション開始";if(_0xAF)cancelAnimationFrame(_0xAF);}window.logic_res=function(){_0xST();_0xSC=0;_0xDR();};window.logic_gold=function(){_0xST();_0x88.value="2.6180";_0xSC=0;_0xDR();};window.logic_upd=function(){_0xST();_0xDR();};_0xDR();})();
+</script>
+</body>
+</html>
