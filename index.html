@@ -53,6 +53,49 @@
       margin-right: 12px;
       border-radius: 3px;
     }
+
+    /* お知らせスクロールエリアのスタイル */
+    .news-scroll-container {
+      background: #ffffff;
+      border-radius: 14px;
+      padding: 0 20px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+      max-height: 160px; /* お知らせがたまってもこの高さで固定 */
+      overflow-y: auto;  /* 中身がはみ出たらスクロール */
+      border: 1px solid #e0e6ed;
+    }
+    .news-item {
+      padding: 14px 0;
+      border-bottom: 1px solid #f0f4f8;
+      display: flex;
+      gap: 15px;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    .news-item:last-child {
+      border-bottom: none;
+    }
+    .news-date {
+      font-weight: bold;
+      color: #4a90e2;
+      white-space: nowrap;
+    }
+    .news-text {
+      color: #555;
+    }
+    /* スクロールバーのデザイン */
+    .news-scroll-container::-webkit-scrollbar {
+      width: 6px;
+    }
+    .news-scroll-container::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 10px;
+    }
+    .news-scroll-container::-webkit-scrollbar-thumb {
+      background: #ccc;
+      border-radius: 10px;
+    }
+
     .grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
@@ -60,7 +103,8 @@
     }
     .card {
       background: #ffffff;
-      border-radius: 14px;      padding: 20px;
+      border-radius: 14px;
+      padding: 20px;
       text-decoration: none;
       color: #333;
       box-shadow: 0 6px 14px rgba(0,0,0,0.08);
@@ -93,6 +137,14 @@
       margin-top: 8px;
       opacity: 0.8;
     }
+
+    /* スマホ向け調整 */
+    @media (max-width: 600px) {
+      .news-item {
+        flex-direction: column;
+        gap: 4px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -103,6 +155,18 @@
 </header>
 
 <main>
+  <h2 class="section-title">お知らせ</h2>
+  <div class="news-scroll-container">
+    <div class="news-item">
+      <span class="news-date">2026.03.10</span>
+      <span class="news-text">新ゲーム「ブロック・ハント」を公開しました！空間認知能力を楽しく鍛えましょう。</span>
+    </div>
+    <div class="news-item">
+      <span class="news-date">2026.03.10</span>
+      <span class="news-text">年度末の多忙及び新作ポケモンゲームの発売につき、しばらくの間は新規ツールの公開頻度が低くなる見込みです。既存ツールの改善は随時行っていきます。</span>
+    </div>
+    </div>
+
   <h2 class="section-title">算数学習ツール</h2>
   <div class="grid">
     <a class="card" href="tools/tasizannhikizannrennsyuu/">
