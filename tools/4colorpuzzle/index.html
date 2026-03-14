@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>4色パズル：ぬりわけ名人</title>
     <style>
         :root {
@@ -18,6 +18,12 @@
             font-family: 'Hiragino Kaku Gothic ProN', 'Meiryo', sans-serif;
             background-color: var(--bg-light); color: var(--text-dark);
             overflow: hidden;
+            /* 画面の長押し選択やハイライトを無効化 */
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
         }
 
         .screen {
@@ -71,6 +77,7 @@
             padding: 10px 20px; font-size: 1rem; font-weight: bold;
             cursor: pointer; border: 3px solid #000; border-radius: 0;
             transition: 0.1s; box-shadow: 4px 4px 0px #000;
+            -webkit-tap-highlight-color: transparent;
         }
         .btn:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0px #000; }
         .btn-easy { background: var(--accent-green); }
@@ -81,11 +88,12 @@
         .color-chip {
             width: 45px; height: 45px; border-radius: 50%; border: 3px solid #ddd;
             cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
         }
         .color-chip.active { border-color: #000; transform: scale(1.1); }
 
         .msg { font-weight: bold; font-size: 1rem; min-height: 1.5em; color: transparent; }
-        .msg-show { color: #e11d48; } /* 赤色で表示 */
+        .msg-show { color: #e11d48; }
         .msg-error { animation: shake 0.2s; }
         @keyframes shake {
             0%, 100% { transform: translateX(0); }
@@ -106,7 +114,8 @@
             <div class="rule-box">
                 <strong>【あそびかた】</strong><br>
                 ・となりの場所と同じ色は ぬれません。<br>
-                ・ぜんぶの場所を 4色で ぬりわけよう！
+                ・ぜんぶの場所を 4色で ぬりわけよう！<br>
+                ・ぬってある場所をたたくと、消すことができます。
             </div>
             <div class="level-btns">
                 <button class="btn btn-easy" onclick="initGame(12)">★ かんたん</button>
@@ -148,11 +157,12 @@
             const chip = document.createElement('div');
             chip.className = `color-chip ${i === 0 ? 'active' : ''}`;
             chip.style.backgroundColor = c;
-            chip.onclick = () => {
+            chip.onclick = (e) => {
+                e.preventDefault();
                 document.querySelectorAll('.color-chip').forEach(el => el.classList.remove('active'));
                 chip.classList.add('active');
                 selectedColor = c;
-                hideMsg(); // 色を変えたらメッセージを隠す
+                hideMsg();
             };
             palette.appendChild(chip);
         });
@@ -194,10 +204,22 @@
     }
 
     canvas.addEventListener('pointerdown', (e) => {
+        e.preventDefault(); // ズームやハイライトを防ぐ
         const rect = canvas.getBoundingClientRect();
         const x = Math.floor(e.clientX - rect.left);
         const y = Math.floor(e.clientY - rect.top);
+        
+        // 範囲外クリック対策
+        if(x < 0 || x >= canvas.width || y < 0 || y >= canvas.height) return;
+        
         const id = mapData[y * canvas.width + x];
+
+        if (regions[id].color !== null) {
+            regions[id].color = null;
+            hideMsg();
+            render();
+            return;
+        }
 
         let canPaint = true;
         for(let neighborId of adj[id]) {
@@ -214,12 +236,12 @@
         } else {
             showMsg("となりとおなじいろです");
         }
-    });
+    }, { passive: false });
 
     function showMsg(text) {
         msgEl.innerText = text;
+        msgEl.style.color = "#e11d48";
         msgEl.classList.add('msg-show', 'msg-error');
-        // アニメーション用のクラスを一度消して付け直す
         setTimeout(() => msgEl.classList.remove('msg-error'), 200);
     }
 
