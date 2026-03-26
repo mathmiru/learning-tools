@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>モンティ・ホール もんだい｜mathmiru</title>
+    <style>
+        body { font-family: "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif; background: #f4f6fb; margin: 0; text-align: center; color: #333; overflow-x: hidden; }
+        .screen { display: none; padding: 20px; max-width: 600px; margin: 0 auto; box-sizing: border-box; }
+        .active { display: block; }
+        
+        h1 { color: #4a90e2; font-size: 24px; margin-bottom: 10px; line-height: 1.4; }
+        .sub-txt { font-size: 14px; color: #666; margin-bottom: 20px; }
+
+        .btn { color: white; border: none; padding: 12px 24px; border-radius: 30px; font-size: 18px; cursor: pointer; margin: 10px; transition: 0.2s; text-decoration: none; display: inline-block; }
+        .btn:active { transform: translateY(2px); }
+        .btn-change { background: #007aff; box-shadow: 0 4px 0 #0056b3; } /* より鮮やかな青 */
+        .btn-stay { background: #ff9500; box-shadow: 0 4px 0 #cc7600; } /* より鮮やかなオレンジ */
+        .btn-sub { background: #95a5a6; box-shadow: 0 4px 0 #7f8c8d; }
+
+        .door-container { display: flex; justify-content: center; gap: 10px; margin: 20px 0; }
+        .door { width: 100px; height: 140px; background: #ff9500; border: 4px solid #cc7600; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 44px; cursor: pointer; position: relative; transition: 0.2s; box-sizing: border-box; }
+        
+        /* 選択中：そのまま（オレンジ強調） */
+        .door.selected-stay { 
+            border: 8px solid #ffcc00; 
+            box-shadow: 0 0 30px #ff9500; 
+            transform: scale(1.1); 
+            z-index: 10; 
+        }
+        /* 選択中：かえる（青強調） */
+        .door.selected-change { 
+            border: 8px solid #54a9ff; 
+            box-shadow: 0 0 30px #007aff; 
+            transform: scale(1.1); 
+            z-index: 10; 
+        }
+
+        .door.opened { background: #ecf0f1; border-color: #bdc3c7; cursor: default; box-shadow: none; transform: scale(1); }
+        
+        .result-label { font-size: 16px; font-weight: bold; margin-top: 5px; }
+        .win-txt { color: #e74c3c; }
+        .lose-txt { color: #7f8c8d; }
+
+        .info-box { text-align: left; background: white; padding: 20px; border-radius: 15px; font-size: 15px; line-height: 1.8; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        .info-box h2 { font-size: 18px; color: #2c3e50; border-bottom: 2px solid #4a90e2; padding-bottom: 5px; margin-top: 15px; margin-bottom: 10px; }
+        
+        .visual-box { background: #f0f7ff; padding: 15px; border-radius: 10px; margin: 10px 0; border: 1px dashed #4a90e2; }
+        .visual-row { display: flex; justify-content: space-around; align-items: center; margin: 10px 0; font-size: 28px; }
+        .visual-item { text-align: center; line-height: 1.2; }
+        .visual-item span { font-size: 12px; color: #666; display: block; }
+
+        .highlight-box { background: #fff3cd; padding: 10px; border-radius: 8px; border-left: 5px solid #ffca28; margin-top: 15px; font-weight: bold; }
+
+        .stats-area { background: white; border-radius: 15px; padding: 15px; margin-top: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        th, td { padding: 10px; border-bottom: 1px solid #eee; text-align: center; }
+        th { background: #4a90e2; color: white; }
+
+        #msg { font-size: 20px; font-weight: bold; min-height: 2.2em; margin: 15px 0; color: #2c3e50; line-height: 1.2; }
+
+        @media (max-width: 400px) {
+            .door { width: 85px; height: 120px; font-size: 34px; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="screen-title" class="screen active">
+    <h1>モンティ・ホール<br>もんだい</h1>
+    <p class="sub-txt">直感（ちょっかん）に ちょうせん！</p>
+    <div class="door-container">
+        <div class="door">🚪</div><div class="door">🚪</div><div class="door">🚪</div>
+    </div>
+    <button class="btn btn-change" onclick="showScreen('screen-info')">あそんでみる！</button>
+</div>
+
+<div id="screen-info" class="screen">
+    <h1>やりかた と ルール</h1>
+    <div class="info-box">
+        <h2>💎 ルール</h2>
+        <div class="visual-row">
+            <div class="visual-item">💎<br><span>あたり</span></div>
+            <div class="visual-item">🐐<br><span>ハズレ</span></div>
+        </div>
+        <p>3つのドアのうち、1つだけ <strong>💎（ダイヤ）</strong>があるよ。のこりの2つは <strong>🐐（ヤギ）</strong>だよ。</p>
+
+        <h2>🎮 ゲームの流れ</h2>
+        <p>1つえらんだあと、モンティさんが 🐐 を1つあけてくれます。</p>
+        <div class="visual-box">
+            <div class="visual-row">
+                <div class="visual-item">🚪<br><span>じぶん</span></div>
+                <div class="visual-item" style="opacity: 0.5;">🐐<br><span>あいた！</span></div>
+                <div class="visual-item">🚪<br><span>のこり</span></div>
+            </div>
+            <p style="font-size: 13px; text-align: center; margin: 0;">のこった 2まいの どちらかに 💎があるよ！</p>
+        </div>
+        
+        <h2>🤔 どっちも 50%？</h2>
+        <p>のこったドアは 2まい。だから、<strong>「どちらも 50％（半分ずつ）であたると おもうよね？」</strong></p>
+        <p>でもじつは、数学（すうがく）の 世界（せかい）ではちがうんだ！</p>
+        
+        <div class="highlight-box" style="text-align: center;">
+            ・そのまま： あたり 33％<br>
+            ・かえる： あたり 67％
+        </div>
+        <p style="margin-top: 10px;">ドアを「かえる」と、あたりやすさが <strong>2ばい</strong> になるよ！ 本当かどうか、実験でたしかめてみよう！</p>
+    </div>
+    <button class="btn btn-change" onclick="showScreen('screen-sim')">実験を はじめる</button><br>
+    <button class="btn btn-sub" onclick="showScreen('screen-title')">タイトルにもどる</button>
+</div>
+
+<div id="screen-sim" class="screen">
+    <div id="msg">ドアをひとつ えらんでね！</div>
+    <div class="door-container" id="doors-div">
+        <div class="door" id="door0" onclick="chooseDoor(0)">🚪</div>
+        <div class="door" id="door1" onclick="chooseDoor(1)">🚪</div>
+        <div class="door" id="door2" onclick="chooseDoor(2)">🚪</div>
+    </div>
+    
+    <div id="controls" style="display:none;">
+        <p>ドアを かえますか？</p>
+        <button class="btn btn-change" onclick="finalDecision(true)">かえる！</button>
+        <button class="btn btn-stay" onclick="finalDecision(false)">そのまま！</button>
+    </div>
+
+    <div id="post-game" style="display:none;">
+        <button class="btn btn-change" onclick="resetGame()">もう一回やる</button><br>
+        <button class="btn btn-sub" onclick="showScreen('screen-title')">タイトルにもどる</button>
+    </div>
+
+    <div class="stats-area">
+        <h3>📊 実験の きろく</h3>
+        <table>
+            <tr><th>えらびかた</th><th>回数</th><th>あたり</th><th>かくりつ</th></tr>
+            <tr><td>そのまま</td><td id="stay-total">0</td><td id="stay-win">0</td><td id="stay-pct">0%</td></tr>
+            <tr><td>かえる</td><td id="change-total">0</td><td id="change-win">0</td><td id="change-pct">0%</td></tr>
+        </table>
+    </div>
+</div>
+
+<script>
+    let carDoor, selectedDoor, openedDoor;
+    let stats = { stay: { wins: 0, total: 0 }, change: { wins: 0, total: 0 } };
+
+    function showScreen(id) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        if(id === 'screen-sim') resetGame();
+    }
+
+    function resetGame() {
+        carDoor = Math.floor(Math.random() * 3);
+        selectedDoor = -1;
+        document.getElementById('msg').innerText = "ドアをひとつ えらんでね！";
+        document.getElementById('msg').style.color = "#2c3e50";
+        document.getElementById('controls').style.display = 'none';
+        document.getElementById('post-game').style.display = 'none';
+        for(let i=0; i<3; i++) {
+            let d = document.getElementById('door' + i);
+            d.innerHTML = "🚪";
+            d.className = "door";
+            d.style.pointerEvents = 'auto';
+        }
+    }
+
+    function chooseDoor(id) {
+        selectedDoor = id;
+        document.getElementById('door' + id).classList.add('selected-stay');
+        let options = [0, 1, 2].filter(d => d !== carDoor && d !== selectedDoor);
+        openedDoor = options[Math.floor(Math.random() * options.length)];
+        
+        setTimeout(() => {
+            let dOpen = document.getElementById('door' + openedDoor);
+            dOpen.innerHTML = "🐐<div class='result-label lose-txt'>ハズレ</div>";
+            dOpen.classList.add('opened');
+            document.getElementById('msg').innerText = "モンティ「ハズレをあけたよ。\nドアを かえる？」";
+            document.getElementById('controls').style.display = 'block';
+            for(let i=0; i<3; i++) document.getElementById('door' + i).style.pointerEvents = 'none';
+        }, 600);
+    }
+
+    function finalDecision(isChanging) {
+        document.getElementById('controls').style.display = 'none';
+        let finalChoice = isChanging ? [0, 1, 2].find(d => d !== selectedDoor && d !== openedDoor) : selectedDoor;
+        if (isChanging) stats.change.total++; else stats.stay.total++;
+
+        for(let i=0; i<3; i++) document.getElementById('door' + i).classList.remove('selected-stay', 'selected-change');
+        document.getElementById('door' + finalChoice).classList.add(isChanging ? 'selected-change' : 'selected-stay');
+
+        document.getElementById('msg').innerText = "あけるよ…ドキドキ…";
+        setTimeout(() => {
+            revealDoor(finalChoice);
+            setTimeout(() => {
+                for(let i=0; i<3; i++) if (i !== finalChoice) revealDoor(i);
+                if (finalChoice === carDoor) {
+                    document.getElementById('msg').innerText = "✨ やったー！あたり！ ✨";
+                    document.getElementById('msg').style.color = "#e74c3c";
+                    if(isChanging) stats.change.wins++; else stats.stay.wins++;
+                } else {
+                    document.getElementById('msg').innerText = "ざんねん！ハズレ…";
+                    document.getElementById('msg').style.color = "#7f8c8d";
+                }
+                updateStats();
+                document.getElementById('post-game').style.display = 'block';
+            }, 1000);
+        }, 1000);
+    }
+
+    function revealDoor(i) {
+        let d = document.getElementById('door' + i);
+        d.innerHTML = (i === carDoor) ? "💎<div class='result-label win-txt'>あたり！</div>" : "🐐<div class='result-label lose-txt'>ハズレ</div>";
+        d.classList.add('opened');
+    }
+
+    function updateStats() {
+        const updateRow = (id, data) => {
+            document.getElementById(id + '-total').innerText = data.total;
+            document.getElementById(id + '-win').innerText = data.wins;
+            document.getElementById(id + '-pct').innerText = (data.total === 0 ? 0 : Math.round(data.wins/data.total*100)) + "%";
+        };
+        updateRow('stay', stats.stay);
+        updateRow('change', stats.change);
+    }
+</script>
+</body>
+</html>
