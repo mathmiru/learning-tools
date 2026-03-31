@@ -13,28 +13,28 @@
             --accent-green: #4ade80;
             --accent-yellow: #fbbf24;
         }
+        * { 
+            box-sizing: border-box; 
+            -webkit-tap-highlight-color: transparent !important;
+            -webkit-touch-callout: none;
+            user-select: none;
+            outline: none;
+        }
         body, html {
             margin: 0; padding: 0; width: 100%; height: 100%;
             font-family: 'Hiragino Kaku Gothic ProN', 'Meiryo', sans-serif;
             background-color: var(--bg-light); color: var(--text-dark);
             overflow: hidden;
-            /* 画面の長押し選択やハイライトを無効化 */
-            -webkit-touch-callout: none;
-            -webkit-user-select: none;
-            user-select: none;
-            -webkit-tap-highlight-color: transparent;
-            touch-action: manipulation;
+            touch-action: none;
         }
 
-        .screen {
-            display: none; width: 100vw; height: 100vh;
-            flex-direction: column; align-items: center; justify-content: center;
-        }
+        .screen { display: none; width: 100%; height: 100%; flex-direction: column; align-items: center; }
         .active { display: flex; }
 
-        /* タイトル画面 */
+        /* 元のタイトル画面のデザインを復元 */
         #screen-title { 
-            background: #fff; position: relative; overflow-y: auto;
+            justify-content: center;
+            background: #fff; position: relative; 
         }
         .title-decoration {
             position: absolute; width: 100%; height: 100%;
@@ -45,61 +45,66 @@
         }
         .title-box {
             z-index: 10; text-align: center; background: white; 
-            padding: 30px; border: 4px solid #000; box-shadow: 15px 15px 0px #000;
-            max-width: 90%; width: 450px; box-sizing: border-box;
+            padding: 30px; border: 4px solid #000; box-shadow: 10px 10px 0px #000;
+            max-width: 90%; width: 400px;
         }
-        h1 { 
-            font-size: 3.5rem; margin: 0; letter-spacing: 0.1em; 
-            font-weight: 900; line-height: 1.2;
-        }
+        h1 { font-size: 2.8rem; margin: 0; letter-spacing: 0.1em; font-weight: 900; line-height: 1.2; }
         .rule-box {
             background: #f8fafc; border: 2px solid #000;
-            padding: 15px; margin: 20px 0; text-align: left; line-height: 1.6;
-            font-size: 0.95rem;
+            padding: 12px; margin: 15px 0; text-align: left; line-height: 1.5; font-size: 0.85rem;
         }
-        .level-btns { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+        .level-btns { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
         
-        /* ゲーム画面 */
-        #screen-game { background: #fff; }
+        /* ゲーム画面レイアウト */
+        #screen-game { background: #fff; height: 100vh; }
         .game-header { 
-            width: 100%; background: #000; color: #fff; padding: 8px; 
-            text-align: center; font-weight: bold; font-size: 1rem;
+            width: 100%; background: #000; color: #fff; padding: 10px; 
+            text-align: center; font-weight: bold; font-size: 1rem; flex-shrink: 0;
         }
-        canvas { background: #fff; cursor: pointer; touch-action: none; flex-grow: 1; width: 100%; }
+        .canvas-container {
+            flex-grow: 1; width: 100%; overflow: hidden; display: flex; align-items: center; justify-content: center;
+            background: #eee;
+        }
+        canvas { background: #fff; cursor: pointer; touch-action: none; }
 
         .ui-panel {
             width: 100%; background: #fff; border-top: 4px solid #000;
-            padding: 15px; display: flex; flex-direction: column; align-items: center; gap: 10px;
-            box-sizing: border-box;
+            padding: 10px 10px 25px 10px; display: flex; flex-direction: column; align-items: center; gap: 8px;
+            flex-shrink: 0;
         }
 
         .btn {
-            padding: 10px 20px; font-size: 1rem; font-weight: bold;
+            padding: 10px 20px; font-size: 0.9rem; font-weight: bold;
             cursor: pointer; border: 3px solid #000; border-radius: 0;
-            transition: 0.1s; box-shadow: 4px 4px 0px #000;
-            -webkit-tap-highlight-color: transparent;
+            box-shadow: 4px 4px 0px #000; background: #fff;
+            transition: transform 0.05s;
         }
         .btn:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0px #000; }
         .btn-easy { background: var(--accent-green); }
         .btn-normal { background: var(--accent-blue); }
         .btn-hard { background: var(--accent-pink); }
 
-        .palette { display: flex; gap: 15px; }
+        .palette { display: flex; gap: 12px; padding: 5px; }
         .color-chip {
-            width: 45px; height: 45px; border-radius: 50%; border: 3px solid #ddd;
-            cursor: pointer;
-            -webkit-tap-highlight-color: transparent;
+            width: 46px; height: 46px; border-radius: 50%; border: 3px solid #ddd;
+            cursor: pointer; transition: transform 0.1s;
         }
-        .color-chip.active { border-color: #000; transform: scale(1.1); }
+        .color-chip.active { border-color: #000; transform: scale(1.1); border-width: 4px; }
 
-        .msg { font-weight: bold; font-size: 1rem; min-height: 1.5em; color: transparent; }
-        .msg-show { color: #e11d48; }
-        .msg-error { animation: shake 0.2s; }
+        /* メッセージエリア */
+        #game-msg { 
+            font-weight: bold; font-size: 0.95rem; min-height: 1.5em; 
+            visibility: hidden; margin-bottom: 4px; text-align: center;
+        }
+        .msg-visible { visibility: visible !important; }
+        
         @keyframes shake {
             0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-4px); }
-            75% { transform: translateX(4px); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
         }
+        .msg-error { animation: shake 0.2s; color: #e11d48; }
+        .msg-success { color: #16a34a; }
     </style>
 </head>
 <body>
@@ -115,37 +120,42 @@
                 <strong>【あそびかた】</strong><br>
                 ・となりの場所と同じ色は ぬれません。<br>
                 ・ぜんぶの場所を 4色で ぬりわけよう！<br>
-                ・ぬってある場所をたたくと、消すことができます。
+                ・ぬってある場所をたたくと、消せます。
             </div>
             <div class="level-btns">
                 <button class="btn btn-easy" onclick="initGame(12)">★ かんたん</button>
-                <button class="btn btn-normal" onclick="initGame(30)">★★ ふつう</button>
-                <button class="btn btn-hard" onclick="initGame(60)">★★★ むずかしい</button>
+                <button class="btn btn-normal" onclick="initGame(25)">★★ ふつう</button>
+                <button class="btn btn-hard" onclick="initGame(50)">★★★ むずかしい</button>
             </div>
         </div>
     </div>
 
     <div id="screen-game" class="screen">
         <div class="game-header">ぜんぶ ぬりわけよう！</div>
-        <canvas id="gameCanvas"></canvas>
+        <div class="canvas-container">
+            <canvas id="gameCanvas"></canvas>
+        </div>
         <div class="ui-panel">
-            <div id="game-msg" class="msg">メッセージエリア</div>
+            <div id="game-msg">メッセージエリア</div>
             <div class="palette" id="palette"></div>
-            <div style="display:flex; gap:10px;">
-                <button class="btn" style="background:#eee; font-size:0.8rem; box-shadow:2px 2px 0px #000;" onclick="location.reload()">タイトルへ</button>
-                <button class="btn btn-normal" id="checkBtn" style="font-size:0.8rem; box-shadow:2px 2px 0px #000;" onclick="checkClear()">できた！</button>
+            <div style="display:flex; gap:15px; margin-top:5px;">
+                <button class="btn" style="background:#eee; box-shadow:2px 2px 0px #000;" onclick="location.reload()">タイトルへ</button>
+                <button class="btn btn-normal" id="checkBtn" style="box-shadow:2px 2px 0px #000;" onclick="handleCheck()">できた！</button>
             </div>
         </div>
     </div>
 
 <script>
     const canvas = document.getElementById('gameCanvas');
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext('2d', { alpha: false });
     const msgEl = document.getElementById('game-msg');
     const colors = ['#fb7185', '#38bdf8', '#4ade80', '#fbbf24'];
     
     let selectedColor = colors[0];
     let regions = [], adj = [], mapData = null;
+
+    // 画面のどこを触ってもメッセージを消す
+    window.addEventListener('pointerdown', hideMsg, { passive: true });
 
     function initGame(count) {
         document.getElementById('screen-title').classList.remove('active');
@@ -157,126 +167,137 @@
             const chip = document.createElement('div');
             chip.className = `color-chip ${i === 0 ? 'active' : ''}`;
             chip.style.backgroundColor = c;
-            chip.onclick = (e) => {
-                e.preventDefault();
+            chip.addEventListener('pointerdown', (e) => {
+                e.stopPropagation();
+                hideMsg();
                 document.querySelectorAll('.color-chip').forEach(el => el.classList.remove('active'));
                 chip.classList.add('active');
                 selectedColor = c;
-                hideMsg();
-            };
+            });
             palette.appendChild(chip);
         });
 
-        const headerH = document.querySelector('.game-header').offsetHeight;
-        const panelH = document.querySelector('.ui-panel').offsetHeight;
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight - headerH - panelH;
-
+        const container = document.querySelector('.canvas-container');
+        canvas.width = container.clientWidth;
+        canvas.height = container.clientHeight;
         createMap(count);
     }
 
     function createMap(count) {
         const w = canvas.width, h = canvas.height;
-        regions = Array.from({length: count}, (_, i) => ({ id: i, x: Math.random()*w, y: Math.random()*h, color: null }));
+        regions = [];
+        let attempts = 0;
+        while(regions.length < count && attempts < 1000) {
+            let p = { x: Math.random()*w, y: Math.random()*h, id: regions.length, color: null };
+            let tooClose = regions.some(r => Math.hypot(r.x - p.x, r.y - p.y) < (w+h)/25);
+            if (!tooClose || attempts > 500) regions.push(p);
+            attempts++;
+        }
 
         mapData = new Int32Array(w * h);
-        for(let y=0; y<h; y++){
-            for(let x=0; x<w; x++){
+        for(let y = 0; y < h; y++){
+            for(let x = 0; x < w; x++){
                 let dMin = Infinity, id = -1;
-                for(let i=0; i<count; i++){
-                    let d = (x-regions[i].x)**2 + (y-regions[i].y)**2;
+                for(let i = 0; i < regions.length; i++){
+                    let d = (x - regions[i].x)**2 + (y - regions[i].y)**2;
                     if(d < dMin) { dMin = d; id = i; }
                 }
                 mapData[y * w + x] = id;
             }
         }
 
-        adj = Array.from({length: count}, () => new Set());
-        for(let y=0; y<h-1; y++){
-            for(let x=0; x<w-1; x++){
-                let idx = y*w+x;
-                let c = mapData[idx], r = mapData[idx+1], d = mapData[idx+w];
-                if(c!==r){ adj[c].add(r); adj[r].add(c); }
-                if(c!==d){ adj[c].add(d); adj[d].add(c); }
+        adj = Array.from({length: regions.length}, () => new Set());
+        for(let y = 0; y < h; y++){
+            for(let x = 0; x < w; x++){
+                let idx = y * w + x;
+                let c = mapData[idx];
+                if(x < w - 1) {
+                    let r = mapData[idx + 1];
+                    if(c !== r) { adj[c].add(r); adj[r].add(c); }
+                }
+                if(y < h - 1) {
+                    let d = mapData[idx + w];
+                    if(c !== d) { adj[c].add(d); adj[d].add(c); }
+                }
             }
         }
         render();
     }
 
     canvas.addEventListener('pointerdown', (e) => {
-        e.preventDefault(); // ズームやハイライトを防ぐ
+        e.preventDefault();
+        e.stopPropagation();
+        hideMsg();
+
         const rect = canvas.getBoundingClientRect();
-        const x = Math.floor(e.clientX - rect.left);
-        const y = Math.floor(e.clientY - rect.top);
+        const x = Math.floor((e.clientX - rect.left) * (canvas.width / rect.width));
+        const y = Math.floor((e.clientY - rect.top) * (canvas.height / rect.height));
         
-        // 範囲外クリック対策
         if(x < 0 || x >= canvas.width || y < 0 || y >= canvas.height) return;
-        
         const id = mapData[y * canvas.width + x];
+        if(id === undefined || id < 0) return;
 
         if (regions[id].color !== null) {
             regions[id].color = null;
-            hideMsg();
             render();
             return;
         }
 
-        let canPaint = true;
+        let isConflict = false;
         for(let neighborId of adj[id]) {
             if(regions[neighborId].color === selectedColor) {
-                canPaint = false;
-                break;
+                isConflict = true; break;
             }
         }
 
-        if(canPaint) {
+        if(!isConflict) {
             regions[id].color = selectedColor;
-            hideMsg();
             render();
         } else {
-            showMsg("となりとおなじいろです");
+            showMsg("となりと同じ色にはぬれないよ", "error");
         }
-    }, { passive: false });
+    });
 
-    function showMsg(text) {
+    function showMsg(text, type) {
         msgEl.innerText = text;
-        msgEl.style.color = "#e11d48";
-        msgEl.classList.add('msg-show', 'msg-error');
-        setTimeout(() => msgEl.classList.remove('msg-error'), 200);
+        msgEl.className = (type === "error") ? "msg-visible msg-error" : "msg-visible msg-success";
     }
 
     function hideMsg() {
-        msgEl.classList.remove('msg-show');
+        msgEl.innerText = "";
+        msgEl.className = ""; 
+    }
+
+    function handleCheck() {
+        hideMsg();
+        const unfinished = regions.some(r => r.color === null);
+        if(unfinished) {
+            showMsg("まだ白いところが残っているよ！", "error");
+        } else {
+            showMsg("ぬりわけ大成功！お見事！", "success");
+        }
     }
 
     function render() {
         const w = canvas.width, h = canvas.height;
         const img = ctx.createImageData(w, h);
-        for(let i=0; i<mapData.length; i++){
+        const data = img.data;
+        for(let i = 0; i < mapData.length; i++){
             const id = mapData[i];
             const rgb = hexToRgb(regions[id].color || "#ffffff");
-            const p = i*4;
-            const isBorder = (i%w < w-1 && id !== mapData[i+1]) || (id !== mapData[i+w]);
-            
+            const p = i * 4;
+            let isBorder = false;
+            const x = i % w; const y = (i / w) | 0;
+            if(x < w - 1 && id !== mapData[i + 1]) isBorder = true;
+            if(y < h - 1 && id !== mapData[i + w]) isBorder = true;
             if(isBorder){
-                img.data[p]=img.data[p+1]=img.data[p+2]=100;
+                data[p] = 160; data[p+1] = 160; data[p+2] = 160;
             } else {
-                img.data[p]=rgb.r; img.data[p+1]=rgb.g; img.data[p+2]=rgb.b;
+                data[p] = rgb.r; data[p+1] = rgb.g; data[p+2] = rgb.b;
             }
-            img.data[p+3]=255;
+            data[p+3] = 255;
         }
         ctx.putImageData(img, 0, 0);
-    }
-
-    function checkClear() {
-        const allFilled = regions.every(r => r.color !== null);
-        if(allFilled) {
-            msgEl.innerText = "ぬりわけ大成功！";
-            msgEl.style.color = "#16a34a";
-            msgEl.classList.add('msg-show');
-        } else {
-            showMsg("まだ 白いところが あるよ！");
-        }
     }
 
     function hexToRgb(h){
