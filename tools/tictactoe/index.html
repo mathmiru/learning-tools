@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title><ruby>消<rt>き</rt></ruby>える○☓ゲーム</title>
+    <style>
+        :root { --bg: #fffbf0; --main: #ff6b6b; --sub: #4ecdc4; --txt: #2c3e50; }
+        body{font-family:'Helvetica Neue',Arial,sans-serif;background:var(--bg);color:var(--txt);display:flex;flex-direction:column;align-items:center;margin:0;padding-top:50px}
+        .s{display:none;flex-direction:column;align-items:center;width:90%;max-width:400px;background:#fff;padding:30px;border-radius:20px;box-shadow:8px 8px 0 rgba(0,0,0,0.05);border:3px solid var(--txt)}
+        .s.active{display:flex}
+        h1{font-size:28px;margin-top:0;text-shadow:2px 2px 0 rgba(0,0,0,0.1);letter-spacing:2px}
+        .r-b{text-align:left;font-size:14px;background:#f9f9f9;padding:15px;border-radius:12px;margin-bottom:20px;border:2px dashed #ccc}
+        .r-b h2{font-size:18px;margin:0 0 10px 0;color:var(--main)}
+        .l-s{margin-bottom:25px;font-weight:bold}
+        select{padding:8px;font-size:16px;border:2px solid var(--txt);border-radius:8px;background:white}
+        .st-b{padding:15px 50px;background:var(--main);color:#fff;border:none;border-radius:50px;font-weight:bold;font-size:20px;cursor:pointer;box-shadow:0 4px 0 #d64545;transition:0.1s}
+        .st-b:active{transform:translateY(3px);box-shadow:none}
+        .ctrl{margin-bottom:20px;display:flex;gap:10px}
+        .btn{padding:6px 12px;font-size:14px;border-radius:6px;border:2px solid var(--txt);cursor:pointer;font-weight:bold;background:#fff}
+        .b-b{background:var(--sub);color:#fff;border-color:var(--sub)}
+        .stat{font-size:18px;font-weight:bold;margin-bottom:15px;height:25px;color:var(--main)}
+        .bd{display:grid;grid-template-columns:repeat(3,90px);grid-template-rows:repeat(3,90px);gap:10px;padding:10px;background:var(--txt);border-radius:15px}
+        .c{background:#fff;display:flex;justify-content:center;align-items:center;font-size:50px;font-weight:bold;cursor:pointer;border-radius:10px;transition:0.1s}
+        .c:hover{background:#eee}
+        .c.O{color:var(--sub)}.c.X{color:var(--main)}
+        .f{animation:bk 0.6s infinite alternate;filter:grayscale(1) opacity(0.3)}
+        @keyframes bk{from{transform:scale(1)}to{transform:scale(0.8)}}
+    </style>
+</head>
+<body>
+
+    <div id="ts" class="s active">
+        <h1><ruby>消<rt>き</rt></ruby>える○☓ゲーム</h1>
+        <div class="r-b">
+            <h2>ルール<ruby>説<rt>せつ</rt>明<rt>めい</rt></ruby></h2>
+            <ul>
+                <li><strong>○か☓を3つ<ruby>並<rt>なら</rt></ruby>べたら<ruby>勝<rt>か</rt></ruby>ち</strong>です。</li>
+                <li><ruby>盤<rt>ばん</rt>面<rt>めん</rt></ruby>のマークは<ruby>各<rt>かく</rt></ruby>3つまで。</li>
+                <li>4つ<ruby>目<rt>め</rt></ruby>を<ruby>置<rt>お</rt></ruby>くと<strong><ruby>一番<rt>いちばん</rt>古<rt>ふる</rt></ruby>いものが<ruby>消<rt>き</rt></ruby>えます</strong>。</li>
+                <li>ブルブルしているものが<ruby>次<rt>つぎ</rt></ruby>に<ruby>消<rt>き</rt></ruby>えます。</li>
+                <li><ruby>先<rt>せん</rt>攻<rt>こう</rt></ruby>・<ruby>後<rt>こう</rt>攻<rt>こう</rt></ruby>はランダムです。</li>
+            </ul>
+        </div>
+        <div class="l-s">
+            レベル：
+            <select id="lv">
+                <option value="1">レベル1</option>
+                <option value="2">レベル2</option>
+                <option value="3" selected>レベル3</option>
+                <option value="4">レベル4</option>
+                <option value="5">レベル5</option>
+            </select>
+        </div>
+        <button class="st-b" onclick="Z()">プレイ</button>
+    </div>
+
+    <div id="gs" class="s">
+        <div class="ctrl">
+            <button class="btn" onclick="Y()"><ruby>戻<rt>もど</rt></ruby>る</button>
+            <button class="btn b-b" onclick="X()"><ruby>再<rt>さい</rt>挑<rt>ちょう</rt>戦<rt>せん</rt></ruby></button>
+        </div>
+        <div class="stat" id="st"></div>
+        <div class="bd" id="b">
+            <div class="c" onclick="W(0)"></div><div class="c" onclick="W(1)"></div><div class="c" onclick="W(2)"></div>
+            <div class="c" onclick="W(3)"></div><div class="c" onclick="W(4)"></div><div class="c" onclick="W(5)"></div>
+            <div class="c" onclick="W(6)"></div><div class="c" onclick="W(7)"></div><div class="c" onclick="W(8)"></div>
+        </div>
+    </div>
+
+    <script>
+        const _d=document,_q=s=>_d.querySelector(s),_qa=s=>_d.querySelectorAll(s);
+        let b=Array(9).fill(''),h=[],a=[],p='',g=!1,t=null;
+        const v=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+        const M1="きみのターン",M2="あいてのターン",M3="きみの<ruby>勝<rt>か</rt></ruby>ち！🎉",M4="あいての<ruby>勝<rt>か</rt></ruby>ち...🥶",M5="<ruby>思考<rt>しこう</rt>中<rt>ちゅう</rt></ruby>...";
+        function Z(){_q('#ts').classList.remove('active');_q('#gs').classList.add('active');X()}
+        function Y(){_q('#gs').classList.remove('active');_q('#ts').classList.add('active');g=!1;clearTimeout(t)}
+        function X(){clearTimeout(t);b=Array(9).fill('');h=[];a=[];g=!0;_qa('.c').forEach(e=>{e.innerText='';e.className='c'});p=Math.random()<0.5?'O':'X';let m=(p==='O'?M1:M2)+'(<ruby>先<rt>せん</rt>攻<rt>こう</rt></ruby>)';_q('#st').innerHTML=m;if(p==='X')t=setTimeout(A,500)}
+        function W(i){if(!g||p!=='O'||b[i]!=='')return;P(i,'O');if(C(b,'O')){E(M3);return}p='X';_q('#st').innerHTML=M5;V();t=setTimeout(A,600)}
+        function P(i,f){b[i]=f;let l=f==='O'?h:a;l.push(i);if(l.length>3){b[l.shift()]=''}}
+        function C(k,f){return v.some(s=>s.every(j=>k[j]===f))}
+        function E(m){_q('#st').innerHTML=m;g=!1;V()}
+        function V(){_qa('.c').forEach((e,i)=>{e.innerText=b[i];e.className='c '+(b[i]||'');if(g){if(p==='O'&&h.length==3&&h[0]==i)e.classList.add('f');if(p==='X'&&a.length==3&&a[0]==i)e.classList.add('f')}})}
+        function G(k){return k.map((x,i)=>x===''?i:null).filter(x=>x!==null)}
+        function A(){if(!g)return;let l=parseInt(_q('#lv').value),m=G(b),i=-1;if(l==1)i=m[Math.floor(Math.random()*m.length)];else if(l==2){if(Math.random()<0.3)i=K();if(i<0)i=m[Math.floor(Math.random()*m.length)]}else if(l==3){i=K();if(i<0)i=m[Math.floor(Math.random()*m.length)]}else if(l==4)i=T(2);else i=T(6);P(i,'X');if(C(b,'X')){E(M4);return}p='O';_q('#st').innerHTML=M1;V()}
+        function K(){let m=G(b);for(let x of m){let t=[...b];t[x]='X';if(C(t,'X'))return x}for(let x of m){let t=[...b];t[x]='O';if(C(t,'O'))return x}return -1}
+        function T(d){let s=-Infinity,m=-1,av=G(b);for(let x of av){let n=S(b,a,x,'X'),sc=mm(n.b,n.h,h,d,0);if(sc>s||(sc===s&&Math.random()<0.5)){s=sc;m=x}}return m<0?av[0]:m}
+        function mm(k,ah,hh,d,mx){if(C(k,'X'))return 10+d;if(C(k,'O'))return -10-d;if(d==0)return 0;let av=G(k);if(mx){let s=-Infinity;for(let x of av){let n=S(k,ah,x,'X');s=Math.max(s,mm(n.b,n.h,hh,d-1,0))}return s}else{let s=Infinity;for(let x of av){let n=S(k,hh,x,'O');s=Math.min(s,mm(n.b,ah,n.h,d-1,1))}return s}}
+        function S(k,h,i,f){let nb=[...k],nh=[...h];nb[i]=f;nh.push(i);if(nh.length>3)nb[nh.shift()]='';return {b:nb,h:nh}}
+    </script>
+</body>
+</html>
