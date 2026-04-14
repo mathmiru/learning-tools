@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>1年生のための百玉そろばん</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { 
+            font-family: 'Meiryo', sans-serif; 
+            margin: 0; 
+            padding: 15px 5px; 
+            min-height: 100vh; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: flex-start; 
+            background-color: #f0f8ff; 
+            overflow: auto; 
+        }
+        
+        .display-area { height: 90px; display: flex; align-items: center; justify-content: center; margin-bottom: 5px; }
+        #numberDisplay { font-size: 90px; font-weight: bold; color: #1e90ff; visibility: hidden; text-shadow: 2px 2px 4px rgba(0,0,0,0.1); }
+        
+        .frame { 
+            width: 1000px; 
+            height: 520px; 
+            border: 18px solid #8b4513; 
+            border-radius: 15px; 
+            background-color: #fff; 
+            padding: 10px; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3); 
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            flex-shrink: 0; 
+        }
+        .row { height: 42px; display: flex; align-items: center; position: relative; border-bottom: 1px dashed #ddd; }
+        .row:last-child { border-bottom: none; }
+        
+        .wire { position: absolute; width: 100%; height: 4px; background: #999; z-index: 1; border-radius: 2px; }
+        .bead { 
+            width: 42px; 
+            height: 42px; 
+            border-radius: 50%; 
+            cursor: pointer; 
+            position: absolute; 
+            transition: left 0.3s ease-out; /* ★0.3秒かけて移動する設定 */
+            z-index: 2; 
+            box-shadow: inset -4px -4px 6px rgba(0,0,0,0.3), 2px 2px 4px rgba(0,0,0,0.2); 
+        }
+        .red { background-color: #ff3b30; }
+        .yellow { background-color: #ffcc00; }
+        
+        .control-panel { 
+            margin-top: 15px; 
+            margin-bottom: 20px;
+            padding: 15px; 
+            background: #fff; 
+            border-radius: 12px; 
+            box-shadow: 0 5px 15px rgba(0,0,0,0.15); 
+            width: 1000px; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 15px; 
+            flex-shrink: 0;
+        }
+        
+        .control-row { 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            gap: 15px; 
+            flex-wrap: wrap; 
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #f9f9f9;
+            padding: 6px 12px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
+        
+        button, select, input { 
+            padding: 8px 12px; 
+            font-size: 16px; 
+            font-weight: bold; 
+            cursor: pointer; 
+            border-radius: 8px; 
+            border: 2px solid #ccc; 
+            white-space: nowrap; 
+        }
+        
+        button { background: #4CAF50; color: white; border: none; transition: background 0.2s; box-shadow: 0 4px 0 #388E3C; }
+        button:active { transform: translateY(2px); box-shadow: 0 2px 0 #388E3C; }
+        button:disabled { background: #aaa; box-shadow: 0 4px 0 #888; cursor: not-allowed; }
+        
+        .btn-toggle { background: #888; box-shadow: 0 4px 0 #666; min-width: 120px; }
+        .btn-toggle.active { background: #1e90ff; box-shadow: 0 4px 0 #0066cc; }
+        
+        .btn-mode { background: #ff9800; box-shadow: 0 4px 0 #e65100; min-width: 120px; }
+        .btn-mode.reverse { background: #9c27b0; box-shadow: 0 4px 0 #6a1b9a; }
+        
+        .btn-set { background: #607d8b; box-shadow: 0 4px 0 #455a64; }
+        .btn-stop { background: #ff4d4d; box-shadow: 0 4px 0 #cc0000; }
+        .btn-reset { background: #555; box-shadow: 0 4px 0 #333; }
+        
+        input[type="number"] { width: 70px; text-align: center; cursor: text; }
+        label { font-size: 16px; font-weight: bold; color: #333; white-space: nowrap; }
+        input[type="range"] { width: 120px; accent-color: #4CAF50; }
+        
+        .main-action-btn { font-size: 18px; padding: 10px 20px; min-width: 160px; }
+    </style>
+</head>
+<body>
+
+    <div class="display-area">
+        <div id="numberDisplay">0</div>
+    </div>
+
+    <div class="frame" id="soroban">
+        </div>
+
+    <div class="control-panel">
+        <div class="control-row">
+            <div style="display: flex; gap: 8px;">
+                <button id="toggleBtn" class="btn-toggle" onclick="toggleNumber()">すうじ：オフ</button>
+                <button id="modeBtn" class="btn-mode" onclick="toggleMode()">⬅ すすむ</button>
+            </div>
+
+            <div class="control-group">
+                <label>◯にする：</label>
+                <input type="number" id="targetNum" min="0" max="100" value="50">
+                <button class="btn-set" onclick="setSpecificNumber()">セット</button>
+                <span style="color:#ccc; margin: 0 5px;">|</span>
+                <label>◯とび：</label>
+                <select id="skipStep">
+                    <option value="1">1ずつ</option><option value="2">2とび</option>
+                    <option value="3">3とび</option><option value="4">4とび</option>
+                    <option value="5">5とび</option><option value="6">6とび</option>
+                    <option value="7">7とび</option><option value="8">8とび</option>
+                    <option value="9">9とび</option><option value="10">10とび</option>
+                </select>
+            </div>
+
+            <div class="control-group" style="background: transparent; border: none;">
+                <label>はやさ：</label>
+                <input type="range" id="speed" min="1" max="5" value="3">
+            </div>
+        </div>
+
+        <div class="control-row" style="margin-top: 5px;">
+            <button id="autoBtn" class="main-action-btn" onclick="startAutoPlay()">▶ じどうで うごかす</button>
+            <button class="btn-stop main-action-btn" onclick="stopAutoPlay()">■ ストップ</button>
+            <button class="btn-reset main-action-btn" onclick="resetBeads()">↺ ぜんぶ もどす</button>
+        </div>
+    </div>
+
+    <script>
+        const soroban = document.getElementById('soroban');
+        const rows = 10;
+        const beadsPerRow = 10;
+        const beadStep = 47;     
+        const rightOffset = 460; 
+        
+        let showNumber = false;
+        let isReverse = false; 
+        let autoPlayInterval = null;
+        let audioCtx = null;
+
+        // ★音声がブロックされないように準備する関数
+        function ensureAudio() {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+        }
+
+        // ★より高音で短い「カチッ」という音を作る関数
+        function playClickSound() {
+            if (!audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            
+            osc.type = 'triangle';
+            // 前よりも周波数を高くして（1500Hz）、高い音にしました
+            osc.frequency.setValueAtTime(1500, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(300, audioCtx.currentTime + 0.02);
+            
+            gainNode.gain.setValueAtTime(0.6, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.03);
+            
+            osc.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            
+            osc.start(audioCtx.currentTime);
+            osc.stop(audioCtx.currentTime + 0.04);
+        }
+
+        for (let i = 0; i < rows; i++) {
+            const rowDiv = document.createElement('div');
+            rowDiv.className = 'row';
+            const wire = document.createElement('div');
+            wire.className = 'wire';
+            rowDiv.appendChild(wire);
+
+            for (let j = 0; j < beadsPerRow; j++) {
+                const bead = document.createElement('div');
+                bead.className = `bead ${j < 5 ? 'red' : 'yellow'}`;
+                bead.style.left = (rightOffset + j * beadStep) + 'px';
+                bead.dataset.pos = 'right';
+                bead.onclick = function() {
+                    ensureAudio();
+                    stopAutoPlay(); 
+                    this.dataset.pos === 'right' ? moveRow(i, j, 'left') : moveRow(i, j, 'right');
+                };
+                rowDiv.appendChild(bead);
+            }
+            soroban.appendChild(rowDiv);
+        }
+
+        function moveRow(rowIdx, beadIdx, direction) {
+            let moved = false; 
+            const beads = soroban.getElementsByClassName('row')[rowIdx].getElementsByClassName('bead');
+            for (let j = 0; j < beadsPerRow; j++) {
+                if (direction === 'left' && j <= beadIdx) {
+                    if (beads[j].dataset.pos !== 'left') moved = true;
+                    beads[j].style.left = (j * beadStep) + 'px';
+                    beads[j].dataset.pos = 'left';
+                } else if (direction === 'right' && j >= beadIdx) {
+                    if (beads[j].dataset.pos !== 'right') moved = true;
+                    beads[j].style.left = (rightOffset + j * beadStep) + 'px';
+                    beads[j].dataset.pos = 'right';
+                }
+            }
+            // ★玉が移動し終わる0.3秒（300ミリ秒）後に音を鳴らす
+            if (moved) setTimeout(playClickSound, 300); 
+            updateDisplay();
+        }
+
+        function toggleNumber() {
+            showNumber = !showNumber;
+            document.getElementById('numberDisplay').style.visibility = showNumber ? 'visible' : 'hidden';
+            const btn = document.getElementById('toggleBtn');
+            btn.innerText = showNumber ? 'すうじ：オン' : 'すうじ：オフ';
+            showNumber ? btn.classList.add('active') : btn.classList.remove('active');
+        }
+
+        function toggleMode() {
+            isReverse = !isReverse;
+            const btn = document.getElementById('modeBtn');
+            if(isReverse) {
+                btn.innerText = '➡ もどる';
+                btn.classList.add('reverse');
+            } else {
+                btn.innerText = '⬅ すすむ';
+                btn.classList.remove('reverse');
+            }
+        }
+
+        function updateDisplay() {
+            const count = Array.from(document.getElementsByClassName('bead')).filter(b => b.dataset.pos === 'left').length;
+            document.getElementById('numberDisplay').innerText = count;
+            return count;
+        }
+
+        function setCount(targetCount) {
+            let moved = false;
+            const allBeads = document.getElementsByClassName('bead');
+            for (let i = 0; i < allBeads.length; i++) {
+                const j = i % 10;
+                if (i < targetCount) {
+                    if (allBeads[i].dataset.pos !== 'left') moved = true;
+                    allBeads[i].style.left = (j * beadStep) + 'px';
+                    allBeads[i].dataset.pos = 'left';
+                } else {
+                    if (allBeads[i].dataset.pos !== 'right') moved = true;
+                    allBeads[i].style.left = (rightOffset + j * beadStep) + 'px';
+                    allBeads[i].dataset.pos = 'right';
+                }
+            }
+            // ★ここでも0.3秒後に鳴らす
+            if (moved) setTimeout(playClickSound, 300);
+            updateDisplay();
+        }
+
+        function setSpecificNumber() {
+            ensureAudio();
+            stopAutoPlay();
+            const val = parseInt(document.getElementById('targetNum').value);
+            if (!isNaN(val) && val >= 0 && val <= 100) setCount(val);
+        }
+
+        function startAutoPlay() {
+            ensureAudio();
+            stopAutoPlay();
+            
+            const step = parseInt(document.getElementById('skipStep').value);
+            const delay = 1800 - (parseInt(document.getElementById('speed').value) * 300); 
+            document.getElementById('autoBtn').disabled = true;
+
+            autoPlayInterval = setInterval(() => {
+                let current = updateDisplay();
+                let next = isReverse ? current - step : current + step;
+                if (next < 0) next = 0;
+                if (next > 100) next = 100;
+                setCount(next);
+                if ((!isReverse && next === 100) || (isReverse && next === 0)) stopAutoPlay();
+            }, delay);
+        }
+
+        function stopAutoPlay() {
+            if (autoPlayInterval) { clearInterval(autoPlayInterval); autoPlayInterval = null; }
+            document.getElementById('autoBtn').disabled = false;
+        }
+
+        function resetBeads() {
+            ensureAudio();
+            stopAutoPlay();
+            setCount(0);
+        }
+    </script>
+</body>
+</html>
+
