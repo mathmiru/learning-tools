@@ -61,7 +61,6 @@ border: none; border-radius: 30px; cursor: pointer; transition: all 0.2s;
 box-shadow: 0 3px 6px rgba(0,0,0,0.1);
 }
 .menu-btn:active { transform: scale(0.96); }
-.menu-btn.match-btn { background: #27AE60; }
 .menu-btn.history-btn { background: var(--history-btn); font-size: 0.95rem; }
 .dice-area {
 display: flex; justify-content: center; gap: 8px; margin: 2px 0;
@@ -75,20 +74,15 @@ box-shadow: inset 0 0 6px rgba(0,0,0,0.05), 0 2px 3px rgba(0,0,0,0.1); backface-
 .scene.held .face { border: 2.5px solid var(--held); box-shadow: 0 0 8px rgba(241, 196, 15, 0.8); }
 .pip { position: absolute; width: 5px; height: 5px; background: #333; border-radius: 50%; transform: translate(-50%, -50%); }
 .face-1 .pip { background: var(--accent); width: 10px; height: 10px; }
-.tl { top: 25%; left: 25%; } .tr { top: 25%; left: 75%; } .ml { top: 50%; left: 25%;
-} .c { top: 50%; left: 50%; } .mr { top: 50%; left: 75%; } .bl { top: 75%;
-left: 25%; } .br { top: 75%; left: 75%; }
-.face-1 { transform: rotateY(0deg) translateZ(21px); } .face-2 { transform: rotateY(180deg) translateZ(21px); } .face-3 { transform: rotateY(90deg) translateZ(21px);
-} .face-4 { transform: rotateY(-90deg) translateZ(21px); } .face-5 { transform: rotateX(90deg) translateZ(21px); } .face-6 { transform: rotateX(-90deg) translateZ(21px); }
+.tl { top: 25%; left: 25%; } .tr { top: 25%; left: 75%; } .ml { top: 50%; left: 25%; } .c { top: 50%; left: 50%; } .mr { top: 50%; left: 75%; } .bl { top: 75%; left: 25%; } .br { top: 75%; left: 75%; }
+.face-1 { transform: rotateY(0deg) translateZ(21px); } .face-2 { transform: rotateY(180deg) translateZ(21px); } .face-3 { transform: rotateY(90deg) translateZ(21px); } .face-4 { transform: rotateY(-90deg) translateZ(21px); } .face-5 { transform: rotateX(90deg) translateZ(21px); } .face-6 { transform: rotateX(-90deg) translateZ(21px); }
 .table-wrap { width: 100%; margin-top: 5px; }
 table { width: 100%; border-collapse: collapse; font-size: 0.72rem; }
 th, td { border: 1px solid #BDC3C7; padding: 2px 1px; text-align: center; height: 20px; box-sizing: border-box; }
 th { background: var(--primary); color: white; font-weight: bold; padding: 4px 1px; }
 .role-name-td { text-align: left; background: rgba(255,255,255,0.8); font-weight: bold; width: 52%; padding-left: 4px; cursor: pointer; line-height: 1.1; }
-.prob-badge.normal { font-size: 0.65rem; color: var(--info); font-weight: 900; background: #EBF5FB; padding: 0px 2px; border-radius: 3px; margin-left: 3px; display: none;
-font-family: monospace; }
-.prob-badge.digits { display: none; font-size: 0.58rem; color: var(--info); font-weight: normal; background: #EBF5FB; padding: 0px 2px; border-radius: 3px; margin-top: 1px;
-text-align: left; font-family: monospace; white-space: nowrap; }
+.prob-badge.normal { font-size: 0.65rem; color: var(--info); font-weight: 900; background: #EBF5FB; padding: 0px 2px; border-radius: 3px; margin-left: 3px; display: none; font-family: monospace; }
+.prob-badge.digits { display: none; font-size: 0.58rem; color: var(--info); font-weight: normal; background: #EBF5FB; padding: 0px 2px; border-radius: 3px; margin-top: 1px; text-align: left; font-family: monospace; white-space: nowrap; }
 .score-cell { font-size: 0.85rem; transition: background 0.1s; background: rgba(255,255,255,0.5); }
 .score-cell.valid { cursor: pointer; color: var(--accent); font-weight: bold; background: #FFF; }
 @keyframes pulse-select { 0% { background-color: #D5F5E3; } 50% { background-color: #A9DFBF; } 100% { background-color: #D5F5E3; } }
@@ -96,8 +90,7 @@ text-align: left; font-family: monospace; white-space: nowrap; }
 .score-cell.filled { cursor: default; color: var(--text); font-weight: normal; background: rgba(200,200,200,0.2); }
 @keyframes flash-com { 0%, 100% { background-color: #F1C40F; } 50% { background-color: white; } }
 .score-cell.com-selecting { animation: flash-com 0.4s 3; }
-.modal { display: none; position: fixed; top: 45%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 15px;
-box-shadow: 0 5px 25px rgba(0,0,0,0.3); border-radius: 10px; z-index: 100; width: 85%; max-width: 280px; text-align: center; }
+.modal { display: none; position: fixed; top: 45%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 15px; box-shadow: 0 5px 25px rgba(0,0,0,0.3); border-radius: 10px; z-index: 100; width: 85%; max-width: 280px; text-align: center; }
 .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.3); z-index: 99; }
 #holdGuide { display: none; font-size: 0.65rem; color: #27AE60; font-weight: bold; margin-left: 8px; animation: bounce 2s infinite; }
 @keyframes bounce { 0%, 20%, 50%, 80%, 100% {transform: translateX(0);} 40% {transform: translateX(-3px);} 60% {transform: translateX(-2px);} }
@@ -105,9 +98,31 @@ box-shadow: 0 5px 25px rgba(0,0,0,0.3); border-radius: 10px; z-index: 100; width
 .history-list { text-align: left; max-height: 280px; overflow-y: auto; margin-top: 10px; font-size: 0.8rem; border-top: 1px solid #eee; }
 .history-item { border-bottom: 1px solid #eee; padding: 6px 0; display: flex; justify-content: space-between; align-items: center; }
 .rank-badge { background: var(--primary); color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 0.7rem; margin-right: 5px; }
+
+/* ズル演出用のカットイン */
+#cheatCutIn {
+    display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    width: 100%; background: rgba(0,0,0,0.9); color: #FFD700; font-size: 1.6rem; font-weight: 900;
+    text-align: center; padding: 40px 0; z-index: 200; pointer-events: none;
+    letter-spacing: 4px; text-shadow: 0 0 10px #FF0000;
+    box-shadow: 0 0 40px rgba(0,0,0,1);
+    animation: cutIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+#cheatCutIn .cheat-face { font-size: 5rem; display: block; margin-bottom: 10px; }
+
+@keyframes cutIn {
+    0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+    100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+}
 </style>
 </head>
 <body>
+<div id="cheatCutIn">
+    <span class="cheat-face">😏</span>
+    ニヤリ…！<br>
+    456サイをつかうぜ…！
+</div>
+
 <div class="app-container" id="appContainer">
 <div id="titleScreen" class="screen active title-screen">
 <div class="title-logo">ヨット</div>
@@ -119,11 +134,23 @@ box-shadow: 0 5px 25px rgba(0,0,0,0.3); border-radius: 10px; z-index: 100; width
 <h4>【やくの なまえ】</h4>
 <p>・1〜6のめ：えらんだ すうじを ぜんぶたす<br>・チョイス：ぜんぶの めを たす<br>・3つ/4つおなじ：おなじめが 3つ/4つあるとき ぜんぶたす<br>・フルハウス：おなじめ 3つ ＋ べつの おなじめ 2つ(25てん)<br>・4れんぞく：すうじが 4つ つながる(30てん)<br>・5れんぞく：すうじが 5つ つながる(40てん)<br>・ヨット：ぜび おなじ め(50てん)</p>
 </div>
-<button class="menu-btn" onclick="startGame('com', 1)">レベル1</button>
-<button class="menu-btn" onclick="startGame('com', 2)">レベル2</button>
-<button class="menu-btn" style="background:#C0392B;" onclick="startGame('com', 3)">レベル3 (最強)</button>
-<button class="menu-btn match-btn" onclick="startGame('local', 0)">2にんで あそぶ（1だい）</button>
+<button class="menu-btn" style="background:#3498DB;" onclick="startGame('com', 1)">レベル1</button>
+<button class="menu-btn" style="background:#27AE60;" onclick="startGame('com', 2)">レベル2</button>
+<button class="menu-btn" style="background:#F1C40F;" onclick="startGame('com', 3)">レベル3</button>
+<button class="menu-btn" style="background:#000;" onclick="showZuruCheck()">レベル4 (ズル)</button>
+<button class="menu-btn" style="background:#E74C3C;" onclick="startGame('local', 0)">2にんで あそぶ（1だい）</button>
 <button class="menu-btn history-btn" onclick="showHistory()">きろくを みる</button>
+</div>
+
+<div id="zuruCheckModal" class="modal">
+    <h3 style="color:var(--accent);">⚠️ きをつけて！</h3>
+    <p style="text-align:left; font-size:0.85rem; line-height:1.6;">
+        こんどの あいては、とっても <b>「ずるい」</b> です！<br><br>
+        ときどき、<b>「4・5・6」</b> しか でない スペシャルな サイコロを こっそり つかってきます。<br><br>
+        そんなの おかしい！とおもうけど、それでも たたかいますか？
+    </p>
+    <button class="menu-btn" style="background:#E74C3C;" onclick="startGame('com', 4)">それでも たたかう！</button>
+    <button class="menu-btn" style="background:#95A5A6;" onclick="hideAllModals()">やめておく</button>
 </div>
 
 <div id="gameScreen" class="screen">
@@ -181,7 +208,7 @@ scores: {
 };
 const CATEGORY_NAMES = {
 ones:"1のめ", twos:"2のめ", threes:"3のめ", fours:"4のめ", fives:"5のめ", sixes:"6のめ",
-choice:"チョイス(たしざん)", three_kind:"3つおなじ", four_kind:"4つおなじ", full_house:"フルハウス", small_str:"4れんぞく", large_str:"5れんぞく", yacht:"ヨット"
+choice:"チョイス", three_kind:"3つおなじ", four_kind:"4つおなじ", full_house:"フルハウス", small_str:"4れんぞく", large_str:"5れんぞく", yacht:"ヨット"
 };
 const RULE_DESCRIPTIONS = {
 ones: "【1のめ】\nでた「1」のめを ぜんぶたした かずになります。1〜6の ごうけいが 63てんより おおいと、ボーナスで 35てん もらえます！",
@@ -213,29 +240,42 @@ if(key === 'sixes') tbody.innerHTML += `<tr style="background:#FCF3CF; font-size
 });
 }
 
+function showZuruCheck() {
+    document.getElementById('modalOverlay').style.display = 'block';
+    document.getElementById('zuruCheckModal').style.display = 'block';
+}
+
 function startGame(mode, level) {
 GAME_STATE.mode = mode; GAME_STATE.comLevel = level;
+hideAllModals();
 document.getElementById('titleScreen').classList.remove('active');
 document.getElementById('gameScreen').classList.add('active');
 initBoard();
-if(mode === 'com') { document.getElementById('p1Header').innerText = "あなた"; document.getElementById('p2Header').innerText = (level===3 ? "最強COM" : "レベル"+level); }
-else { document.getElementById('p1Header').innerText = "1にんめ"; document.getElementById('p2Header').innerText = "2にんめ"; }
+if(mode === 'com') { 
+    document.getElementById('p1Header').innerText = "あなた"; 
+    document.getElementById('p2Header').innerText = (level===4 ? "ズルい人" : "レベル"+level); 
+} else { 
+    document.getElementById('p1Header').innerText = "1にんめ"; document.getElementById('p2Header').innerText = "2にんめ"; 
+}
 resetVisuals(); updateUI();
 }
 
-function rollDice() {
+function rollDice(isZuru = false) {
 if (GAME_STATE.rollsLeft <= 0) return;
 document.getElementById('rollBtn').disabled = true;
-for (let i = 0; i < 5; i++) { if (!GAME_STATE.held[i]) { const result = Math.floor(Math.random() * 6) + 1;
-GAME_STATE.dice[i] = result; execute3DRotation(i, result); } }
+for (let i = 0; i < 5; i++) { 
+    if (!GAME_STATE.held[i]) { 
+        const res = isZuru ? (Math.floor(Math.random() * 3) + 4) : (Math.floor(Math.random() * 6) + 1);
+        GAME_STATE.dice[i] = res; execute3DRotation(i, res); 
+    } 
+}
 GAME_STATE.rollsLeft--;
 setTimeout(() => { updateUI(); calculateAllProbabilities(); }, 600);
 }
 
 function execute3DRotation(i, result) {
 const cube = document.getElementById(`die${i}`);
-cube.style.transition = 'none';
-cube.style.transform = `rotateX(0deg) rotateY(0deg)`;
+cube.style.transition = 'none'; cube.style.transform = `rotateX(0deg) rotateY(0deg)`;
 setTimeout(() => {
 cube.style.transition = 'transform 0.6s cubic-bezier(0.2, 0.8, 0.3, 1)';
 const rotX = Math.floor(Math.random() * 3 + 3) * 360 + (result===5?-90:result===6?90:0);
@@ -316,11 +356,7 @@ const guide = document.getElementById('holdGuide');
 guide.style.display = (GAME_STATE.rollsLeft > 0 && GAME_STATE.rollsLeft < 3) ? 'inline-block' : 'none';
 
 if (GAME_STATE.turn === 1) document.getElementById('turnDisplay').innerText = GAME_STATE.rollsLeft === 0 ? "🔵 やくを えらんでね" : "🔵 あなたの ばん";
-else document.getElementById('turnDisplay').innerText = GAME_STATE.mode === 'com' ? (GAME_STATE.comLevel===3 ? "🔥 最強COMが 計算中..." : "🔴 コンピューターが かんがえ中...") : (GAME_STATE.rollsLeft === 0 ? "🔴 やくを えらんでね" : "🔴 2にんめの ばん");
-
-const rollBtn = document.getElementById('rollBtn');
-if (GAME_STATE.rollsLeft === 0) { rollBtn.innerText = "やくをえらんでね"; rollBtn.disabled = true; }
-else { rollBtn.innerText = "サイコロを ふる"; rollBtn.disabled = (GAME_STATE.mode === 'com' && GAME_STATE.turn === 2); }
+else document.getElementById('turnDisplay').innerText = (GAME_STATE.comLevel >= 3) ? "🔥 計算中..." : "🔴 コンピューターの ばん";
 
 [1, 2].forEach(p => {
 Object.keys(GAME_STATE.scores[p]).forEach(key => {
@@ -335,6 +371,8 @@ const s = GAME_STATE.scores[p]; const upper = (s.ones||0)+(s.twos||0)+(s.threes|
 document.getElementById(`p${p}_bonus`).innerText = `${upper}/63`;
 document.getElementById(`p${p}Total`).innerText = Object.values(s).reduce((a,b)=>a+(b||0), 0) + (upper >= 63 ? 35 : 0);
 });
+const rollBtn = document.getElementById('rollBtn');
+rollBtn.disabled = (GAME_STATE.mode === 'com' && GAME_STATE.turn === 2) || GAME_STATE.rollsLeft === 0;
 }
 
 function selectScore(category, playerNum) {
@@ -342,25 +380,22 @@ if (GAME_STATE.turn !== playerNum || GAME_STATE.rollsLeft === 3 || GAME_STATE.sc
 GAME_STATE.scores[playerNum][category] = calcScore(category, GAME_STATE.dice); endTurn();
 }
 
-function resetVisuals() { for(let i=0; i<5; i++) { if(document.getElementById(`scene${i}`)) document.getElementById(`scene${i}`).classList.remove('held'); if(document.getElementById(`die${i}`)) document.getElementById(`die${i}`).style.transform = `rotateX(0deg) rotateY(0deg)`; } }
+function resetVisuals() { for(let i=0; i<5; i++) { if(document.getElementById(`scene${i}`)) document.getElementById(`scene${i}`).classList.remove('held'); } }
 
 function endTurn() {
 updateUI();
 if (Object.values(GAME_STATE.scores[1]).every(v=>v!==null) && Object.values(GAME_STATE.scores[2]).every(v=>v!==null)) {
 const p1T = parseInt(document.getElementById('p1Total').innerText); const p2T = parseInt(document.getElementById('p2Total').innerText);
-let winTitle = p1T > p2T ? "1にんめのかち！" : (p2T > p1T ? "2にんめのかち！" : "ひきわけ！");
-if(GAME_STATE.mode === 'com') winTitle = p1T > p2T ? "あなたのかち！" : (p1T < p2T ? "最強COMのかち！" : "ひきわけ！");
+let winTitle = p1T > p2T ? "あなたのかち！" : (p1T < p2T ? "あいてのかち！" : "ひきわけ！");
 document.getElementById('winMsg').innerText = "🎉 " + winTitle;
-const p1Label = (GAME_STATE.mode === 'com') ? "あなた" : "1にんめ";
-const p2Label = (GAME_STATE.mode === 'com') ? (GAME_STATE.comLevel===3?"最強COM":"COM") : "2にんめ";
-document.getElementById('scoreSummary').innerHTML = `${p1Label}：${p1T}てん<br>${p2Label}：${p2T}てん`;
+document.getElementById('scoreSummary').innerHTML = `あなた：${p1T}てん<br>あいて：${p2T}てん`;
 document.getElementById('modalOverlay').style.display = 'block';
 document.getElementById('resultModal').style.display = 'block';
 saveScoreRecord(p1T, p2T); return;
 }
 GAME_STATE.turn = GAME_STATE.turn === 1 ? 2 : 1; GAME_STATE.rollsLeft = 3; GAME_STATE.held = [false, false, false, false, false];
-resetVisuals(); updateUI(); calculateAllProbabilities();
-if (GAME_STATE.mode === 'com' && GAME_STATE.turn === 2) setTimeout(startCOMTurn, 1200);
+resetVisuals(); updateUI();
+if (GAME_STATE.mode === 'com' && GAME_STATE.turn === 2) setTimeout(startCOMTurn, 1000);
 }
 
 function saveScoreRecord(p1Score, p2Score) {
@@ -368,8 +403,7 @@ const history = JSON.parse(localStorage.getItem('mathmiru_yacht_history') || '[]
 const now = new Date();
 const dateStr = `${now.getMonth()+1}/${now.getDate()} ${now.getHours()}:${now.getMinutes().toString().padStart(2,'0')}`;
 const modeStr = GAME_STATE.mode === 'com' ? `VS レベル${GAME_STATE.comLevel}` : "2にん対戦";
-const bestOfGame = Math.max(p1Score, p2Score);
-history.push({ date: dateStr, p1: p1Score, p2: p2Score, max: bestOfGame, mode: modeStr });
+history.push({ date: dateStr, p1: p1Score, p2: p2Score, max: Math.max(p1Score, p2Score), mode: modeStr });
 history.sort((a, b) => b.max - a.max);
 localStorage.setItem('mathmiru_yacht_history', JSON.stringify(history.slice(0, 50))); 
 }
@@ -377,10 +411,10 @@ localStorage.setItem('mathmiru_yacht_history', JSON.stringify(history.slice(0, 5
 function showHistory() {
 const history = JSON.parse(localStorage.getItem('mathmiru_yacht_history') || '[]');
 const container = document.getElementById('historyContainer');
-container.innerHTML = history.length === 0 ? '<p style="text-align:center; color:#95A5A6; padding:20px;">まだ きろくが ありません</p>' : '';
-const topTen = [...history].sort((a,b) => b.max - a.max).slice(0, 10);
+container.innerHTML = history.length === 0 ? '<p style="text-align:center; padding:20px;">まだ きろくが ありません</p>' : '';
+const topTen = history.slice(0, 10);
 topTen.forEach((item, index) => {
-container.innerHTML += `<div class="history-item"><div style="display:flex; align-items:center;"><span class="rank-badge">${index + 1}い</span><span>${item.date}<br><small>${item.mode}</small></span></div><span style="font-weight:bold; color:var(--accent); font-size:1rem;">${item.p1} : ${item.p2}</span></div>`;
+container.innerHTML += `<div class="history-item"><div style="display:flex; align-items:center;"><span class="rank-badge">${index + 1}い</span><span>${item.date}<br><small>${item.mode}</small></span></div><span style="font-weight:bold; color:var(--accent);">${item.p1}:${item.p2}</span></div>`;
 });
 document.getElementById('modalOverlay').style.display = 'block';
 document.getElementById('historyModal').style.display = 'block';
@@ -388,138 +422,102 @@ document.getElementById('historyModal').style.display = 'block';
 
 function clearHistory() { if(confirm('きろくを ぜんぶ けしますか？')) { localStorage.removeItem('mathmiru_yacht_history'); showHistory(); } }
 
-// --- AI思考セクション ---
+// --- AI & ズルロジック ---
 async function startCOMTurn() {
 const sleep = ms => new Promise(res => setTimeout(res, ms));
-await sleep(400); comExecuteRoll(); await sleep(1200);
-if(GAME_STATE.rollsLeft > 0) { comExecuteHold(); await sleep(800); comExecuteRoll(); await sleep(1200); }
-if(GAME_STATE.rollsLeft > 0) { comExecuteHold(); await sleep(800); comExecuteRoll(); await sleep(1200); }
-comSelectBestScore();
+await sleep(400); 
+await aiRollProcess(); await sleep(1200);
+if(GAME_STATE.rollsLeft > 0) { aiHoldProcess(); await sleep(800); await aiRollProcess(); await sleep(1200); }
+if(GAME_STATE.rollsLeft > 0) { aiHoldProcess(); await sleep(800); await aiRollProcess(); await sleep(1200); }
+aiSelectBestScore();
 }
 
-function comExecuteRoll() {
-for (let i = 0; i < 5; i++) { if (!GAME_STATE.held[i]) { const res = Math.floor(Math.random() * 6) + 1;
-GAME_STATE.dice[i] = res; execute3DRotation(i, res); } }
-GAME_STATE.rollsLeft--; updateUI(); calculateAllProbabilities();
+async function aiRollProcess() {
+    let isZuru = false;
+    if (GAME_STATE.comLevel === 4) {
+        const available = Object.keys(GAME_STATE.scores[2]).filter(k => GAME_STATE.scores[2][k] === null);
+        if ((available.length > 0) && Math.random() > 0.5) {
+            isZuru = true;
+            document.getElementById('cheatCutIn').style.display = 'block';
+            await new Promise(r => setTimeout(r, 1000));
+            document.getElementById('cheatCutIn').style.display = 'none';
+        }
+    }
+    rollDice(isZuru);
 }
 
-function comExecuteHold() {
-const available = Object.keys(GAME_STATE.scores[2]).filter(k => GAME_STATE.scores[2][k] === null);
-let bestHold = [false, false, false, false, false];
-let maxScore = -1000;
-
-// すべてのホールドパターン（32通り）を評価
-for (let i = 0; i < 32; i++) {
-const pattern = i.toString(2).padStart(5, '0').split('').map(b => b === '1');
-const val = evaluateHoldPattern(pattern, available);
-if (val > maxScore) { maxScore = val; bestHold = pattern; }
-}
-GAME_STATE.held = bestHold;
-for(let i=0; i<5; i++) document.getElementById(`scene${i}`).classList.toggle('held', GAME_STATE.held[i]);
+function aiHoldProcess() {
+    const available = Object.keys(GAME_STATE.scores[2]).filter(k => GAME_STATE.scores[2][k] === null);
+    let bestHold = [false, false, false, false, false];
+    let maxVal = -1000;
+    for (let i = 0; i < 32; i++) {
+        const pattern = i.toString(2).padStart(5, '0').split('').map(b => b === '1');
+        const val = evaluateHold(pattern, available);
+        if (val > maxVal) { maxVal = val; bestHold = pattern; }
+    }
+    GAME_STATE.held = bestHold;
+    for(let i=0; i<5; i++) document.getElementById(`scene${i}`).classList.toggle('held', GAME_STATE.held[i]);
 }
 
-function evaluateHoldPattern(pattern, available) {
-const level = GAME_STATE.comLevel;
-const unheld = []; pattern.forEach((h, i) => { if(!h) unheld.push(i); });
-if (unheld.length === 0) return scoreState(GAME_STATE.dice, available, level);
-
-// シミュレーションによる期待値算出
-let total = 0;
-const samples = unheld.length >= 4 ? (level === 3 ? 60 : 20) : Math.pow(6, unheld.length);
-const virtualDice = [...GAME_STATE.dice];
-
-if (unheld.length >= 4 || (unheld.length === 3 && samples < Math.pow(6, 3))) {
-for(let s=0; s<samples; s++) {
-unheld.forEach(idx => virtualDice[idx] = Math.floor(Math.random()*6)+1);
-total += scoreState(virtualDice, available, level);
-}
-} else {
-function iterate(depth) {
-if (depth === unheld.length) { total += scoreState(virtualDice, available, level); return; }
-for(let v=1; v<=6; v++) { virtualDice[unheld[depth]] = v; iterate(depth + 1); }
-}
-iterate(0);
-}
-return total / samples;
+function evaluateHold(pattern, available) {
+    const unheld = []; pattern.forEach((h, i) => { if(!h) unheld.push(i); });
+    if (unheld.length === 0) return scoreState(GAME_STATE.dice, available);
+    let total = 0;
+    const samples = unheld.length >= 4 ? 20 : 50;
+    const vDice = [...GAME_STATE.dice];
+    for(let s=0; s<samples; s++) {
+        unheld.forEach(idx => vDice[idx] = Math.floor(Math.random()*6)+1);
+        total += scoreState(vDice, available);
+    }
+    return total / samples;
 }
 
-// 現在のダイスの状態が、残り枠に対してどれだけ価値があるか
-function scoreState(dArr, available, level) {
-let bestVal = -50;
-const sArr = available.map(cat => ({ cat, score: calcScore(cat, dArr) }));
-
-sArr.forEach(item => {
-let val = item.score;
-if (level === 3) {
-// 【大局観】ボーナスへの寄与度を評価
-if (['ones','twos','threes','fours','fives','sixes'].includes(item.cat)) {
-const target = {'ones':1,'twos':2,'threes':3,'fours':4,'fives':5,'sixes':6}[item.cat];
-const count = dArr.filter(d => d === target).length;
-// ボーナス(63)達成には各目3つが目安。3つ以上なら高く評価
-if (count >= 3) val += (target * 1.5); 
-else if (count === 2) val += (target * 0.5);
-}
-// 高難易度役の評価
-if (item.cat === 'yacht' && item.score > 0) val += 40;
-if (item.cat === 'large_str' && item.score > 0) val += 25;
-if (item.cat === 'full_house' && item.score > 0) val += 10;
-// 0点になるリスク（残り回数が少ないほど痛い）
-if (item.score === 0) val = -15; 
-} else if (level === 2) {
-if (item.score > 0) val += 5;
-}
-if (val > bestVal) bestVal = val;
-});
-return bestVal;
+function scoreState(dArr, available) {
+    let best = -50;
+    available.forEach(cat => {
+        let s = calcScore(cat, dArr);
+        if (GAME_STATE.comLevel >= 3) {
+            const target = {'ones':1,'twos':2,'threes':3,'fours':4,'fives':5,'sixes':6}[cat];
+            if (target && s >= target * 3) s += (target * 1.5);
+            if (cat === 'yacht' && s > 0) s += 40;
+        }
+        if (s > best) best = s;
+    });
+    return best;
 }
 
-async function comSelectBestScore() {
-const available = Object.keys(GAME_STATE.scores[2]).filter(k => GAME_STATE.scores[2][k] === null);
-let bestCat = available[0];
-let maxUtility = -1000;
-
-const sArr = available.map(cat => ({ cat, score: calcScore(cat, GAME_STATE.dice) }));
-const currentUpper = ['ones','twos','threes','fours','fives','sixes'].reduce((sum, k) => sum + (GAME_STATE.scores[2][k] || 0), 0);
-
-sArr.forEach(item => {
-let utility = item.score;
-if (GAME_STATE.comLevel === 3) {
-// 1〜6の目はボーナスへの距離で価値が変わる
-if (['ones','twos','threes','fours','fives','sixes'].includes(item.cat)) {
-const target = {'ones':1,'twos':2,'threes':3,'fours':4,'fives':5,'sixes':6}[item.cat];
-// ボーナス圏内(3つ以上)ならプラス評価。0点でも後半なら捨てる判断
-if (item.score >= target * 3) utility += 10;
-if (item.score === 0) utility -= 5;
-}
-// 役の保存価値（今取るべきか）
-if (item.cat === 'choice' && item.score < 20) utility -= 10; // 低いチョイスは極力避ける
-if (item.cat === 'yacht' && item.score === 0) utility = -20; // ヨット0点は最終手段
-} else if (GAME_STATE.comLevel === 1) {
-utility = item.score + (Math.random() * 2); // レベル1は少しランダム
-}
-
-if (utility > maxUtility) { maxUtility = utility; bestCat = item.cat; }
-});
-
-const cell = document.getElementById(`p2_${bestCat}`);
-cell.classList.add('com-selecting');
-await new Promise(res => setTimeout(res, 1000));
-cell.classList.remove('com-selecting');
-GAME_STATE.scores[2][bestCat] = calcScore(bestCat, GAME_STATE.dice);
-endTurn();
+async function aiSelectBestScore() {
+    const available = Object.keys(GAME_STATE.scores[2]).filter(k => GAME_STATE.scores[2][k] === null);
+    let bestCat = available[0]; let maxUtility = -1000;
+    available.forEach(cat => {
+        let utility = calcScore(cat, GAME_STATE.dice);
+        if (GAME_STATE.comLevel >= 3) {
+            if (['ones','twos','threes'].includes(cat) && utility === 0) utility = -5;
+            if (cat === 'choice' && utility < 15) utility -= 10;
+            if (cat === 'yacht' && utility === 0) utility = -20;
+        }
+        if (utility > maxUtility) { maxUtility = utility; bestCat = cat; }
+    });
+    const cell = document.getElementById(`p2_${bestCat}`);
+    cell.classList.add('com-selecting');
+    await new Promise(res => setTimeout(res, 1200));
+    cell.classList.remove('com-selecting');
+    GAME_STATE.scores[2][bestCat] = calcScore(bestCat, GAME_STATE.dice);
+    endTurn();
 }
 
 function showRuleDetail(key) {
-document.getElementById('ruleModalTitle').innerText = CATEGORY_NAMES[key];
-document.getElementById('ruleModalDesc').innerText = RULE_DESCRIPTIONS[key];
-document.getElementById('modalOverlay').style.display = 'block';
-document.getElementById('ruleDetailModal').style.display = 'block';
+    document.getElementById('ruleModalTitle').innerText = CATEGORY_NAMES[key];
+    document.getElementById('ruleModalDesc').innerText = RULE_DESCRIPTIONS[key];
+    document.getElementById('modalOverlay').style.display = 'block';
+    document.getElementById('ruleDetailModal').style.display = 'block';
 }
 function hideAllModals() {
-document.getElementById('modalOverlay').style.display='none';
-document.getElementById('ruleDetailModal').style.display='none';
-document.getElementById('historyModal').style.display='none';
-document.getElementById('resultModal').style.display='none';
+    document.getElementById('modalOverlay').style.display='none';
+    document.getElementById('ruleDetailModal').style.display='none';
+    document.getElementById('historyModal').style.display='none';
+    document.getElementById('resultModal').style.display='none';
+    document.getElementById('zuruCheckModal').style.display='none';
 }
 </script>
 </body>
