@@ -119,7 +119,7 @@ padding: 3px; }
 <p>5つのサイコロを3かいふって「やく」をつくります。のこしたいめをタッチして ふりなおせます。</p>
 <p style="color:var(--info); font-weight:bold;">★サイコロをふると「やく」ができる％（かくりつ）がわかるよ！のこすサイコロをえらぶと、かくりつもかわるから よくみてね！</p>
 <h4>【やくの なまえ】</h4>
-<p>・1〜6のめ：えらんだ すうじを ぜんぶたす<br>・チョイス：ぜんぶの めを たす<br>・3つ/4つおなじ：おなじめが 3つ/4つあるとき ぜんぶたす<br>・フルハウス：おなじめ 3つ ＋ べつの おなじめ 2つ(25てん)<br>・4れんぞく：すうじが 4つ つながる(30てん)<br>・5れんぞく：すうじが 5つ つながる(40てん)<br>・ヨット：ぜび おなじ め(50てん)</p>
+<p>・1〜6のめ：えらんだ すうじを ぜんぶたす<br>・チョイス：ぜんぶの めを たす<br>・3つ/4つおなじ：おなじめが 3つ/4つあるとき ぜんぶたす<br>・フルハウス：おなじめ 3つ ＋ べつの おなじめ 2つ(25てん)<br>・4れんぞく：すうじが 4つ つながる(30てん)<br>・5れんぞく：すうじが 5つ つながる(40てん)<br>・ヨット：ぜんぶ おなじ め(50てん)</p>
 </div>
 <button class="menu-btn" onclick="startGame('com', 1)">レベル1</button>
 <button class="menu-btn" onclick="startGame('com', 2)">レベル2</button>
@@ -158,11 +158,15 @@ padding: 3px; }
 </div>
 <div class="modal-overlay" id="modalOverlay" onclick="hideAllModals()"></div>
 <div class="modal" id="onlineModal">
-<h3 style="margin-top:0; font-size:1.1rem;">オンラインべやに はいる</h3>
-<p style="font-size:0.75rem; color:#7f8c8d; margin:5px 0;">すきな「4けたの すうじ」を いれてね</p>
+<h3 style="margin-top:0; font-size:1.1rem;">オンラインべや</h3>
+<p style="font-size:0.75rem; color:#7f8c8d; margin:5px 0;">4けたの すうじを いれてね</p>
 <input type="number" id="roomPin" maxlength="4" placeholder="0000">
-<button class="menu-btn" style="margin-top:5px;" onclick="connectToPeer()">へやに はいる</button>
-<button class="menu-btn" style="background:#95A5A6;" onclick="hideAllModals()">もどる</button>
+<div style="margin-top:10px;">
+<button class="menu-btn" style="background:#27AE60;" onclick="connectAsHost()">1. へやを 作る（親）</button>
+<button class="menu-btn" style="background:var(--accent);" onclick="connectAsClient()">2. へやに 入る（子）</button>
+</div>
+<p style="font-size:0.65rem; color:#e67e22; margin-top:10px;">※まずは「親」が作ってから「子」が入ってね</p>
+<button class="menu-btn" style="background:#95A5A6; margin-top:10px;" onclick="hideAllModals()">もどる</button>
 </div>
 <div class="modal" id="ruleDetailModal" style="text-align:left;">
 <h3 id="ruleModalTitle" style="margin-top:0; font-size:1.1rem; color:var(--primary); border-bottom:2px solid var(--info); padding-bottom:3px;">やくのなまえ</h3>
@@ -445,38 +449,50 @@ cell.classList.remove('com-selecting');
 GAME_STATE.scores[2][best] = calcScore(best, GAME_STATE.dice);
 endTurn();
 }
-// --- 遠隔対戦用 STUNサーバー設定を追加した PeerJS ロジック ---
-function connectToPeer() {
+// --- 役割固定式の PeerJS ロジック ---
+function connectAsHost() {
 const pin = document.getElementById('roomPin').value;
 if (pin.length < 1) return alert("4けたの すうじを いれてね");
 document.getElementById('displayPin').innerText = pin;
 hideAllModals();
 document.getElementById('titleScreen').classList.remove('active');
 document.getElementById('waitingScreen').classList.add('active');
-const peerId = 'mathmiru-yacht-' + pin;
-// ホストとしてPeerを作成（STUNサーバー設定を追加）
-peer = new Peer(peerId + '-host', { config: iceConfig });
-peer.on('open', () => {
 myPlayerId = 1;
-document.getElementById('waitMsg').innerText = "あいてを まっています";
+const peerId = 'mathmiru-yacht-' + pin + '-host';
+peer = new Peer(peerId, { config: iceConfig });
+peer.on('open', () => {
+document.getElementById('waitMsg').innerText = "あいてを まっています（親）";
 peer.on('connection', (c) => {
 conn = c;
 setupConnection();
 });
 });
 peer.on('error', (err) => {
-if (err.type === 'unavailable-id') {
-// クライアントとしてPeerを作成（STUNサーバー設定を追加）
+alert("へやを作れませんでした: " + err.type + "\n番号を変えるか、もう一度試してね。");
+location.reload();
+});
+}
+function connectAsClient() {
+const pin = document.getElementById('roomPin').value;
+if (pin.length < 1) return alert("4けたの すうじを いれてね");
+document.getElementById('displayPin').innerText = pin;
+hideAllModals();
+document.getElementById('titleScreen').classList.remove('active');
+document.getElementById('waitingScreen').classList.add('active');
+myPlayerId = 2;
 peer = new Peer({ config: iceConfig });
 peer.on('open', () => {
-myPlayerId = 2;
-conn = peer.connect(peerId + '-host');
+document.getElementById('waitMsg').innerText = "親に つなぎに 行っています...（子）";
+const hostId = 'mathmiru-yacht-' + pin + '-host';
+conn = peer.connect(hostId);
 setupConnection();
-});
-} else {
-alert("つうしんエラー: " + err.type);
+// 一定時間つながらない場合のケア
+setTimeout(() => {
+if (GAME_STATE.mode !== 'online') {
+alert("親が見つかりません。番号が合っているか、親が「へやを作る」を先に押しているか確認してね。");
 location.reload();
 }
+}, 8000);
 });
 }
 function setupConnection() {
@@ -489,6 +505,10 @@ if (data.type === 'sync') receiveNetworkState(data.state);
 });
 conn.on('close', () => {
 alert("あいてが 退出しました");
+location.reload();
+});
+conn.on('error', (err) => {
+alert("接続エラーが発生しました。");
 location.reload();
 });
 }
