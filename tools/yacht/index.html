@@ -105,8 +105,7 @@ padding: 3px; }
 @keyframes bounce { 0%, 20%, 50%, 80%, 100% {transform: translateX(0);} 40% {transform: translateX(-3px);} 60% {transform: translateX(-2px);} }
 .win-display { color: var(--accent); font-size: 1.4rem; font-weight: 900; margin-bottom: 10px; }
 .waiting-dots:after { content: ' .'; animation: dots 1.5s steps(5, end) infinite; }
-@keyframes dots { 0%, 20% { content: ' .'; } 40% { content: ' . .';
-} 60% { content: ' . . .'; } 80%, 100% { content: ''; } }
+@keyframes dots { 0%, 20% { content: ' .'; } 40% { content: ' . .'; } 60% { content: ' . . .'; } 80%, 100% { content: ''; } }
 </style>
 </head>
 <body>
@@ -142,7 +141,7 @@ padding: 3px; }
 </div>
 <div class="dice-area" id="diceArea"></div>
 <div style="text-align:center; margin-bottom:4px; display:flex; justify-content:center; align-items:center; gap:8px;">
-<button class="menu-btn" id="rollBtn" onclick="rollDice()">サイコロを ふる</button>
+<button class="menu-btn" id="rollBtn" onclick="rollDice()" style="width:150px; margin:0; padding:6px; font-size:0.85rem;">サイコロを ふる</button>
 <div style="display:flex; flex-direction:column; align-items:flex-start;">
 <span id="rollsLeft" style="font-weight:bold; font-size:0.8rem;">のこり: 3かい</span>
 <span id="holdGuide">のこす めを タッチ！</span>
@@ -175,420 +174,346 @@ padding: 3px; }
 <button class="menu-btn" style="width:100%;" onclick="location.reload()">タイトルへ</button>
 </div>
 </div>
-
 <script>
-// --- グローバル変数 ---
-const SKYWAY_KEY = '9ac938db-1230-4a41-a827-ae374c0b5676'; 
+// --- 基本設定・グローバル変数 ---
+const SKYWAY_KEY = '9ac938db-1230-4a41-a827-ae374c0b5676';
 let myPlayerId = 1;
 let dataChannel = null;
-
 const GAME_STATE = {
-  mode: 'com', comLevel: 1, turn: 1, rollsLeft: 3,
-  dice: [1, 1, 1, 1, 1], held: [false, false, false, false, false],
-  scores: {
-    1: { ones:null, twos:null, threes:null, fours:null, fives:null, sixes:null, choice:null, three_kind:null, four_kind:null, full_house:null, small_str:null, large_str:null, yacht:null },
-    2: { ones:null, twos:null, threes:null, fours:null, fives:null, sixes:null, choice:null, three_kind:null, four_kind:null, full_house:null, small_str:null, large_str:null, yacht:null }
-  }
+mode: 'com', comLevel: 1, turn: 1, rollsLeft: 3,
+dice: [1, 1, 1, 1, 1], held: [false, false, false, false, false],
+scores: {
+1: { ones:null, twos:null, threes:null, fours:null, fives:null, sixes:null, choice:null, three_kind:null, four_kind:null, full_house:null, small_str:null, large_str:null, yacht:null },
+2: { ones:null, twos:null, threes:null, fours:null, fives:null, sixes:null, choice:null, three_kind:null, four_kind:null, full_house:null, small_str:null, large_str:null, yacht:null }
+}
 };
-
 const CATEGORY_NAMES = {
-  ones:"1のめ", twos:"2のめ", threes:"3のめ", fours:"4のめ", fives:"5のめ", sixes:"6のめ",
-  choice:"チョイス(たしざん)", three_kind:"3つおなじ", four_kind:"4つおなじ", full_house:"フルハウス", small_str:"4れんぞく", large_str:"5れんぞく", yacht:"ヨット"
+ones:"1のめ", twos:"2のめ", threes:"3のめ", fours:"4のめ", fives:"5のめ", sixes:"6のめ",
+choice:"チョイス(たしざん)", three_kind:"3つおなじ", four_kind:"4つおなじ", full_house:"フルハウス", small_str:"4れんぞく", large_str:"5れんぞく", yacht:"ヨット"
 };
-
 const RULE_DESCRIPTIONS = {
-  ones: "【1のめ】\nでた「1」のめを ぜんぶたした かずになります。1〜6の ごうけいが 63てんより おおいと、ボーナスで 35てん もらえます！",
-  twos: "【2のめ】\nでた「2」のめを ぜんぶたした かずになります。",
-  threes: "【3のめ】\nでた「3」のめを ぜんぶたした かずになります。",
-  fours: "【4のめ】\nでた「4」のめを ぜんぶたした かずになります。",
-  fives: "【5のめ】\nでた「5」のめを ぜんぶたした かずになります。",
-  sixes: "【6のめ】\nでた「6」のめを ぜんぶたした かずになります。",
-  choice: "【チョイス】\nなんでもOK！5つの サイコロの めを ぜんぶたした かずになります。",
-  three_kind: "【3つおなじ】\nおなじめが 3つより おおいとき、5つの めを ぜんぶたした かずになります。",
-  four_kind: "【4つおなじ】\nおなじめが 4つより おおいとき、5つの めを ぜんぶたした かずになります。",
-  full_house: "【フルハウス】\nおなじめ3つと、べつの おなじめ2つが そろうと【25てん】もらえます！",
-  small_str: "【4れんぞく】\nすうじが 4つ つながると（れい：1-2-3-4）【30てん】もらえます！",
-  large_str: "【5れんぞく】\nすうじが 5つ つながると（れい：1-2-3-4-5）【40てん】もらえます！",
-  yacht: "【ヨット】\nぜび おなじめに なると【50てん】もらえます！いちばん むずかしい やくです。"
+ones: "【1のめ】\nでた「1」のめを ぜんぶたした かずになります。1〜6の ごうけいが 63てんより おおいと、ボーナスで 35てん もらえます！",
+twos: "【2のめ】\nでた「2」のめを ぜんぶたした かずになります。",
+threes: "【3のめ】\nでた「3」のめを ぜんぶたした かずになります。",
+fours: "【4のめ】\nでた「4」のめを ぜんぶたした かずになります。",
+fives: "【5のめ】\nでた「5」のめを ぜんぶたした かずになります。",
+sixes: "【6のめ】\nでた「6」のめを ぜんぶたした かずになります。",
+choice: "【チョイス】\nなんでもOK！5つの サイコロの めを ぜんぶたした かずになります。",
+three_kind: "【3つおなじ】\nおなじめが 3つより おおいとき、5つの めを ぜんぶたした かずになります。",
+four_kind: "【4つおなじ】\nおなじめが 4つより おおいとき、5つの めを ぜんぶたした かずになります。",
+full_house: "【フルハウス】\nおなじめ3つと、べつの おなじめ2つが そろうと【25てん】もらえます！",
+small_str: "【4れんぞく】\nすうじが 4つ つながると（れい：1-2-3-4）【30てん】もらえます！",
+large_str: "【5れんぞく】\nすうじが 5つ つながると（れい：1-2-3-4-5）【40てん】もらえます！",
+yacht: "【ヨット】\nぜび おなじめに なると【50てん】もらえます！いちばん むずかしい やくです。"
 };
-
-// --- 関数定義 ---
 function initBoard() {
-  const diceArea = document.getElementById('diceArea');
-  diceArea.innerHTML = '';
-  for (let i = 0; i < 5; i++) {
-    diceArea.innerHTML += `<div class="scene" id="scene${i}" onclick="toggleHold(${i})"><div class="cube" id="die${i}"><div class="face face-1"><div class="pip c"></div></div><div class="face face-2"><div class="pip tl"></div><div class="pip br"></div></div><div class="face face-3"><div class="pip tl"></div><div class="pip c"></div><div class="pip br"></div></div><div class="face face-4"><div class="pip tl"></div><div class="pip tr"></div><div class="pip bl"></div><div class="pip br"></div></div><div class="face face-5"><div class="pip tl"></div><div class="pip tr"></div><div class="pip c"></div><div class="pip bl"></div><div class="pip br"></div></div><div class="face face-6"><div class="pip tl"></div><div class="pip tr"></div><div class="pip ml"></div><div class="pip mr"></div><div class="pip bl"></div><div class="pip br"></div></div></div></div>`;
-  }
-  const tbody = document.getElementById('scoreBoard');
-  tbody.innerHTML = '';
-  Object.keys(CATEGORY_NAMES).forEach(key => {
-    tbody.innerHTML += `<tr><td class="role-name-td" onclick="showRuleDetail('${key}')">${CATEGORY_NAMES[key]}<div id="prob_${key}" class="prob-badge"></div></td><td id="p1_${key}" class="score-cell" onclick="selectScore('${key}', 1)"></td><td id="p2_${key}" class="score-cell" onclick="selectScore('${key}', 2)"></td></tr>`;
-    if(key === 'sixes') tbody.innerHTML += `<tr style="background:#FCF3CF; font-size:0.65rem; height:16px;"><td>①〜⑥のボーナス(63てんで+35)</td><td id="p1_bonus">0/63</td><td id="p2_bonus">0/63</td></tr>`;
-  });
+const diceArea = document.getElementById('diceArea');
+diceArea.innerHTML = '';
+for (let i = 0; i < 5; i++) {
+diceArea.innerHTML += `<div class="scene" id="scene${i}" onclick="toggleHold(${i})"><div class="cube" id="die${i}"><div class="face face-1"><div class="pip c"></div></div><div class="face face-2"><div class="pip tl"></div><div class="pip br"></div></div><div class="face face-3"><div class="pip tl"></div><div class="pip c"></div><div class="pip br"></div></div><div class="face face-4"><div class="pip tl"></div><div class="pip tr"></div><div class="pip bl"></div><div class="pip br"></div></div><div class="face face-5"><div class="pip tl"></div><div class="pip tr"></div><div class="pip c"></div><div class="pip bl"></div><div class="pip br"></div></div><div class="face face-6"><div class="pip tl"></div><div class="pip tr"></div><div class="pip ml"></div><div class="pip mr"></div><div class="pip bl"></div><div class="pip br"></div></div></div></div>`;
 }
-
+const tbody = document.getElementById('scoreBoard');
+tbody.innerHTML = '';
+Object.keys(CATEGORY_NAMES).forEach(key => {
+tbody.innerHTML += `<tr><td class="role-name-td" onclick="showRuleDetail('${key}')">${CATEGORY_NAMES[key]}<div id="prob_${key}" class="prob-badge"></div></td><td id="p1_${key}" class="score-cell" onclick="selectScore('${key}', 1)"></td><td id="p2_${key}" class="score-cell" onclick="selectScore('${key}', 2)"></td></tr>`;
+if(key === 'sixes') tbody.innerHTML += `<tr style="background:#FCF3CF; font-size:0.65rem; height:16px;"><td>①〜⑥のボーナス(63てんで+35)</td><td id="p1_bonus">0/63</td><td id="p2_bonus">0/63</td></tr>`;
+});
+}
 function startGame(mode, level) {
-  GAME_STATE.mode = mode; GAME_STATE.comLevel = level;
-  document.getElementById('titleScreen').classList.remove('active');
-  document.getElementById('waitingScreen').classList.remove('active');
-  document.getElementById('gameScreen').classList.add('active');
-  initBoard();
-  if(mode === 'com') { myPlayerId = 1; document.getElementById('p1Header').innerText = "あなた"; document.getElementById('p2Header').innerText = "レベル" + level; }
-  else if(mode === 'local') { myPlayerId = 1; document.getElementById('p1Header').innerText = "1にんめ"; document.getElementById('p2Header').innerText = "2にんめ"; }
-  else if(mode === 'online') {
-    document.getElementById('p1Header').innerText = myPlayerId === 1 ? "あなた" : "あいて";
-    document.getElementById('p2Header').innerText = myPlayerId === 2 ? "あなた" : "あいて";
-  }
-  resetVisuals(); updateUI();
+GAME_STATE.mode = mode; GAME_STATE.comLevel = level;
+document.getElementById('titleScreen').classList.remove('active');
+document.getElementById('waitingScreen').classList.remove('active');
+document.getElementById('gameScreen').classList.add('active');
+initBoard();
+if(mode === 'com') { myPlayerId = 1; document.getElementById('p1Header').innerText = "あなた"; document.getElementById('p2Header').innerText = "レベル" + level; }
+else if(mode === 'local') { myPlayerId = 1; document.getElementById('p1Header').innerText = "1にんめ"; document.getElementById('p2Header').innerText = "2にんめ"; }
+else {
+document.getElementById('p1Header').innerText = myPlayerId === 1 ? "あなた" : "あいて";
+document.getElementById('p2Header').innerText = myPlayerId === 2 ? "あなた" : "あいて";
 }
-
+resetVisuals(); updateUI();
+}
 function rollDice() {
-  const currentActivePlayer = (GAME_STATE.mode === 'online') ? myPlayerId : GAME_STATE.turn;
-  if (GAME_STATE.turn !== currentActivePlayer || GAME_STATE.rollsLeft <= 0) return;
-  document.getElementById('rollBtn').disabled = true;
-  for (let i = 0; i < 5; i++) { if (!GAME_STATE.held[i]) { const result = Math.floor(Math.random() * 6) + 1;
-  GAME_STATE.dice[i] = result; execute3DRotation(i, result); } }
-  GAME_STATE.rollsLeft--;
-  setTimeout(() => { updateUI(); calculateAllProbabilities(); if (GAME_STATE.mode === 'online') syncToNetwork(); }, 600);
+const currentActivePlayer = (GAME_STATE.mode === 'online') ? myPlayerId : GAME_STATE.turn;
+if (GAME_STATE.turn !== currentActivePlayer || GAME_STATE.rollsLeft <= 0) return;
+document.getElementById('rollBtn').disabled = true;
+for (let i = 0; i < 5; i++) { if (!GAME_STATE.held[i]) { const result = Math.floor(Math.random() * 6) + 1;
+GAME_STATE.dice[i] = result; execute3DRotation(i, result); } }
+GAME_STATE.rollsLeft--;
+setTimeout(() => { updateUI(); calculateAllProbabilities(); if (GAME_STATE.mode === 'online') syncToNetwork(); }, 600);
 }
-
 function execute3DRotation(i, result) {
-  const cube = document.getElementById(`die${i}`);
-  if(!cube) return;
-  cube.style.transition = 'none';
-  cube.style.transform = `rotateX(0deg) rotateY(0deg)`;
-  setTimeout(() => {
-    cube.style.transition = 'transform 0.6s cubic-bezier(0.2, 0.8, 0.3, 1)';
-    const rotX = Math.floor(Math.random() * 3 + 3) * 360 + (result===5?-90:result===6?90:0);
-    const rotY = Math.floor(Math.random() * 3 + 3) * 360 + (result===2?180:result===3?-90:result===4?90:0);
-    cube.style.transform = `rotateX(${rotX}deg) rotateY(${rotY}deg)`;
-  }, 50);
+const cube = document.getElementById(`die${i}`);
+cube.style.transition = 'none';
+cube.style.transform = `rotateX(0deg) rotateY(0deg)`;
+setTimeout(() => {
+cube.style.transition = 'transform 0.6s cubic-bezier(0.2, 0.8, 0.3, 1)';
+const rotX = Math.floor(Math.random() * 3 + 3) * 360 + (result===5?-90:result===6?90:0);
+const rotY = Math.floor(Math.random() * 3 + 3) * 360 + (result===2?180:result===3?-90:result===4?90:0);
+cube.style.transform = `rotateX(${rotX}deg) rotateY(${rotY}deg)`;
+}, 50);
 }
-
 function toggleHold(index) {
-  const currentActivePlayer = (GAME_STATE.mode === 'online') ? myPlayerId : GAME_STATE.turn;
-  if (GAME_STATE.rollsLeft === 3 || GAME_STATE.turn !== currentActivePlayer || GAME_STATE.rollsLeft === 0) return;
-  GAME_STATE.held[index] = !GAME_STATE.held[index];
-  document.getElementById(`scene${index}`).classList.toggle('held', GAME_STATE.held[index]);
-  calculateAllProbabilities();
-  if (GAME_STATE.mode === 'online') syncToNetwork();
+const currentActivePlayer = (GAME_STATE.mode === 'online') ? myPlayerId : GAME_STATE.turn;
+if (GAME_STATE.rollsLeft === 3 || GAME_STATE.turn !== currentActivePlayer || GAME_STATE.rollsLeft === 0) return;
+GAME_STATE.held[index] = !GAME_STATE.held[index];
+document.getElementById(`scene${index}`).classList.toggle('held', GAME_STATE.held[index]);
+calculateAllProbabilities();
+if (GAME_STATE.mode === 'online') syncToNetwork();
 }
-
 function calculateAllProbabilities() {
-  Object.keys(CATEGORY_NAMES).forEach(k => { const badge = document.getElementById(`prob_${k}`); if (badge) badge.style.display = 'none'; });
-  if (GAME_STATE.rollsLeft === 3 || GAME_STATE.rollsLeft === 0) return;
-  const unheldIndices = [];
-  for (let i = 0; i < 5; i++) { if (!GAME_STATE.held[i]) unheldIndices.push(i); }
-  if (unheldIndices.length === 0) return;
-  const totalPatterns = Math.pow(6, unheldIndices.length);
-  const patternCounts = {};
-  Object.keys(CATEGORY_NAMES).forEach(k => { patternCounts[k] = {}; });
-  const virtualDice = [...GAME_STATE.dice];
-  function search(depth) {
-    if (depth === unheldIndices.length) {
-      Object.keys(CATEGORY_NAMES).forEach(key => {
-        if (['ones', 'twos', 'threes', 'fours', 'fives', 'sixes'].includes(key)) {
-          const target = {'ones':1,'twos':2,'threes':3,'fours':4,'fives':5,'sixes':6}[key];
-          const matchCount = virtualDice.filter(d => d === target).length;
-          patternCounts[key][matchCount] = (patternCounts[key][matchCount] || 0) + 1;
-        } else { if (calcScore(key, virtualDice) > 0) patternCounts[key]['success'] = (patternCounts[key]['success'] || 0) + 1; }
-      }); return;
-    }
-    for (let v = 1; v <= 6; v++) { virtualDice[unheldIndices[depth]] = v; search(depth + 1); }
-  }
-  search(0);
-  const activeP = GAME_STATE.turn;
-  Object.keys(CATEGORY_NAMES).forEach(key => {
-    const badge = document.getElementById(`prob_${key}`);
-    if (!badge || GAME_STATE.scores[activeP][key] !== null) return;
-    if (['ones', 'twos', 'threes', 'fours', 'fives', 'sixes'].includes(key)) {
-      badge.className = 'prob-badge digits'; let textArr = [];
-      for (let c = 1; c <= 5; c++) { const count = patternCounts[key][c] || 0;
-      if (count > 0) { const pct = ((count / totalPatterns) * 100).toFixed(0); if (pct > 0) textArr.push(`${c}こ:${pct}%`); } }
-      if(textArr.length > 0) { badge.innerHTML = textArr.join(' '); badge.style.display = 'block'; }
-    } else {
-      badge.className = 'prob-badge normal'; const count = patternCounts[key]['success'] || 0;
-      const pct = ((count / totalPatterns) * 100).toFixed(0); badge.innerText = `${pct}%`; badge.style.display = 'inline-block';
-    }
-  });
+Object.keys(CATEGORY_NAMES).forEach(k => { const badge = document.getElementById(`prob_${k}`); if (badge) badge.style.display = 'none'; });
+if (GAME_STATE.rollsLeft === 3 || GAME_STATE.rollsLeft === 0) return;
+const unheldIndices = [];
+for (let i = 0; i < 5; i++) { if (!GAME_STATE.held[i]) unheldIndices.push(i); }
+if (unheldIndices.length === 0) return;
+const totalPatterns = Math.pow(6, unheldIndices.length);
+const patternCounts = {};
+Object.keys(CATEGORY_NAMES).forEach(k => { patternCounts[k] = {}; });
+const virtualDice = [...GAME_STATE.dice];
+function search(depth) {
+if (depth === unheldIndices.length) {
+Object.keys(CATEGORY_NAMES).forEach(key => {
+if (['ones', 'twos', 'threes', 'fours', 'fives', 'sixes'].includes(key)) {
+const target = {'ones':1,'twos':2,'threes':3,'fours':4,'fives':5,'sixes':6}[key];
+const matchCount = virtualDice.filter(d => d === target).length;
+patternCounts[key][matchCount] = (patternCounts[key][matchCount] || 0) + 1;
+} else { if (calcScore(key, virtualDice) > 0) patternCounts[key]['success'] = (patternCounts[key]['success'] || 0) + 1; }
+}); return;
 }
-
+for (let v = 1; v <= 6; v++) { virtualDice[unheldIndices[depth]] = v; search(depth + 1); }
+}
+search(0);
+const activeP = GAME_STATE.turn;
+Object.keys(CATEGORY_NAMES).forEach(key => {
+const badge = document.getElementById(`prob_${key}`);
+if (!badge || GAME_STATE.scores[activeP][key] !== null) return;
+if (['ones', 'twos', 'threes', 'fours', 'fives', 'sixes'].includes(key)) {
+badge.className = 'prob-badge digits'; let textArr = [];
+for (let c = 1; c <= 5; c++) { const count = patternCounts[key][c] || 0;
+if (count > 0) { const pct = ((count / totalPatterns) * 100).toFixed(0); if (pct > 0) textArr.push(`${c}こ:${pct}%`); } }
+if(textArr.length > 0) { badge.innerHTML = textArr.join(' '); badge.style.display = 'block'; }
+} else {
+badge.className = 'prob-badge normal'; const count = patternCounts[key]['success'] || 0;
+const pct = ((count / totalPatterns) * 100).toFixed(0); badge.innerText = `${pct}%`; badge.style.display = 'inline-block';
+}
+});
+}
 function calcScore(category, dArr) {
-  const counts = [0,0,0,0,0,0,0]; let sum = 0; dArr.forEach(d => { counts[d]++; sum += d; });
-  switch(category) {
-    case 'ones': return counts[1] * 1; case 'twos': return counts[2] * 2; case 'threes': return counts[3] * 3;
-    case 'fours': return counts[4] * 4; case 'fives': return counts[5] * 5; case 'sixes': return counts[6] * 6;
-    case 'choice': return sum;
-    case 'three_kind': return counts.some(c => c >= 3) ? sum : 0;
-    case 'four_kind': return counts.some(c => c >= 4) ? sum : 0;
-    case 'yacht': return counts.some(c => c === 5) ? 50 : 0;
-    case 'full_house': return (counts.includes(3) && counts.includes(2)) || counts.includes(5) ? 25 : 0;
-    case 'small_str': const s = counts.map(c=>c>0?1:0).join(''); return (s.includes('1111')) ? 30 : 0;
-    case 'large_str': const l = counts.map(c=>c>0?1:0).join(''); return (l.includes('11111')) ? 40 : 0;
-  }
-  return 0;
+const counts = [0,0,0,0,0,0,0]; let sum = 0; dArr.forEach(d => { counts[d]++; sum += d; });
+switch(category) {
+case 'ones': return counts[1] * 1; case 'twos': return counts[2] * 2; case 'threes': return counts[3] * 3;
+case 'fours': return counts[4] * 4; case 'fives': return counts[5] * 5; case 'sixes': return counts[6] * 6;
+case 'choice': return sum;
+case 'three_kind': return counts.some(c => c >= 3) ? sum : 0;
+case 'four_kind': return counts.some(c => c >= 4) ? sum : 0;
+case 'yacht': return counts.some(c => c === 5) ? 50 : 0;
+case 'full_house': return (counts.includes(3) && counts.includes(2)) || counts.includes(5) ? 25 : 0;
+case 'small_str': const s = counts.map(c=>c>0?1:0).join(''); return (s.includes('1111')) ? 30 : 0;
+case 'large_str': const l = counts.map(c=>c>0?1:0).join(''); return (l.includes('11111')) ? 40 : 0;
 }
-
+return 0;
+}
 function updateUI() {
-  const activeP = GAME_STATE.turn; const isMyTurn = (GAME_STATE.mode === 'online') ? (GAME_STATE.turn === myPlayerId) : true;
-  const container = document.getElementById('appContainer');
-  container.className = activeP === 1 ? "app-container p1-turn" : "app-container p2-turn";
-  document.getElementById('rollsLeft').innerText = `のこり: ${GAME_STATE.rollsLeft}かい`;
-  const guide = document.getElementById('holdGuide');
-  guide.style.display = (isMyTurn && GAME_STATE.rollsLeft > 0 && GAME_STATE.rollsLeft < 3) ? 'inline-block' : 'none';
-  if (GAME_STATE.mode === 'online') {
-    if (GAME_STATE.turn === myPlayerId) document.getElementById('turnDisplay').innerText = GAME_STATE.rollsLeft === 0 ?
-    "⚠️ やくを えらんでね" : `   🟢    あなたの番 (${myPlayerId===1?'あお':'あか'})`;
-    else document.getElementById('turnDisplay').innerText = "   ⏳    あいての つうしんを まっています...";
-  } else {
-    if (GAME_STATE.turn === 1) document.getElementById('turnDisplay').innerText = GAME_STATE.rollsLeft === 0 ?
-    "   🔵    やくを えらんでね" : "   🔵    あなたの ばん";
-    else document.getElementById('turnDisplay').innerText = GAME_STATE.mode === 'com' ? "   🔴    コンピューターが かんがえ中..." : (GAME_STATE.rollsLeft === 0 ? "   🔴    やくを えらんでね" : "   🔴    2にんめの ばん");
-  }
-  const rollBtn = document.getElementById('rollBtn');
-  if (GAME_STATE.rollsLeft === 0 && isMyTurn) { rollBtn.innerText = "やくをえらんでね"; rollBtn.disabled = true; }
-  else { rollBtn.innerText = "サイコロを ふる"; rollBtn.disabled = (!isMyTurn || (GAME_STATE.mode === 'com' && GAME_STATE.turn === 2)); }
-  [1, 2].forEach(p => {
-    Object.keys(GAME_STATE.scores[p]).forEach(key => {
-      const cell = document.getElementById(`p${p}_${key}`); const val = GAME_STATE.scores[p][key];
-      if (val === null) {
-        if (GAME_STATE.turn === p && GAME_STATE.rollsLeft < 3 && (GAME_STATE.mode !== 'online' || myPlayerId === p) && (GAME_STATE.mode !== 'com' || p === 1)) {
-          cell.innerText = calcScore(key, GAME_STATE.dice); cell.className = (GAME_STATE.rollsLeft === 0) ? 'score-cell valid must-select' : 'score-cell valid';
-        } else { cell.innerText = ''; cell.className = 'score-cell'; }
-      } else { cell.innerText = val; cell.className = 'score-cell filled'; }
-    });
-    const s = GAME_STATE.scores[p]; const upper = (s.ones||0)+(s.twos||0)+(s.threes||0)+(s.fours||0)+(s.fives||0)+(s.sixes||0);
-    const bonusElem = document.getElementById(`p${p}_bonus`);
-    if(bonusElem) bonusElem.innerText = `${upper}/63`;
-    const totalElem = document.getElementById(`p${p}Total`);
-    if(totalElem) totalElem.innerText = Object.values(s).reduce((a,b)=>a+(b||0), 0) + (upper >= 63 ? 35 : 0);
-  });
+const activeP = GAME_STATE.turn; const isMyTurn = (GAME_STATE.mode === 'online') ? (GAME_STATE.turn === myPlayerId) : true;
+const container = document.getElementById('appContainer');
+container.className = activeP === 1 ? "app-container p1-turn" : "app-container p2-turn";
+document.getElementById('rollsLeft').innerText = `のこり: ${GAME_STATE.rollsLeft}かい`;
+const guide = document.getElementById('holdGuide');
+guide.style.display = (isMyTurn && GAME_STATE.rollsLeft > 0 && GAME_STATE.rollsLeft < 3) ? 'inline-block' : 'none';
+if (GAME_STATE.mode === 'online') {
+if (GAME_STATE.turn === myPlayerId) document.getElementById('turnDisplay').innerText = GAME_STATE.rollsLeft === 0 ? "⚠️ やくを えらんでね" : `🟢 あなたの番 (${myPlayerId===1?'あお':'あか'})`;
+else document.getElementById('turnDisplay').innerText = "⏳ あいての つうしんを まっています...";
+} else {
+if (GAME_STATE.turn === 1) document.getElementById('turnDisplay').innerText = GAME_STATE.rollsLeft === 0 ? "🔵 やくを えらんでね" : "🔵 あなたの ばん";
+else document.getElementById('turnDisplay').innerText = GAME_STATE.mode === 'com' ? "🔴 コンピューターが かんがえ中..." : (GAME_STATE.rollsLeft === 0 ? "🔴 やくを えらんでね" : "🔴 2にんめの ばん");
 }
-
+const rollBtn = document.getElementById('rollBtn');
+if (GAME_STATE.rollsLeft === 0 && isMyTurn) { rollBtn.innerText = "やくをえらんでね"; rollBtn.disabled = true; }
+else { rollBtn.innerText = "サイコロを ふる"; rollBtn.disabled = (!isMyTurn || (GAME_STATE.mode === 'com' && GAME_STATE.turn === 2)); }
+[1, 2].forEach(p => {
+Object.keys(GAME_STATE.scores[p]).forEach(key => {
+const cell = document.getElementById(`p${p}_${key}`); const val = GAME_STATE.scores[p][key];
+if (val === null) {
+if (GAME_STATE.turn === p && GAME_STATE.rollsLeft < 3 && (GAME_STATE.mode !== 'online' || myPlayerId === p) && (GAME_STATE.mode !== 'com' || p === 1)) {
+cell.innerText = calcScore(key, GAME_STATE.dice); cell.className = (GAME_STATE.rollsLeft === 0) ? 'score-cell valid must-select' : 'score-cell valid';
+} else { cell.innerText = ''; cell.className = 'score-cell'; }
+} else { cell.innerText = val; cell.className = 'score-cell filled'; }
+});
+const s = GAME_STATE.scores[p]; const upper = (s.ones||0)+(s.twos||0)+(s.threes||0)+(s.fours||0)+(s.fives||0)+(s.sixes||0);
+document.getElementById(`p${p}_bonus`).innerText = `${upper}/63`;
+document.getElementById(`p${p}Total`).innerText = Object.values(s).reduce((a,b)=>a+(b||0), 0) + (upper >= 63 ? 35 : 0);
+});
+}
 function selectScore(category, playerNum) {
-  const activeP = (GAME_STATE.mode === 'online') ? myPlayerId : GAME_STATE.turn;
-  if (GAME_STATE.turn !== activeP || playerNum !== activeP || GAME_STATE.rollsLeft === 3 || GAME_STATE.scores[activeP][category] !== null) return;
-  GAME_STATE.scores[activeP][category] = calcScore(category, GAME_STATE.dice); endTurn();
+const activeP = (GAME_STATE.mode === 'online') ? myPlayerId : GAME_STATE.turn;
+if (GAME_STATE.turn !== activeP || playerNum !== activeP || GAME_STATE.rollsLeft === 3 || GAME_STATE.scores[activeP][category] !== null) return;
+GAME_STATE.scores[activeP][category] = calcScore(category, GAME_STATE.dice); endTurn();
 }
-
-function resetVisuals() { for(let i=0; i<5; i++) { 
-  const s = document.getElementById(`scene${i}`);
-  if(s) s.classList.remove('held'); 
-  const d = document.getElementById(`die${i}`);
-  if(d) d.style.transform = `rotateX(0deg) rotateY(0deg)`; 
-}}
-
+function resetVisuals() { for(let i=0; i<5; i++) { if(document.getElementById(`scene${i}`)) document.getElementById(`scene${i}`).classList.remove('held'); if(document.getElementById(`die${i}`)) document.getElementById(`die${i}`).style.transform = `rotateX(0deg) rotateY(0deg)`; } }
 function endTurn() {
-  updateUI();
-  const p1T = parseInt(document.getElementById('p1Total').innerText); 
-  const p2T = parseInt(document.getElementById('p2Total').innerText);
-  if (Object.values(GAME_STATE.scores[1]).every(v=>v!==null) && Object.values(GAME_STATE.scores[2]).every(v=>v!==null)) {
-    let winTitle = "";
-    if (p1T > p2T) { winTitle = (GAME_STATE.mode === 'com') ? "あなたのかち！" : ((GAME_STATE.mode === 'online' && myPlayerId === 1) ? "あなたのかち！" : "1にんめのかち！"); }
-    else if (p2T > p1T) { winTitle = (GAME_STATE.mode === 'com') ? "コンピューターのかち！" : ((GAME_STATE.mode === 'online' && myPlayerId === 2) ? "あなたのかち！" : "2にんめのかち！"); }
-    else { winTitle = "ひきわけ！"; }
-    document.getElementById('winMsg').innerText = "   🎉    " + winTitle;
-    const p1Label = (GAME_STATE.mode === 'com') ? "あなた" : "1にんめ";
-    const p2Label = (GAME_STATE.mode === 'com') ? "コンピューター" : "2にんめ";
-    document.getElementById('scoreSummary').innerHTML = `${p1Label}：${p1T}てん<br>${p2Label}：${p2T}てん`;
-    document.getElementById('modalOverlay').style.display = 'block';
-    document.getElementById('resultModal').style.display = 'block';
-    if(GAME_STATE.mode === 'online') syncToNetwork(); return;
-  }
-  GAME_STATE.turn = GAME_STATE.turn === 1 ? 2 : 1; GAME_STATE.rollsLeft = 3; GAME_STATE.held = [false, false, false, false, false];
-  resetVisuals(); updateUI(); calculateAllProbabilities(); if (GAME_STATE.mode === 'online') syncToNetwork();
-  if (GAME_STATE.mode === 'com' && GAME_STATE.turn === 2) setTimeout(startCOMTurn, 1200);
+updateUI();
+if (Object.values(GAME_STATE.scores[1]).every(v=>v!==null) && Object.values(GAME_STATE.scores[2]).every(v=>v!==null)) {
+const p1T = parseInt(document.getElementById('p1Total').innerText); const p2T = parseInt(document.getElementById('p2Total').innerText);
+let winTitle = "";
+if (p1T > p2T) { winTitle = (GAME_STATE.mode === 'com') ? "あなたのかち！" : ((GAME_STATE.mode === 'online' && myPlayerId === 1) ? "あなたのかち！" : "1にんめのかち！"); }
+else if (p2T > p1T) { winTitle = (GAME_STATE.mode === 'com') ? "コンピューターのかち！" : ((GAME_STATE.mode === 'online' && myPlayerId === 2) ? "あなたのかち！" : "2にんめのかち！"); }
+else { winTitle = "ひきわけ！"; }
+document.getElementById('winMsg').innerText = "🎉 " + winTitle;
+const p1Label = (GAME_STATE.mode === 'com') ? "あなた" : "1にんめ";
+const p2Label = (GAME_STATE.mode === 'com') ? "コンピューター" : "2にんめ";
+document.getElementById('scoreSummary').innerHTML = `${p1Label}：${p1T}てん<br>${p2Label}：${p2T}てん`;
+document.getElementById('modalOverlay').style.display = 'block';
+document.getElementById('resultModal').style.display = 'block';
+if(GAME_STATE.mode === 'online') syncToNetwork(); return;
 }
-
+GAME_STATE.turn = GAME_STATE.turn === 1 ? 2 : 1; GAME_STATE.rollsLeft = 3; GAME_STATE.held = [false, false, false, false, false];
+resetVisuals(); updateUI(); calculateAllProbabilities(); if (GAME_STATE.mode === 'online') syncToNetwork();
+if (GAME_STATE.mode === 'com' && GAME_STATE.turn === 2) setTimeout(startCOMTurn, 1200);
+}
 async function startCOMTurn() {
-  const sleep = ms => new Promise(res => setTimeout(res, ms));
-  await sleep(500); comExecuteRoll(); await sleep(1800);
-  comExecuteHold(); await sleep(1200); comExecuteRoll(); await sleep(1800);
-  comExecuteHold(); await sleep(1200); comExecuteRoll(); await sleep(1800);
-  comSelectBestScore();
+const sleep = ms => new Promise(res => setTimeout(res, ms));
+await sleep(500); comExecuteRoll(); await sleep(1800);
+comExecuteHold(); await sleep(1200); comExecuteRoll(); await sleep(1800);
+comExecuteHold(); await sleep(1200); comExecuteRoll(); await sleep(1800);
+comSelectBestScore();
 }
-
 function comExecuteRoll() {
-  for (let i = 0; i < 5; i++) { if (!GAME_STATE.held[i]) { const res = Math.floor(Math.random() * 6) + 1;
-  GAME_STATE.dice[i] = res; execute3DRotation(i, res); } }
-  GAME_STATE.rollsLeft--; updateUI(); calculateAllProbabilities();
+for (let i = 0; i < 5; i++) { if (!GAME_STATE.held[i]) { const res = Math.floor(Math.random() * 6) + 1;
+GAME_STATE.dice[i] = res; execute3DRotation(i, res); } }
+GAME_STATE.rollsLeft--; updateUI(); calculateAllProbabilities();
 }
-
 function comExecuteHold() {
-  GAME_STATE.held = [false, false, false, false, false];
-  const available = Object.keys(GAME_STATE.scores[2]).filter(k => GAME_STATE.scores[2][k] === null);
-  if (GAME_STATE.comLevel === 3) {
-    let bestHold = [false, false, false, false, false]; let maxEV = -1;
-    for (let i = 0; i < 32; i++) {
-      const currentHold = i.toString(2).padStart(5, '0').split('').map(b => b === '1');
-      let ev = calculateEV(currentHold, available);
-      if (ev > maxEV) { maxEV = ev; bestHold = currentHold; }
-    }
-    GAME_STATE.held = bestHold;
-  } else if (GAME_STATE.comLevel === 2) {
-    const counts = [0,0,0,0,0,0,0]; GAME_STATE.dice.forEach(d => counts[d]++);
-    const maxC = Math.max(...counts); const mostF = counts.indexOf(maxC);
-    if (maxC >= 2) GAME_STATE.dice.forEach((d, i) => { if(d === mostF) GAME_STATE.held[i] = true; });
-  } else { GAME_STATE.dice.forEach((d, i) => { if(d >= 4) GAME_STATE.held[i] = true; }); }
-  for(let i=0; i<5; i++) {
-    const s = document.getElementById(`scene${i}`);
-    if(s) s.classList.toggle('held', GAME_STATE.held[i]);
-  }
+GAME_STATE.held = [false, false, false, false, false];
+const available = Object.keys(GAME_STATE.scores[2]).filter(k => GAME_STATE.scores[2][k] === null);
+if (GAME_STATE.comLevel === 3) {
+let bestHold = [false, false, false, false, false]; let maxEV = -1;
+for (let i = 0; i < 32; i++) {
+const currentHold = i.toString(2).padStart(5, '0').split('').map(b => b === '1');
+let ev = calculateEV(currentHold, available);
+if (ev > maxEV) { maxEV = ev; bestHold = currentHold; }
 }
-
+GAME_STATE.held = bestHold;
+} else if (GAME_STATE.comLevel === 2) {
+const counts = [0,0,0,0,0,0,0]; GAME_STATE.dice.forEach(d => counts[d]++);
+const maxC = Math.max(...counts); const mostF = counts.indexOf(maxC);
+if (maxC >= 2) GAME_STATE.dice.forEach((d, i) => { if(d === mostF) GAME_STATE.held[i] = true; });
+} else { GAME_STATE.dice.forEach((d, i) => { if(d >= 4) GAME_STATE.held[i] = true; }); }
+for(let i=0; i<5; i++) document.getElementById(`scene${i}`).classList.toggle('held', GAME_STATE.held[i]);
+}
 function calculateEV(holdPattern, available) {
-  const unheld = []; holdPattern.forEach((h, i) => { if(!h) unheld.push(i); });
-  if (unheld.length === 0) return getBestInstantScore(GAME_STATE.dice, available);
-  let total = 0; const virtualDice = [...GAME_STATE.dice];
-  const samples = unheld.length > 3 ? 50 : Math.pow(6, unheld.length);
-  if (unheld.length > 3) {
-    for(let s=0; s<samples; s++) {
-      unheld.forEach(idx => virtualDice[idx] = Math.floor(Math.random()*6)+1);
-      total += getBestInstantScore(virtualDice, available);
-    }
-  } else {
-    function iterate(depth) {
-      if (depth === unheld.length) { total += getBestInstantScore(virtualDice, available); return; }
-      for(let v=1; v<=6; v++) { virtualDice[unheld[depth]] = v; iterate(depth + 1); }
-    }
-    iterate(0);
-  }
-  return total / samples;
+const unheld = []; holdPattern.forEach((h, i) => { if(!h) unheld.push(i); });
+if (unheld.length === 0) return getBestInstantScore(GAME_STATE.dice, available);
+let total = 0; const virtualDice = [...GAME_STATE.dice];
+const samples = unheld.length > 3 ? 50 : Math.pow(6, unheld.length);
+if (unheld.length > 3) {
+for(let s=0; s<samples; s++) {
+unheld.forEach(idx => virtualDice[idx] = Math.floor(Math.random()*6)+1);
+total += getBestInstantScore(virtualDice, available);
 }
-
+} else {
+function iterate(depth) {
+if (depth === unheld.length) { total += getBestInstantScore(virtualDice, available); return; }
+for(let v=1; v<=6; v++) { virtualDice[unheld[depth]] = v; iterate(depth + 1); }
+}
+iterate(0);
+}
+return total / samples;
+}
 function getBestInstantScore(dArr, available) {
-  let max = 0;
-  available.forEach(cat => { let s = calcScore(cat, dArr); if(s > max) max = s; });
-  return max;
+let max = 0;
+available.forEach(cat => { let s = calcScore(cat, dArr); if(s > max) max = s; });
+return max;
 }
-
 async function comSelectBestScore() {
-  const available = Object.keys(GAME_STATE.scores[2]).filter(k => GAME_STATE.scores[2][k] === null);
-  let best = available[0]; let maxS = -1;
-  available.forEach(c => {
-    let s = calcScore(c, GAME_STATE.dice);
-    if (GAME_STATE.comLevel === 3 && ['ones','twos','threes','fours','fives','sixes'].includes(c)) s += 2;
-    if (s > maxS) { maxS = s; best = c; }
-  });
-  const cell = document.getElementById(`p2_${best}`);
-  if(cell) cell.classList.add('com-selecting');
-  await new Promise(res => setTimeout(res, 1200));
-  if(cell) cell.classList.remove('com-selecting');
-  GAME_STATE.scores[2][best] = calcScore(best, GAME_STATE.dice);
-  endTurn();
+const available = Object.keys(GAME_STATE.scores[2]).filter(k => GAME_STATE.scores[2][k] === null);
+let best = available[0]; let maxS = -1;
+available.forEach(c => {
+let s = calcScore(c, GAME_STATE.dice);
+if (GAME_STATE.comLevel === 3 && ['ones','twos','threes','fours','fives','sixes'].includes(c)) s += 2;
+if (s > maxS) { maxS = s; best = c; }
+});
+const cell = document.getElementById(`p2_${best}`);
+cell.classList.add('com-selecting');
+await new Promise(res => setTimeout(res, 1200));
+cell.classList.remove('com-selecting');
+GAME_STATE.scores[2][best] = calcScore(best, GAME_STATE.dice);
+endTurn();
 }
-
-// --- オンライン対戦用 ---
+// --- オンライン対戦用 SkyWay ロジック ---
 async function connectToSkyWay() {
-  const pinInput = document.getElementById('roomPin');
-  const pin = pinInput.value;
-  if (!pin) return alert("4けたの すうじを いれてね");
-  
-  if (typeof skyway_room === 'undefined') {
-    return alert("SkyWayライブラリを準備中です。数秒待ってからもう一度お試しください。");
-  }
-
-  const { SkyWayContext, SkyWayRoom, SkyWayStreamFactory } = skyway_room;
-
-  document.getElementById('displayPin').innerText = pin;
-  hideAllModals();
-  document.getElementById('titleScreen').classList.remove('active');
-  document.getElementById('waitingScreen').classList.add('active');
-
-  try {
-    const context = await SkyWayContext.Create(SKYWAY_KEY);
-    const room = await SkyWayRoom.FindOrCreate(context, {
-      type: 'p2p',
-      name: 'mathmiru-yacht-' + pin,
-    });
-    const me = await room.join();
-
-    me.onPublicationSubscribed.add(({ stream }) => {
-      if (stream.contentType === 'data') {
-        stream.onData.add((data) => { receiveNetworkState(data); });
-      }
-    });
-
-    dataChannel = await SkyWayStreamFactory.createDataStream();
-    await me.publish(dataChannel);
-
-    if (room.members.length === 1) {
-      myPlayerId = 1;
-      document.getElementById('waitMsg').innerText = "あいてを まっています";
-    } else {
-      myPlayerId = 2;
-      startGame('online');
-      syncToNetwork();
-    }
-
-    room.onMemberJoined.add(() => {
-      if (myPlayerId === 1) {
-        startGame('online');
-        syncToNetwork();
-      }
-    });
-
-    room.onMemberLeft.add(() => {
-      alert("あいてが 退出しました");
-      location.reload();
-    });
-
-  } catch (err) {
-    alert("つうしんエラー: " + err.message);
-    location.reload();
-  }
+const pin = document.getElementById('roomPin').value;
+if (pin.length < 1) return alert("4けたの すうじを いれてね");
+if (typeof skyway_room === 'undefined') return alert("SkyWayライブラリを読み込み中です。");
+document.getElementById('displayPin').innerText = pin;
+hideAllModals();
+document.getElementById('titleScreen').classList.remove('active');
+document.getElementById('waitingScreen').classList.add('active');
+try {
+const { SkyWayContext, SkyWayRoom, SkyWayStreamFactory } = skyway_room;
+const context = await SkyWayContext.Create(SKYWAY_KEY);
+const room = await SkyWayRoom.FindOrCreate(context, { type: 'p2p', name: 'mathmiru-yacht-' + pin });
+const me = await room.join();
+me.onPublicationSubscribed.add(({ stream }) => {
+if (stream.contentType === 'data') {
+stream.onData.add((data) => { receiveNetworkState(data); });
 }
-
+});
+dataChannel = await SkyWayStreamFactory.createDataStream();
+await me.publish(dataChannel);
+if (room.members.length === 1) {
+myPlayerId = 1;
+document.getElementById('waitMsg').innerText = "あいてを まっています";
+} else {
+myPlayerId = 2;
+startGame('online');
+syncToNetwork();
+}
+room.onMemberJoined.add(() => {
+if (myPlayerId === 1) { startGame('online'); syncToNetwork(); }
+});
+room.onMemberLeft.add(() => { alert("あいてが 退出しました"); location.reload(); });
+} catch (err) { alert("つうしんエラー: " + err.message); location.reload(); }
+}
 function syncToNetwork() {
-  if (GAME_STATE.mode !== 'online' || !dataChannel) return;
-  dataChannel.write(GAME_STATE);
+if (GAME_STATE.mode !== 'online' || !dataChannel) return;
+dataChannel.write(GAME_STATE);
 }
-
 function receiveNetworkState(incoming) {
-  if (!incoming) return;
-  if (incoming.turn === GAME_STATE.turn && incoming.rollsLeft < GAME_STATE.rollsLeft) {
-    for (let i = 0; i < 5; i++) if (!incoming.held[i]) execute3DRotation(i, incoming.dice[i]);
-  }
-  Object.assign(GAME_STATE, JSON.parse(JSON.stringify(incoming)));
-  setTimeout(() => {
-    for(let i=0; i<5; i++) {
-      const s = document.getElementById(`scene${i}`);
-      if(s) s.classList.toggle('held', GAME_STATE.held[i]);
-    }
-    updateUI();
-    calculateAllProbabilities();
-  }, 250);
+if (!incoming) return;
+if (incoming.turn === GAME_STATE.turn && incoming.rollsLeft < GAME_STATE.rollsLeft) {
+for (let i = 0; i < 5; i++) if (!incoming.held[i]) execute3DRotation(i, incoming.dice[i]);
 }
-
+Object.assign(GAME_STATE, JSON.parse(JSON.stringify(incoming)));
+setTimeout(() => {
+for(let i=0; i<5; i++) {
+const scene = document.getElementById(`scene${i}`);
+if(scene) scene.classList.toggle('held', GAME_STATE.held[i]);
+}
+updateUI();
+calculateAllProbabilities();
+}, 250);
+}
 function showOnlineModal() {
-  document.getElementById('modalOverlay').style.display='block';
-  document.getElementById('onlineModal').style.display='block';
+document.getElementById('modalOverlay').style.display='block';
+document.getElementById('onlineModal').style.display='block';
 }
-
 function showRuleDetail(key) {
-  document.getElementById('ruleModalTitle').innerText = CATEGORY_NAMES[key];
-  document.getElementById('ruleModalDesc').innerText = RULE_DESCRIPTIONS[key];
-  document.getElementById('modalOverlay').style.display = 'block';
-  document.getElementById('ruleDetailModal').style.display = 'block';
+document.getElementById('ruleModalTitle').innerText = CATEGORY_NAMES[key];
+document.getElementById('ruleModalDesc').innerText = RULE_DESCRIPTIONS[key];
+document.getElementById('modalOverlay').style.display = 'block';
+document.getElementById('ruleDetailModal').style.display = 'block';
 }
-
 function hideAllModals() {
-  document.getElementById('modalOverlay').style.display='none';
-  document.getElementById('onlineModal').style.display='none';
-  document.getElementById('ruleDetailModal').style.display='none';
-  document.getElementById('resultModal').style.display='none';
+document.getElementById('modalOverlay').style.display='none';
+document.getElementById('onlineModal').style.display='none';
+document.getElementById('ruleDetailModal').style.display='none';
+document.getElementById('resultModal').style.display='none';
 }
-
-// 確実にグローバルに公開
-window.startGame = startGame;
-window.rollDice = rollDice;
 window.toggleHold = toggleHold;
-window.selectScore = selectScore;
 window.showOnlineModal = showOnlineModal;
-window.connectToSkyWay = connectToSkyWay;
 window.showRuleDetail = showRuleDetail;
 window.hideAllModals = hideAllModals;
-
 </script>
 </body>
 </html>
