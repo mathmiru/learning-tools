@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>かくりつヨット - マスミル</title>
+<script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 <style>
 :root {
 --primary: #2C3E50;
@@ -24,12 +25,14 @@ margin: 0;
 padding: 0;
 display: flex;
 justify-content: center;
-overflow: hidden;
+/* スクロールを許可 */
+overflow-y: auto;
 }
 .app-container {
 width: 100%;
 max-width: 420px;
-height: 100vh;
+/* 高さ固定を解除し、最小高さを設定 */
+min-height: 100vh;
 background: #FFFFFF;
 box-shadow: 0 0 20px rgba(0,0,0,0.1);
 position: relative;
@@ -39,15 +42,13 @@ display: flex;
 flex-direction: column;
 transition: background-color 0.4s ease;
 }
-
 .app-container.p1-turn { background-color: var(--bg-p1); }
 .app-container.p2-turn { background-color: var(--bg-p2); }
-.screen { display: none; width: 100%; height: 100%; flex-direction: column; }
+.screen { display: none; width: 100%; flex-direction: column; }
 .screen.active { display: flex; }
 .title-screen { text-align: center; justify-content: center; }
 .title-logo { font-size: 2.5rem; font-weight: 900; color: var(--primary); letter-spacing: 4px; margin-bottom: 2px; }
 .title-sub { font-size: 0.9rem; color: #7F8C8D; margin-bottom: 12px; font-weight: bold; }
-
 .rule-box {
 text-align: left; font-size: 0.72rem; background: rgba(255,255,255,0.8);
 padding: 10px; border-radius: 8px; margin: 0 auto 10px auto;
@@ -81,30 +82,27 @@ box-shadow: inset 0 0 6px rgba(0,0,0,0.05), 0 2px 3px rgba(0,0,0,0.1); backface-
 left: 25%; } .br { top: 75%; left: 75%; }
 .face-1 { transform: rotateY(0deg) translateZ(21px); } .face-2 { transform: rotateY(180deg) translateZ(21px); } .face-3 { transform: rotateY(90deg) translateZ(21px);
 } .face-4 { transform: rotateY(-90deg) translateZ(21px); } .face-5 { transform: rotateX(90deg) translateZ(21px); } .face-6 { transform: rotateX(-90deg) translateZ(21px); }
-.table-wrap { flex: 1; width: 100%; overflow: hidden; display: flex; flex-direction: column; }
+.table-wrap { width: 100%; margin-top: 5px; }
 table { width: 100%; border-collapse: collapse; font-size: 0.72rem; }
 th, td { border: 1px solid #BDC3C7; padding: 2px 1px; text-align: center; height: 20px; box-sizing: border-box; }
 th { background: var(--primary); color: white; font-weight: bold; padding: 4px 1px; }
 .role-name-td { text-align: left; background: rgba(255,255,255,0.8); font-weight: bold; width: 52%; padding-left: 4px; cursor: pointer; line-height: 1.1; }
-
 .prob-badge.normal { font-size: 0.65rem; color: var(--info); font-weight: 900; background: #EBF5FB; padding: 0px 2px; border-radius: 3px; margin-left: 3px; display: none;
 font-family: monospace; }
 .prob-badge.digits { display: none; font-size: 0.58rem; color: var(--info); font-weight: normal; background: #EBF5FB; padding: 0px 2px; border-radius: 3px; margin-top: 1px;
 text-align: left; font-family: monospace; white-space: nowrap; }
-
 .score-cell { font-size: 0.85rem; transition: background 0.1s; background: rgba(255,255,255,0.5); }
 .score-cell.valid { cursor: pointer; color: var(--accent); font-weight: bold; background: #FFF; }
 @keyframes pulse-select { 0% { background-color: #D5F5E3; } 50% { background-color: #A9DFBF; } 100% { background-color: #D5F5E3; } }
 .score-cell.valid.must-select { animation: pulse-select 1s infinite; border: 1.5px solid var(--success) !important; }
 .score-cell.filled { cursor: default; color: var(--text); font-weight: normal; background: rgba(200,200,200,0.2); }
-
 @keyframes flash-com { 0%, 100% { background-color: #F1C40F; } 50% { background-color: white; } }
 .score-cell.com-selecting { animation: flash-com 0.4s 3; }
-.modal { display: none; position: absolute; top: 45%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 15px;
+.modal { display: none; position: fixed; top: 45%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 15px;
 box-shadow: 0 5px 25px rgba(0,0,0,0.3); border-radius: 10px; z-index: 100; width: 85%; max-width: 280px; text-align: center; }
 .modal input { font-size: 1.8rem; width: 130px; text-align: center; letter-spacing: 4px; margin: 10px 0; border: 2px solid var(--primary); border-radius: 6px;
 padding: 3px; }
-.modal-overlay { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.3); z-index: 99; }
+.modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.3); z-index: 99; }
 #holdGuide { display: none; font-size: 0.65rem; color: #27AE60; font-weight: bold; margin-left: 8px; animation: bounce 2s infinite; }
 @keyframes bounce { 0%, 20%, 50%, 80%, 100% {transform: translateX(0);} 40% {transform: translateX(-3px);} 60% {transform: translateX(-2px);} }
 .win-display { color: var(--accent); font-size: 1.4rem; font-weight: 900; margin-bottom: 10px; }
@@ -134,7 +132,7 @@ padding: 3px; }
 <div id="waitingScreen" class="screen title-screen">
 <div class="title-logo">ヨット</div>
 <div style="margin: 40px 0;">
-<div style="font-size: 1.2rem; font-weight: bold; margin-bottom: 10px;" class="waiting-dots">たいせんあいてを まっています</div>
+<div id="waitMsg" style="font-size: 1.2rem; font-weight: bold; margin-bottom: 10px;" class="waiting-dots">たいせんあいてを まっています</div>
 <div style="color: #7F8C8D;">へやばんごう: <span id="displayPin" style="font-weight: bold; color: var(--primary);">0000</span></div>
 </div>
 <button class="menu-btn" style="background:#95A5A6;" onclick="location.reload()">キャンセル</button>
@@ -164,8 +162,8 @@ padding: 3px; }
 <div class="modal" id="onlineModal">
 <h3 style="margin-top:0; font-size:1.1rem;">オンラインべやに はいる</h3>
 <p style="font-size:0.75rem; color:#7f8c8d; margin:5px 0;">すきな「4けたの すうじ」を いれてね</p>
-<input type="text" id="roomPin" maxlength="4" placeholder="0000" pattern="\d*">
-<button class="menu-btn" style="margin-top:5px;" onclick="connectOnline()">へやに はいる</button>
+<input type="number" id="roomPin" maxlength="4" placeholder="0000">
+<button class="menu-btn" style="margin-top:5px;" onclick="connectToPeer()">へやに はいる</button>
 <button class="menu-btn" style="background:#95A5A6;" onclick="hideAllModals()">もどる</button>
 </div>
 <div class="modal" id="ruleDetailModal" style="text-align:left;">
@@ -174,29 +172,22 @@ padding: 3px; }
 <button class="menu-btn" style="width:100%; margin:0; padding:6px; font-size:0.85rem;" onclick="hideAllModals()">とじる</button>
 </div>
 <div class="modal" id="resultModal">
-<div id="winMsg" class="win-display">あいうえお</div>
+<div id="winMsg" class="win-display"></div>
 <div id="scoreSummary" style="font-size:0.9rem; margin-bottom:15px; line-height:1.5;"></div>
 <button class="menu-btn" style="width:100%;" onclick="location.reload()">タイトルへ</button>
 </div>
 </div>
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getDatabase, ref, set, onValue, get, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
-const firebaseConfig = { apiKey: "YOUR_API_KEY", authDomain: "YOUR_AUTH_DOMAIN", databaseURL: "YOUR_DATABASE_URL", projectId: "YOUR_PROJECT_ID", storageBucket: "YOUR_STORAGE_BUCKET", messagingSenderId: "YOUR_MESSAGING_SENDER_ID", appId: "YOUR_APP_ID" };
-const isFirebaseConfigured = firebaseConfig.apiKey !== "YOUR_API_KEY";
-const app = isFirebaseConfigured ? initializeApp(firebaseConfig) : null;
-const db = isFirebaseConfigured ? getDatabase(app) : null;
-const myClientId = Math.random().toString(36).substring(2, 9);
+<script>
+let peer = null;
+let conn = null;
 let myPlayerId = 1;
-let currentRoomPin = null;
 const GAME_STATE = {
 mode: 'com', comLevel: 1, turn: 1, rollsLeft: 3,
 dice: [1, 1, 1, 1, 1], held: [false, false, false, false, false],
 scores: {
 1: { ones:null, twos:null, threes:null, fours:null, fives:null, sixes:null, choice:null, three_kind:null, four_kind:null, full_house:null, small_str:null, large_str:null, yacht:null },
 2: { ones:null, twos:null, threes:null, fours:null, fives:null, sixes:null, choice:null, three_kind:null, four_kind:null, full_house:null, small_str:null, large_str:null, yacht:null }
-},
-playersJoined: 0
+}
 };
 const CATEGORY_NAMES = {
 ones:"1のめ", twos:"2のめ", threes:"3のめ", fours:"4のめ", fives:"5のめ", sixes:"6のめ",
@@ -215,7 +206,7 @@ four_kind: "【4つおなじ】\nおなじめが 4つより おおいとき、5�
 full_house: "【フルハウス】\nおなじめ3つと、べつの おなじめ2つが そろうと【25てん】もらえます！",
 small_str: "【4れんぞく】\nすうじが 4つ つながると（れい：1-2-3-4）【30てん】もらえます！",
 large_str: "【5れんぞく】\nすうじが 5つ つながると（れい：1-2-3-4-5）【40てん】もらえます！",
-yacht: "【ヨット】\nぜんぶ おなじめに なると【50てん】もらえます！いちばん むずかしい やくです。"
+yacht: "【ヨット】\nぜび おなじめに なると【50てん】もらえます！いちばん むずかしい やくです。"
 };
 function initBoard() {
 const diceArea = document.getElementById('diceArea');
@@ -238,7 +229,9 @@ document.getElementById('gameScreen').classList.add('active');
 initBoard();
 if(mode === 'com') { myPlayerId = 1; document.getElementById('p1Header').innerText = "あなた"; document.getElementById('p2Header').innerText = "レベル" + level; }
 else if(mode === 'local') { myPlayerId = 1; document.getElementById('p1Header').innerText = "1にんめ"; document.getElementById('p2Header').innerText = "2にんめ"; }
-else { document.getElementById('p1Header').innerText = myPlayerId === 1 ? "あなた" : "あいて"; document.getElementById('p2Header').innerText = myPlayerId === 2 ? "あなた" : "あいて";
+else {
+document.getElementById('p1Header').innerText = myPlayerId === 1 ? "あなた" : "あいて";
+document.getElementById('p2Header').innerText = myPlayerId === 2 ? "あなた" : "あいて";
 }
 resetVisuals(); updateUI();
 }
@@ -330,14 +323,14 @@ container.className = activeP === 1 ? "app-container p1-turn" : "app-container p
 document.getElementById('rollsLeft').innerText = `のこり: ${GAME_STATE.rollsLeft}かい`;
 const guide = document.getElementById('holdGuide');
 guide.style.display = (isMyTurn && GAME_STATE.rollsLeft > 0 && GAME_STATE.rollsLeft < 3) ? 'inline-block' : 'none';
-
 if (GAME_STATE.mode === 'online') {
-if (GAME_STATE.turn === myPlayerId) document.getElementById('turnDisplay').innerText = GAME_STATE.rollsLeft === 0 ? "⚠️ やくを えらんでね" : ` 🟢  あなたの番 (${myPlayerId===1?'あお':'あか'})`;
-else document.getElementById('turnDisplay').innerText = " ⏳  あいての つうしんを まっています...";
+if (GAME_STATE.turn === myPlayerId) document.getElementById('turnDisplay').innerText = GAME_STATE.rollsLeft === 0 ?
+"⚠️ やくを えらんでね" : `  🟢   あなたの番 (${myPlayerId===1?'あお':'あか'})`;
+else document.getElementById('turnDisplay').innerText = "  ⏳   あいての つうしんを まっています...";
 } else {
 if (GAME_STATE.turn === 1) document.getElementById('turnDisplay').innerText = GAME_STATE.rollsLeft === 0 ?
-" 🔵  やくを えらんでね" : " 🔵  あなたの ばん";
-else document.getElementById('turnDisplay').innerText = GAME_STATE.mode === 'com' ? " 🔴  コンピューターが かんがえ中..." : (GAME_STATE.rollsLeft === 0 ? " 🔴  やくを えらんでね" : " 🔴  2にんめの ばん");
+"  🔵   やくを えらんでね" : "  🔵   あなたの ばん";
+else document.getElementById('turnDisplay').innerText = GAME_STATE.mode === 'com' ? "  🔴   コンピューターが かんがえ中..." : (GAME_STATE.rollsLeft === 0 ? "  🔴   やくを えらんでね" : "  🔴   2にんめの ばん");
 }
 const rollBtn = document.getElementById('rollBtn');
 if (GAME_STATE.rollsLeft === 0 && isMyTurn) { rollBtn.innerText = "やくをえらんでね"; rollBtn.disabled = true; }
@@ -372,7 +365,7 @@ if (p1T > p2T) { winTitle = (GAME_STATE.mode === 'com') ?
 else if (p2T > p1T) { winTitle = (GAME_STATE.mode === 'com') ?
 "コンピューターのかち！" : ((GAME_STATE.mode === 'online' && myPlayerId === 2) ? "あなたのかち！" : "2にんめのかち！"); }
 else { winTitle = "ひきわけ！"; }
-document.getElementById('winMsg').innerText = " 🎉  " + winTitle;
+document.getElementById('winMsg').innerText = "  🎉   " + winTitle;
 const p1Label = (GAME_STATE.mode === 'com') ? "あなた" : "1にんめ";
 const p2Label = (GAME_STATE.mode === 'com') ? "コンピューター" : "2にんめ";
 document.getElementById('scoreSummary').innerHTML = `${p1Label}：${p1T}てん<br>${p2Label}：${p2T}てん`;
@@ -453,67 +446,53 @@ cell.classList.remove('com-selecting');
 GAME_STATE.scores[2][best] = calcScore(best, GAME_STATE.dice);
 endTurn();
 }
-function connectOnline() {
-const pin = document.getElementById('roomPin').value; if (pin.length !== 4) return alert("4けたの数字をいれてね");
-currentRoomPin = pin;
+function connectToPeer() {
+const pin = document.getElementById('roomPin').value;
+if (pin.length < 1) return alert("4けたの すうじを いれてね");
 document.getElementById('displayPin').innerText = pin;
 hideAllModals();
 document.getElementById('titleScreen').classList.remove('active');
 document.getElementById('waitingScreen').classList.add('active');
-if (isFirebaseConfigured) {
-const roomRef = ref(db, 'rooms/' + pin);
-get(roomRef).then((snap) => {
-let data = snap.val();
-if (!data) {
+const peerId = 'mathmiru-yacht-' + pin;
+peer = new Peer(peerId + '-host');
+peer.on('open', () => {
 myPlayerId = 1;
-data = { p1: myClientId, p2: "", state: GAME_STATE };
-data.state.playersJoined = 1;
-set(roomRef, data);
-}
-else if (data.p1 === myClientId) { myPlayerId = 1; }
-else if (!data.p2) {
-myPlayerId = 2;
-data.p2 = myClientId;
-data.state.playersJoined = 2;
-update(roomRef, { p2: myClientId, 'state/playersJoined': 2 });
-}
-else if (data.p2 === myClientId) { myPlayerId = 2; }
-else return alert("満員です");
-onValue(roomRef, (s) => {
-const roomData = s.val();
-if(roomData && roomData.state) {
-if (roomData.state.playersJoined === 2 && document.getElementById('waitingScreen').classList.contains('active')) {
-startGame('online');
-}
-receiveNetworkState(roomData.state);
-}
+document.getElementById('waitMsg').innerText = "あいてを まっています";
+peer.on('connection', (c) => {
+conn = c;
+setupConnection();
 });
+});
+peer.on('error', (err) => {
+if (err.type === 'unavailable-id') {
+peer = new Peer();
+peer.on('open', () => {
+myPlayerId = 2;
+conn = peer.connect(peerId + '-host');
+setupConnection();
 });
 } else {
-let meta = JSON.parse(localStorage.getItem(`meta_${pin}`)) || { p1: "", p2: "", joined: 0 };
-if (!meta.p1) { meta.p1 = myClientId; meta.joined = 1; }
-else if (meta.p1 !== myClientId && !meta.p2) { meta.p2 = myClientId; meta.joined = 2; }
-myPlayerId = (meta.p1 === myClientId) ? 1 : 2;
-localStorage.setItem(`meta_${pin}`, JSON.stringify(meta));
-
-const checkJoined = setInterval(() => {
-const curMeta = JSON.parse(localStorage.getItem(`meta_${pin}`));
-if (curMeta && curMeta.joined === 2) {
-clearInterval(checkJoined);
-startGame('online');
+alert("つうしんエラー: " + err.type);
+location.reload();
 }
-}, 1000);
-window.addEventListener('storage', (e) => {
-if (e.key === `sync_${pin}`) receiveNetworkState(JSON.parse(localStorage.getItem(`sync_${pin}`)).state);
 });
-GAME_STATE.playersJoined = meta.joined;
-syncToNetwork();
 }
+function setupConnection() {
+conn.on('open', () => {
+startGame('online');
+syncToNetwork();
+});
+conn.on('data', (data) => {
+if (data.type === 'sync') receiveNetworkState(data.state);
+});
+conn.on('close', () => {
+alert("あいてが 退出しました");
+location.reload();
+});
 }
 function syncToNetwork() {
-if (GAME_STATE.mode !== 'online') return;
-if (isFirebaseConfigured) set(ref(db, 'rooms/' + currentRoomPin + '/state'), GAME_STATE);
-else { localStorage.setItem(`sync_${currentRoomPin}`, JSON.stringify({ p1: myClientId, state: GAME_STATE })); }
+if (GAME_STATE.mode !== 'online' || !conn) return;
+conn.send({ type: 'sync', state: GAME_STATE });
 }
 function receiveNetworkState(incoming) {
 if (!incoming) return;
@@ -521,13 +500,16 @@ if (incoming.turn === GAME_STATE.turn && incoming.rollsLeft < GAME_STATE.rollsLe
 for (let i = 0; i < 5; i++) if (!incoming.held[i]) execute3DRotation(i, incoming.dice[i]);
 }
 Object.assign(GAME_STATE, JSON.parse(JSON.stringify(incoming)));
-setTimeout(() => { for(let i=0; i<5; i++) document.getElementById(`scene${i}`).classList.toggle('held', GAME_STATE.held[i]); updateUI(); calculateAllProbabilities(); }, 250);
+setTimeout(() => {
+for(let i=0; i<5; i++) document.getElementById(`scene${i}`).classList.toggle('held', GAME_STATE.held[i]);
+updateUI();
+calculateAllProbabilities();
+}, 250);
 }
-window.startGame = startGame; window.rollDice = rollDice; window.toggleHold = toggleHold; window.selectScore = selectScore;
+window.toggleHold = toggleHold;
 window.showOnlineModal = () => { document.getElementById('modalOverlay').style.display='block'; document.getElementById('onlineModal').style.display='block'; };
 window.showRuleDetail = (key) => { document.getElementById('ruleModalTitle').innerText = CATEGORY_NAMES[key]; document.getElementById('ruleModalDesc').innerText = RULE_DESCRIPTIONS[key]; document.getElementById('modalOverlay').style.display = 'block'; document.getElementById('ruleDetailModal').style.display = 'block'; };
 window.hideAllModals = () => { document.getElementById('modalOverlay').style.display='none'; document.getElementById('onlineModal').style.display='none'; document.getElementById('ruleDetailModal').style.display='none'; };
-window.connectOnline = connectOnline;
 </script>
 </body>
 </html>
