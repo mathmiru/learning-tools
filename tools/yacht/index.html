@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>かくりつヨット - マスミル</title>
+    <style>
+        :root {
+            --primary: #2C3E50;
+            --accent: #E74C3C;
+            --bg-p1: #EBF5FB;
+            --bg-p2: #FADBD8;
+            --board: #FFFFFF;
+            --text: #34495E;
+            --held: #F1C40F;
+            --success: #1ABC9C;
+            --info: #2980B9;
+        }
+
+        body {
+            font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif;
+            background-color: #DDDDDD;
+            color: var(--text);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 420px;
+            height: 100vh;
+            background: #FFFFFF;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            position: relative;
+            padding: 8px 10px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            transition: background-color 0.4s ease;
+        }
+        
+        .app-container.p1-turn { background-color: var(--bg-p1); }
+        .app-container.p2-turn { background-color: var(--bg-p2); }
+
+        .screen { display: none; width: 100%; height: 100%; flex-direction: column; }
+        .screen.active { display: flex; }
+
+        .title-screen { text-align: center; justify-content: center; }
+        .title-logo { font-size: 2.5rem; font-weight: 900; color: var(--primary); letter-spacing: 4px; margin-bottom: 2px; }
+        .title-sub { font-size: 0.9rem; color: #7F8C8D; margin-bottom: 12px; font-weight: bold; }
+        
+        .rule-box {
+            text-align: left; font-size: 0.72rem; background: rgba(255,255,255,0.8); 
+            padding: 10px; border-radius: 8px; margin: 0 auto 10px auto; 
+            max-height: 155px; overflow-y: auto; border: 1px solid #E2E8F0;
+            line-height: 1.4; width: 90%;
+        }
+        .rule-box h4 { margin: 4px 0; color: var(--primary); border-bottom: 1px solid #ccc; }
+
+        .menu-btn {
+            display: block; width: 85%; max-width: 280px; margin: 5px auto; padding: 8px;
+            font-size: 0.95rem; font-weight: bold; color: white; background: var(--primary);
+            border: none; border-radius: 30px; cursor: pointer; transition: all 0.2s;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+        }
+        .menu-btn:active { transform: scale(0.96); }
+        .menu-btn.match-btn { background: #27AE60; }
+        .menu-btn.online-btn { background: var(--accent); }
+
+        .dice-area {
+            display: flex; justify-content: center; gap: 8px; margin: 2px 0;
+            perspective: 400px; height: 52px; align-items: center;
+        }
+        .scene { width: 42px; height: 42px; cursor: pointer; transition: transform 0.2s ease, opacity 0.2s ease; }
+        .scene.held { transform: translateY(6px); }
+        .cube { width: 100%; height: 100%; position: relative; transform-style: preserve-3d; transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.3, 1); }
+        .face { position: absolute; width: 42px; height: 42px; background: #fff; border: 1px solid #b3b3b3; border-radius: 6px; box-shadow: inset 0 0 6px rgba(0,0,0,0.05), 0 2px 3px rgba(0,0,0,0.1); backface-visibility: hidden; }
+        .scene.held .face { border: 2.5px solid var(--held); box-shadow: 0 0 8px rgba(241, 196, 15, 0.8); }
+        .pip { position: absolute; width: 5px; height: 5px; background: #333; border-radius: 50%; transform: translate(-50%, -50%); }
+        .face-1 .pip { background: var(--accent); width: 10px; height: 10px; }
+        .tl { top: 25%; left: 25%; } .tr { top: 25%; left: 75%; } .ml { top: 50%; left: 25%; } .c { top: 50%; left: 50%; } .mr { top: 50%; left: 75%; } .bl { top: 75%; left: 25%; } .br { top: 75%; left: 75%; }
+        .face-1 { transform: rotateY(0deg) translateZ(21px); } .face-2 { transform: rotateY(180deg) translateZ(21px); } .face-3 { transform: rotateY(90deg) translateZ(21px); } .face-4 { transform: rotateY(-90deg) translateZ(21px); } .face-5 { transform: rotateX(90deg) translateZ(21px); } .face-6 { transform: rotateX(-90deg) translateZ(21px); }
+
+        .table-wrap { flex: 1; width: 100%; overflow: hidden; display: flex; flex-direction: column; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.72rem; }
+        th, td { border: 1px solid #BDC3C7; padding: 2px 1px; text-align: center; height: 20px; box-sizing: border-box; }
+        th { background: var(--primary); color: white; font-weight: bold; padding: 4px 1px; }
+        .role-name-td { text-align: left; background: rgba(255,255,255,0.8); font-weight: bold; width: 52%; padding-left: 4px; cursor: pointer; line-height: 1.1; }
+        
+        .prob-badge.normal { font-size: 0.65rem; color: var(--info); font-weight: 900; background: #EBF5FB; padding: 0px 2px; border-radius: 3px; margin-left: 3px; display: none; font-family: monospace; }
+        .prob-badge.digits { display: none; font-size: 0.58rem; color: var(--info); font-weight: normal; background: #EBF5FB; padding: 0px 2px; border-radius: 3px; margin-top: 1px; text-align: left; font-family: monospace; white-space: nowrap; }
+        
+        .score-cell { font-size: 0.85rem; transition: background 0.1s; background: rgba(255,255,255,0.5); }
+        .score-cell.valid { cursor: pointer; color: var(--accent); font-weight: bold; background: #FFF; }
+        @keyframes pulse-select { 0% { background-color: #D5F5E3; } 50% { background-color: #A9DFBF; } 100% { background-color: #D5F5E3; } }
+        .score-cell.valid.must-select { animation: pulse-select 1s infinite; border: 1.5px solid var(--success) !important; }
+        .score-cell.filled { cursor: default; color: var(--text); font-weight: normal; background: rgba(200,200,200,0.2); }
+        
+        @keyframes flash-com { 0%, 100% { background-color: #F1C40F; } 50% { background-color: white; } }
+        .score-cell.com-selecting { animation: flash-com 0.4s 3; }
+
+        .modal { display: none; position: absolute; top: 45%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 15px; box-shadow: 0 5px 25px rgba(0,0,0,0.3); border-radius: 10px; z-index: 100; width: 85%; max-width: 280px; text-align: center; }
+        .modal input { font-size: 1.8rem; width: 130px; text-align: center; letter-spacing: 4px; margin: 10px 0; border: 2px solid var(--primary); border-radius: 6px; padding: 3px; }
+        .modal-overlay { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.3); z-index: 99; }
+        #holdGuide { display: none; font-size: 0.65rem; color: #27AE60; font-weight: bold; margin-left: 8px; animation: bounce 2s infinite; }
+        @keyframes bounce { 0%, 20%, 50%, 80%, 100% {transform: translateX(0);} 40% {transform: translateX(-3px);} 60% {transform: translateX(-2px);} }
+        .win-display { color: var(--accent); font-size: 1.4rem; font-weight: 900; margin-bottom: 10px; }
+
+        .waiting-dots:after { content: ' .'; animation: dots 1.5s steps(5, end) infinite; }
+        @keyframes dots { 0%, 20% { content: ' .'; } 40% { content: ' . .'; } 60% { content: ' . . .'; } 80%, 100% { content: ''; } }
+    </style>
+</head>
+<body>
+
+<div class="app-container" id="appContainer">
+    <div id="titleScreen" class="screen active title-screen">
+        <div class="title-logo">ヨット</div>
+        <div class="title-sub">かくりつが わかる サイコロゲーム</div>
+        <div class="rule-box">
+            <h4>【あそびかた】</h4>
+            <p>5つのサイコロを3かいふって「やく」をつくります。のこしたいめをタッチして ふりなおせます。</p>
+            <p style="color:var(--info); font-weight:bold;">★サイコロをふると「やく」ができる％（かくりつ）がわかるよ！のこすサイコロをえらぶと、かくりつもかわるから よくみてね！</p>
+            <h4>【やくの なまえ】</h4>
+            <p>・1〜6のめ：えらんだ すうじを ぜんぶたす<br>・チョイス：ぜんぶの めを たす<br>・3つ/4つおなじ：おなじめが 3つ/4つあるとき ぜんぶたす<br>・フルハウス：おなじめ 3つ ＋ べつの おなじめ 2つ(25てん)<br>・4れんぞく：すうじが 4つ つながる(30てん)<br>・5れんぞく：すうじが 5つ つながる(40てん)<br>・ヨット：ぜんぶ おなじ め(50てん)</p>
+        </div>
+        <button class="menu-btn" onclick="startGame('com', 1)">レベル1</button>
+        <button class="menu-btn" onclick="startGame('com', 2)">レベル2</button>
+        <button class="menu-btn" onclick="startGame('com', 3)">レベル3</button>
+        <button class="menu-btn match-btn" onclick="startGame('local', 0)">2にんで あそぶ（1だい）</button>
+        <button class="menu-btn online-btn" onclick="showOnlineModal()">オンラインで あそぶ</button>
+    </div>
+
+    <div id="waitingScreen" class="screen title-screen">
+        <div class="title-logo">ヨット</div>
+        <div style="margin: 40px 0;">
+            <div style="font-size: 1.2rem; font-weight: bold; margin-bottom: 10px;" class="waiting-dots">たいせんあいてを まっています</div>
+            <div style="color: #7F8C8D;">へやばんごう: <span id="displayPin" style="font-weight: bold; color: var(--primary);">0000</span></div>
+        </div>
+        <button class="menu-btn" style="background:#95A5A6;" onclick="location.reload()">キャンセル</button>
+    </div>
+
+    <div id="gameScreen" class="screen">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2px;">
+            <div id="turnDisplay" style="font-weight:bold; font-size:0.82rem; color:var(--primary); max-width:75%; line-height:1.2;">じゅんびちゅう...</div>
+            <button onclick="location.reload()" style="padding:1px 6px; border-radius:4px; border:1px solid #aaa; background:#fff; cursor:pointer; font-size:0.7rem;">タイトルへ</button>
+        </div>
+        <div class="dice-area" id="diceArea"></div>
+        <div style="text-align:center; margin-bottom:4px; display:flex; justify-content:center; align-items:center; gap:8px;">
+            <button class="menu-btn" id="rollBtn" onclick="rollDice()">サイコロを ふる</button>
+            <div style="display:flex; flex-direction:column; align-items:flex-start;">
+                <span id="rollsLeft" style="font-weight:bold; font-size:0.8rem;">のこり: 3かい</span>
+                <span id="holdGuide">のこす めを タッチ！</span>
+            </div>
+        </div>
+        <div class="table-wrap">
+            <table>
+                <thead><tr><th style="width:52%;">やくの なまえ</th><th id="p1Header" style="width:24%;">1にんめ</th><th id="p2Header" style="width:24%;">2にんめ</th></tr></thead>
+                <tbody id="scoreBoard"></tbody>
+                <tfoot><tr style="background:#EAEDED; font-weight:bold; font-size:0.75rem;"><td>ごうけいてん</td><td id="p1Total">0</td><td id="p2Total">0</td></tr></tfoot>
+            </table>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modalOverlay" onclick="hideAllModals()"></div>
+    <div class="modal" id="onlineModal">
+        <h3 style="margin-top:0; font-size:1.1rem;">オンラインべやに はいる</h3>
+        <p style="font-size:0.75rem; color:#7f8c8d; margin:5px 0;">すきな「4けたの すうじ」を いれてね</p>
+        <input type="text" id="roomPin" maxlength="4" placeholder="0000" pattern="\d*">
+        <button class="menu-btn" style="margin-top:5px;" onclick="connectOnline()">へやに はいる</button>
+        <button class="menu-btn" style="background:#95A5A6;" onclick="hideAllModals()">もどる</button>
+    </div>
+    <div class="modal" id="ruleDetailModal" style="text-align:left;">
+        <h3 id="ruleModalTitle" style="margin-top:0; font-size:1.1rem; color:var(--primary); border-bottom:2px solid var(--info); padding-bottom:3px;">やくのなまえ</h3>
+        <p id="ruleModalDesc" style="font-size:0.75rem; line-height:1.4; color:var(--text); white-space:pre-wrap; margin:10px 0;"></p>
+        <button class="menu-btn" style="width:100%; margin:0; padding:6px; font-size:0.85rem;" onclick="hideAllModals()">とじる</button>
+    </div>
+    <div class="modal" id="resultModal">
+        <div id="winMsg" class="win-display">あいうえお</div>
+        <div id="scoreSummary" style="font-size:0.9rem; margin-bottom:15px; line-height:1.5;"></div>
+        <button class="menu-btn" style="width:100%;" onclick="location.reload()">タイトルへ</button>
+    </div>
+</div>
+
+<script type="module">
+    import { initializeApp as _iA } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getDatabase as _gD, ref as _r, set as _s, onValue as _oV, get as _g, update as _u } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+    const _c = { apiKey: "YOUR_API_KEY", authDomain: "YOUR_AUTH_DOMAIN", databaseURL: "YOUR_DATABASE_URL", projectId: "YOUR_PROJECT_ID", storageBucket: "YOUR_STORAGE_BUCKET", messagingSenderId: "YOUR_MESSAGING_SENDER_ID", appId: "YOUR_APP_ID" };
+    const _fC = _c.apiKey !== "YOUR_API_KEY";
+    const _app = _fC ? _iA(_c) : null;
+    const _db = _fC ? _gD(_app) : null;
+    const _mCId = Math.random().toString(36).substring(2, 9);
+    let _mPId = 1, _cRP = null;
+
+    const _G = {
+        m: 'com', l: 1, t: 1, rL: 3,
+        d: [1, 1, 1, 1, 1], h: [false, false, false, false, false],
+        s: { 1: { ones:null, twos:null, threes:null, fours:null, fives:null, sixes:null, choice:null, three_kind:null, four_kind:null, full_house:null, small_str:null, large_str:null, yacht:null }, 2: { ones:null, twos:null, threes:null, fours:null, fives:null, sixes:null, choice:null, three_kind:null, four_kind:null, full_house:null, small_str:null, large_str:null, yacht:null } },
+        pJ: 0
+    };
+
+    const _CN = { ones:"1のめ", twos:"2のめ", threes:"3のめ", fours:"4のめ", fives:"5のめ", sixes:"6のめ", choice:"チョイス(たしざん)", three_kind:"3つおなじ", four_kind:"4つおなじ", full_house:"フルハウス", small_str:"4れんぞく", large_str:"5れんぞく", yacht:"ヨット" };
+    const _RD = { ones: "【1のめ】\nでた「1」のめを ぜんぶたした かずになります。1〜6の ごうけいが 63てんより おおいと、ボーナスで 35てん もらえます！", twos: "【2のめ】\nでた「2」のめを ぜんぶたした かずになります。", threes: "【3のめ】\nでた「3」のめを ぜんぶたした かずになります。", fours: "【4のめ】\nでた「4」のめを ぜんぶたした かずになります。", fives: "【5のめ】\nでた「5」のめを ぜんぶたした かずになります。", sixes: "【6のめ】\nでた「6」のめを ぜんぶたした かずになります。", choice: "【チョイス】\nなんでもOK！5つの サイコロの めを ぜんぶたした かずになります。", three_kind: "【3つおなじ】\nおなじめが 3つより おおいとき、5つの めを ぜんぶたした かずになります。", four_kind: "【4つおなじ】\nおなじめが 4つより おおいとき、5つの めを ぜんぶたした かずになります。", full_house: "【フルハウス】\nおなじめ3つと、べつの おなじめ2つが そろうと【25てん】もらえます！", small_str: "【4れんぞく】\nすうじが 4つ つながると（れい：1-2-3-4）【30てん】もらえます！", large_str: "【5れんぞく】\nすうじが 5つ つながると（れい：1-2-3-4-5）【40てん】もらえます！", yacht: "【ヨット】\nぜんぶ おなじめに なると【50てん】もらえます！いちばん むずかしい やくです。" };
+
+    const _dQ = (id) => document.getElementById(id);
+
+    function _iB() {
+        const _dA = _dQ('diceArea'); _dA.innerHTML = '';
+        for (let i = 0; i < 5; i++) { _dA.innerHTML += `<div class="scene" id="scene${i}" onclick="toggleHold(${i})"><div class="cube" id="die${i}"><div class="face face-1"><div class="pip c"></div></div><div class="face face-2"><div class="pip tl"></div><div class="pip br"></div></div><div class="face face-3"><div class="pip tl"></div><div class="pip c"></div><div class="pip br"></div></div><div class="face face-4"><div class="pip tl"></div><div class="pip tr"></div><div class="pip bl"></div><div class="pip br"></div></div><div class="face face-5"><div class="pip tl"></div><div class="pip tr"></div><div class="pip c"></div><div class="pip bl"></div><div class="pip br"></div></div><div class="face face-6"><div class="pip tl"></div><div class="pip tr"></div><div class="pip ml"></div><div class="pip mr"></div><div class="pip bl"></div><div class="pip br"></div></div></div></div>`; }
+        const _tB = _dQ('scoreBoard'); _tB.innerHTML = '';
+        Object.keys(_CN).forEach(k => {
+            _tB.innerHTML += `<tr><td class="role-name-td" onclick="showRuleDetail('${k}')">${_CN[k]}<div id="prob_${k}" class="prob-badge"></div></td><td id="p1_${k}" class="score-cell" onclick="selectScore('${k}', 1)"></td><td id="p2_${k}" class="score-cell" onclick="selectScore('${k}', 2)"></td></tr>`;
+            if(k === 'sixes') _tB.innerHTML += `<tr style="background:#FCF3CF; font-size:0.65rem; height:16px;"><td>①〜⑥のボーナス(63てんで+35)</td><td id="p1_bonus">0/63</td><td id="p2_bonus">0/63</td></tr>`;
+        });
+    }
+
+    window.startGame = function(m, l) {
+        _G.m = m; _G.l = l; _dQ('titleScreen').classList.remove('active'); _dQ('waitingScreen').classList.remove('active'); _dQ('gameScreen').classList.add('active'); _iB();
+        if(m === 'com') { _mPId = 1; _dQ('p1Header').innerText = "あなた"; _dQ('p2Header').innerText = "レベル" + l; }
+        else if(m === 'local') { _mPId = 1; _dQ('p1Header').innerText = "1にんめ"; _dQ('p2Header').innerText = "2にんめ"; }
+        else { _dQ('p1Header').innerText = _mPId === 1 ? "あなた" : "あいて"; _dQ('p2Header').innerText = _mPId === 2 ? "あなた" : "あいて"; }
+        _rV(); _uUI();
+    };
+
+    window.rollDice = function() {
+        const _aP = (_G.m === 'online') ? _mPId : _G.t; if (_G.t !== _aP || _G.rL <= 0) return;
+        _dQ('rollBtn').disabled = true;
+        for (let i = 0; i < 5; i++) { if (!_G.h[i]) { const _r = Math.floor(Math.random() * 6) + 1; _G.d[i] = _r; _e3R(i, _r); } }
+        _G.rL--; setTimeout(() => { _uUI(); _cAP(); if (_G.m === 'online') _sTN(); }, 600);
+    };
+
+    function _e3R(i, r) {
+        const _cb = _dQ(`die${i}`); _cb.style.transition = 'none'; _cb.style.transform = `rotateX(0deg) rotateY(0deg)`;
+        setTimeout(() => { _cb.style.transition = 'transform 0.6s cubic-bezier(0.2, 0.8, 0.3, 1)'; const _x = Math.floor(Math.random() * 3 + 3) * 360 + (r===5?-90:r===6?90:0), _y = Math.floor(Math.random() * 3 + 3) * 360 + (r===2?180:r===3?-90:r===4?90:0); _cb.style.transform = `rotateX(${_x}deg) rotateY(${_y}deg)`; }, 50);
+    }
+
+    window.toggleHold = function(i) {
+        const _aP = (_G.m === 'online') ? _mPId : _G.t; if (_G.rL === 3 || _G.t !== _aP || _G.rL === 0) return;
+        _G.h[i] = !_G.h[i]; _dQ(`scene${i}`).classList.toggle('held', _G.h[i]); _cAP(); if (_G.m === 'online') _sTN();
+    };
+
+    function _cAP() {
+        Object.keys(_CN).forEach(k => { const _b = _dQ(`prob_${k}`); if (_b) _b.style.display = 'none'; });
+        if (_G.rL === 3 || _G.rL === 0) return;
+        const _uI = []; for (let i = 0; i < 5; i++) if (!_G.h[i]) _uI.push(i); if (_uI.length === 0) return;
+        const _tP = Math.pow(6, _uI.length), _pC = {}; Object.keys(_CN).forEach(k => _pC[k] = {});
+        const _vD = [..._G.d];
+        function _sr(dp) {
+            if (dp === _uI.length) {
+                Object.keys(_CN).forEach(k => {
+                    if (['ones', 'twos', 'threes', 'fours', 'fives', 'sixes'].includes(k)) { const _t = {'ones':1,'twos':2,'threes':3,'fours':4,'fives':5,'sixes':6}[k], _m = _vD.filter(d => d === _t).length; _pC[k][_m] = (_pC[k][_m] || 0) + 1; }
+                    else { if (_cS(k, _vD) > 0) _pC[k]['success'] = (_pC[k]['success'] || 0) + 1; }
+                }); return;
+            }
+            for (let v = 1; v <= 6; v++) { _vD[_uI[dp]] = v; _sr(dp + 1); }
+        }
+        _sr(0);
+        Object.keys(_CN).forEach(k => {
+            const _b = _dQ(`prob_${k}`); if (!_b || _G.s[_G.t][k] !== null) return;
+            if (['ones', 'twos', 'threes', 'fours', 'fives', 'sixes'].includes(k)) {
+                _b.className = 'prob-badge digits'; let _tx = []; for (let c = 1; c <= 5; c++) { const _cn = _pC[k][c] || 0; if (_cn > 0) { const _p = ((_cn / _tP) * 100).toFixed(0); if (_p > 0) _tx.push(`${c}こ:${_p}%`); } }
+                if(_tx.length > 0) { _b.innerHTML = _tx.join(' '); _b.style.display = 'block'; }
+            } else { _b.className = 'prob-badge normal'; const _cn = _pC[k]['success'] || 0, _p = ((_cn / _tP) * 100).toFixed(0); _b.innerText = `${_p}%`; _b.style.display = 'inline-block'; }
+        });
+    }
+
+    function _cS(c, d) {
+        const _ct = [0,0,0,0,0,0,0]; let _sm = 0; d.forEach(v => { _ct[v]++; _sm += v; });
+        switch(c) {
+            case 'ones': return _ct[1]*1; case 'twos': return _ct[2]*2; case 'threes': return _ct[3]*3; case 'fours': return _ct[4]*4; case 'fives': return _ct[5]*5; case 'sixes': return _ct[6]*6;
+            case 'choice': return _sm; case 'three_kind': return _ct.some(v => v >= 3) ? _sm : 0; case 'four_kind': return _ct.some(v => v >= 4) ? _sm : 0;
+            case 'yacht': return _ct.some(v => v === 5) ? 50 : 0; case 'full_house': return (_ct.includes(3) && _ct.includes(2)) || _ct.includes(5) ? 25 : 0;
+            case 'small_str': const _s = _ct.map(v=>v>0?1:0).join(''); return (_s.includes('1111')) ? 30 : 0; case 'large_str': const _l = _ct.map(v=>v>0?1:0).join(''); return (_l.includes('11111')) ? 40 : 0;
+            default: return 0;
+        }
+    }
+
+    function _uUI() {
+        const _aP = _G.t, _iMT = (_G.m === 'online') ? (_G.t === _mPId) : true, _cnt = _dQ('appContainer');
+        _cnt.className = _aP === 1 ? "app-container p1-turn" : "app-container p2-turn";
+        _dQ('rollsLeft').innerText = `のこり: ${_G.rL}かい`;
+        const _gd = _dQ('holdGuide'); _gd.style.display = (_iMT && _G.rL > 0 && _G.rL < 3) ? 'inline-block' : 'none';
+        if (_G.m === 'online') { _dQ('turnDisplay').innerText = (_G.t === _mPId) ? (_G.rL === 0 ? "⚠️ やくを えらんでね" : `🟢 あなたの番 (${_mPId===1?'あお':'あか'})`) : "⏳ あいての つうしんを まっています..."; }
+        else {
+            if (_G.t === 1) _dQ('turnDisplay').innerText = _G.rL === 0 ? "🔵 やくを えらんでね" : "🔵 あなたの ばん";
+            else _dQ('turnDisplay').innerText = _G.m === 'com' ? "🔴 コンピューターが かんがえ中..." : (_G.rL === 0 ? "🔴 やくを えらんでね" : "🔴 2にんめの ばん");
+        }
+        const _rB = _dQ('rollBtn'); if (_G.rL === 0 && _iMT) { _rB.innerText = "やくをえらんでね"; _rB.disabled = true; } else { _rB.innerText = "サイコロを ふる"; _rB.disabled = (!_iMT || (_G.m === 'com' && _G.t === 2)); }
+        [1, 2].forEach(p => {
+            Object.keys(_G.s[p]).forEach(k => {
+                const _cl = _dQ(`p${p}_${k}`), _v = _G.s[p][k];
+                if (_v === null) {
+                    if (_G.t === p && _G.rL < 3 && (_G.m !== 'online' || _mPId === p) && (_G.m !== 'com' || p === 1)) { _cl.innerText = _cS(k, _G.d); _cl.className = (_G.rL === 0) ? 'score-cell valid must-select' : 'score-cell valid'; }
+                    else { _cl.innerText = ''; _cl.className = 'score-cell'; }
+                } else { _cl.innerText = _v; _cl.className = 'score-cell filled'; }
+            });
+            const _sc = _G.s[p], _up = (_sc.ones||0)+(_sc.twos||0)+(_sc.threes||0)+(_sc.fours||0)+(_sc.fives||0)+(_sc.sixes||0);
+            _dQ(`p${p}_bonus`).innerText = `${_up}/63`; _dQ(`p${p}Total`).innerText = Object.values(_sc).reduce((a,b)=>a+(b||0), 0) + (_up >= 63 ? 35 : 0);
+        });
+    }
+
+    window.selectScore = function(k, pN) {
+        const _aP = (_G.m === 'online') ? _mPId : _G.t; if (_G.t !== _aP || pN !== _aP || _G.rL === 3 || _G.s[_aP][k] !== null) return;
+        _G.s[_aP][k] = _cS(k, _G.d); _eT();
+    };
+
+    function _rV() { for(let i=0; i<5; i++) { _dQ(`scene${i}`).classList.remove('held'); _dQ(`die${i}`).style.transform = `rotateX(0deg) rotateY(0deg)`; } }
+
+    function _eT() {
+        _uUI(); if (Object.values(_G.s[1]).every(v=>v!==null) && Object.values(_G.s[2]).every(v=>v!==null)) {
+            const _p1 = parseInt(_dQ('p1Total').innerText), _p2 = parseInt(_dQ('p2Total').innerText); let _wT = "";
+            if (_p1 > _p2) _wT = (_G.m === 'com') ? "あなたのかち！" : "1にんめのかち！"; else if (_p2 > _p1) _wT = (_G.m === 'com') ? "コンピューターのかち！" : "2にんめのかち！"; else _wT = "ひきわけ！";
+            _dQ('winMsg').innerText = "🎉 " + _wT; _dQ('scoreSummary').innerHTML = `${(_G.m==='com'?'あなた':'1にんめ')}：${_p1}てん<br>${(_G.m==='com'?'コンピューター':'2にんめ')}：${_p2}てん`;
+            _dQ('modalOverlay').style.display = 'block'; _dQ('resultModal').style.display = 'block'; if(_G.m === 'online') _sTN(); return;
+        }
+        _G.t = _G.t === 1 ? 2 : 1; _G.rL = 3; _G.h = [false, false, false, false, false]; _rV(); _uUI(); _cAP(); if (_G.m === 'online') _sTN();
+        if (_G.m === 'com' && _G.t === 2) setTimeout(_sCT, 1200);
+    }
+
+    async function _sCT() {
+        const _sl = m => new Promise(r => setTimeout(r, m)); await _sl(500); _cER(); await _sl(1800); _cEH(); await _sl(1200); _cER(); await _sl(1800); _cEH(); await _sl(1200); _cER(); await _sl(1800); _cBS();
+    }
+
+    function _cER() { for (let i = 0; i < 5; i++) if (!_G.h[i]) { const _r = Math.floor(Math.random() * 6) + 1; _G.d[i] = _r; _e3R(i, _r); } _G.rL--; _uUI(); _cAP(); }
+    function _cEH() {
+        _G.h = [false, false, false, false, false]; const _av = Object.keys(_G.s[2]).filter(k => _G.s[2][k] === null);
+        if (_G.l === 3) { let _bH = [false, false, false, false, false], _mE = -1; for (let i = 0; i < 32; i++) { const _cH = i.toString(2).padStart(5, '0').split('').map(b => b === '1'); let _ev = _cEV(_cH, _av); if (_ev > _mE) { _mE = _ev; _bH = _cH; } } _G.h = _bH; }
+        else if (_G.l === 2) { const _ct = [0,0,0,0,0,0,0]; _G.d.forEach(v => _ct[v]++); const _mX = Math.max(..._ct), _mF = _ct.indexOf(_mX); if (_mX >= 2) _G.d.forEach((v, i) => { if(v === _mF) _G.h[i] = true; }); }
+        else { _G.d.forEach((v, i) => { if(v >= 4) _G.h[i] = true; }); }
+        for(let i=0; i<5; i++) _dQ(`scene${i}`).classList.toggle('held', _G.h[i]);
+    }
+
+    function _cEV(_hp, _av) {
+        const _uh = []; _hp.forEach((h, i) => { if(!h) _uh.push(i); }); if (_uh.length === 0) return _gBIS(_G.d, _av);
+        let _tl = 0; const _vD = [..._G.d], _smp = _uh.length > 3 ? 50 : Math.pow(6, _uh.length);
+        if (_uh.length > 3) { for(let s=0; s<_smp; s++) { _uh.forEach(id => _vD[id] = Math.floor(Math.random()*6)+1); _tl += _gBIS(_vD, _av); } }
+        else { function _it(d) { if (d === _uh.length) { _tl += _gBIS(_vD, _av); return; } for(let v=1; v<=6; v++) { _vD[_uh[d]] = v; _it(d + 1); } } _it(0); }
+        return _tl / _smp;
+    }
+
+    function _gBIS(_da, _av) { let _mx = 0; _av.forEach(c => { let _s = _cS(c, _da); if(_s > _mx) _mx = _s; }); return _mx; }
+
+    async function _cBS() {
+        const _av = Object.keys(_G.s[2]).filter(k => _G.s[2][k] === null); let _bt = _av[0], _mS = -1;
+        _av.forEach(c => { let _s = _cS(c, _G.d); if (_G.l === 3 && ['ones','twos','threes','fours','fives','sixes'].includes(c)) _s += 2; if (_s > _mS) { _mS = _s; _bt = c; } });
+        const _cl = _dQ(`p2_${_bt}`); _cl.classList.add('com-selecting'); await new Promise(r => setTimeout(r, 1200)); _cl.classList.remove('com-selecting'); _G.s[2][_bt] = _cS(_bt, _G.d); _eT();
+    }
+
+    window.connectOnline = function() {
+        const _p = _dQ('roomPin').value; if (_p.length !== 4) return alert("4けたの数字をいれてね");
+        _cRP = _p; _dQ('displayPin').innerText = _p; hideAllModals(); _dQ('titleScreen').classList.remove('active'); _dQ('waitingScreen').classList.add('active');
+        if (_fC) {
+            const _rR = _r(_db, 'rooms/' + _p); _g(_rR).then((sn) => {
+                let _dt = sn.val();
+                if (!_dt) { _mPId = 1; _dt = { p1: _mCId, p2: "", state: _G }; _dt.state.pJ = 1; _s(_rR, _dt); }
+                else if (_dt.p1 === _mCId) { _mPId = 1; }
+                else if (!_dt.p2) { _mPId = 2; _dt.p2 = _mCId; _dt.state.pJ = 2; _u(_rR, { p2: _mCId, 'state/playersJoined': 2 }); }
+                else if (_dt.p2 === _mCId) { _mPId = 2; } else return alert("満員です");
+                _oV(_rR, (s) => { const _rd = s.val(); if(_rd && _rd.state) { if (_rd.state.pJ === 2 && _dQ('waitingScreen').classList.contains('active')) startGame('online'); _rNS(_rd.state); } });
+            });
+        } else {
+            let _mt = JSON.parse(localStorage.getItem(`meta_${_p}`)) || { p1: "", p2: "", joined: 0 };
+            if (!_mt.p1) { _mt.p1 = _mCId; _mt.joined = 1; } else if (_mt.p1 !== _mCId && !_mt.p2) { _mt.p2 = _mCId; _mt.joined = 2; }
+            _mPId = (_mt.p1 === _mCId) ? 1 : 2; localStorage.setItem(`meta_${_p}`, JSON.stringify(_mt));
+            const _iv = setInterval(() => { const _cm = JSON.parse(localStorage.getItem(`meta_${_p}`)); if (_cm && _cm.joined === 2) { clearInterval(_iv); startGame('online'); } }, 1000);
+            window.addEventListener('storage', (e) => { if (e.key === `sync_${_p}`) _rNS(JSON.parse(localStorage.getItem(`sync_${_p}`)).state); });
+            _G.pJ = _mt.joined; _sTN();
+        }
+    };
+
+    function _sTN() { if (_G.m !== 'online') return; if (_fC) _s(_r(_db, 'rooms/' + _cRP + '/state'), _G); else localStorage.setItem(`sync_${_cRP}`, JSON.stringify({ p1: _mCId, state: _G })); }
+    function _rNS(_in) { if (!_in) return; if (_in.t === _G.t && _in.rL < _G.rL) for (let i = 0; i < 5; i++) if (!_in.h[i]) _e3R(i, _in.d[i]); Object.assign(_G, JSON.parse(JSON.stringify(_in))); setTimeout(() => { for(let i=0; i<5; i++) _dQ(`scene${i}`).classList.toggle('held', _G.h[i]); _uUI(); _cAP(); }, 250); }
+
+    window.showOnlineModal = () => { _dQ('modalOverlay').style.display='block'; _dQ('onlineModal').style.display='block'; };
+    window.showRuleDetail = (k) => { _dQ('ruleModalTitle').innerText = _CN[k]; _dQ('ruleModalDesc').innerText = _RD[k]; _dQ('modalOverlay').style.display = 'block'; _dQ('ruleDetailModal').style.display = 'block'; };
+    window.hideAllModals = () => { _dQ('modalOverlay').style.display='none'; _dQ('onlineModal').style.display='none'; _dQ('ruleDetailModal').style.display='none'; };
+</script>
+</body>
+</html>
