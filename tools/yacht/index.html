@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>かくりつヨット - マスミル</title>
-<script src="https://cdn.jsdelivr.net/npm/@skyway-sdk/room@latest/dist/skyway_room.js"></script>
 <style>
 :root {
 --primary: #2C3E50;
@@ -16,6 +15,7 @@
 --held: #F1C40F;
 --success: #1ABC9C;
 --info: #2980B9;
+--history-btn: #F39C12;
 }
 body {
 font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif;
@@ -55,14 +55,14 @@ line-height: 1.4; width: 90%;
 }
 .rule-box h4 { margin: 4px 0; color: var(--primary); border-bottom: 1px solid #ccc; }
 .menu-btn {
-display: block; width: 85%; max-width: 280px; margin: 5px auto; padding: 8px;
-font-size: 0.95rem; font-weight: bold; color: white; background: var(--primary);
+display: block; width: 85%; max-width: 280px; margin: 5px auto; padding: 10px;
+font-size: 1rem; font-weight: bold; color: white; background: var(--primary);
 border: none; border-radius: 30px; cursor: pointer; transition: all 0.2s;
 box-shadow: 0 3px 6px rgba(0,0,0,0.1);
 }
 .menu-btn:active { transform: scale(0.96); }
 .menu-btn.match-btn { background: #27AE60; }
-.menu-btn.online-btn { background: var(--accent); }
+.menu-btn.history-btn { background: var(--history-btn); font-size: 0.95rem; }
 .dice-area {
 display: flex; justify-content: center; gap: 8px; margin: 2px 0;
 perspective: 400px; height: 52px; align-items: center;
@@ -98,14 +98,13 @@ text-align: left; font-family: monospace; white-space: nowrap; }
 .score-cell.com-selecting { animation: flash-com 0.4s 3; }
 .modal { display: none; position: fixed; top: 45%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 15px;
 box-shadow: 0 5px 25px rgba(0,0,0,0.3); border-radius: 10px; z-index: 100; width: 85%; max-width: 280px; text-align: center; }
-.modal input { font-size: 1.8rem; width: 130px; text-align: center; letter-spacing: 4px; margin: 10px 0; border: 2px solid var(--primary); border-radius: 6px;
-padding: 3px; }
 .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.3); z-index: 99; }
 #holdGuide { display: none; font-size: 0.65rem; color: #27AE60; font-weight: bold; margin-left: 8px; animation: bounce 2s infinite; }
 @keyframes bounce { 0%, 20%, 50%, 80%, 100% {transform: translateX(0);} 40% {transform: translateX(-3px);} 60% {transform: translateX(-2px);} }
 .win-display { color: var(--accent); font-size: 1.4rem; font-weight: 900; margin-bottom: 10px; }
-.waiting-dots:after { content: ' .'; animation: dots 1.5s steps(5, end) infinite; }
-@keyframes dots { 0%, 20% { content: ' .'; } 40% { content: ' . .'; } 60% { content: ' . . .'; } 80%, 100% { content: ''; } }
+.history-list { text-align: left; max-height: 280px; overflow-y: auto; margin-top: 10px; font-size: 0.8rem; border-top: 1px solid #eee; }
+.history-item { border-bottom: 1px solid #eee; padding: 6px 0; display: flex; justify-content: space-between; align-items: center; }
+.rank-badge { background: var(--primary); color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 0.7rem; margin-right: 5px; }
 </style>
 </head>
 <body>
@@ -122,18 +121,11 @@ padding: 3px; }
 </div>
 <button class="menu-btn" onclick="startGame('com', 1)">レベル1</button>
 <button class="menu-btn" onclick="startGame('com', 2)">レベル2</button>
-<button class="menu-btn" onclick="startGame('com', 3)">レベル3</button>
+<button class="menu-btn" style="background:#C0392B;" onclick="startGame('com', 3)">レベル3 (最強)</button>
 <button class="menu-btn match-btn" onclick="startGame('local', 0)">2にんで あそぶ（1だい）</button>
-<button class="menu-btn online-btn" onclick="showOnlineModal()">オンラインで あそぶ</button>
+<button class="menu-btn history-btn" onclick="showHistory()">きろくを みる</button>
 </div>
-<div id="waitingScreen" class="screen title-screen">
-<div class="title-logo">ヨット</div>
-<div style="margin: 40px 0;">
-<div id="waitMsg" style="font-size: 1.2rem; font-weight: bold; margin-bottom: 10px;" class="waiting-dots">たいせんあいてを まっています</div>
-<div style="color: #7F8C8D;">へやばんごう: <span id="displayPin" style="font-weight: bold; color: var(--primary);">0000</span></div>
-</div>
-<button class="menu-btn" style="background:#95A5A6;" onclick="location.reload()">キャンセル</button>
-</div>
+
 <div id="gameScreen" class="screen">
 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2px;">
 <div id="turnDisplay" style="font-weight:bold; font-size:0.82rem; color:var(--primary); max-width:75%; line-height:1.2;">じゅんびちゅう...</div>
@@ -155,30 +147,30 @@ padding: 3px; }
 </table>
 </div>
 </div>
+
 <div class="modal-overlay" id="modalOverlay" onclick="hideAllModals()"></div>
-<div class="modal" id="onlineModal">
-<h3 style="margin-top:0; font-size:1.1rem;">オンラインべやに はいる</h3>
-<p style="font-size:0.75rem; color:#7f8c8d; margin:5px 0;">すきな「4けたの すうじ」を いれてね</p>
-<input type="number" id="roomPin" maxlength="4" placeholder="0000">
-<button class="menu-btn" style="margin-top:5px;" onclick="connectToSkyWay()">へやに はいる</button>
-<button class="menu-btn" style="background:#95A5A6;" onclick="hideAllModals()">もどる</button>
-</div>
+
 <div class="modal" id="ruleDetailModal" style="text-align:left;">
 <h3 id="ruleModalTitle" style="margin-top:0; font-size:1.1rem; color:var(--primary); border-bottom:2px solid var(--info); padding-bottom:3px;">やくのなまえ</h3>
 <p id="ruleModalDesc" style="font-size:0.75rem; line-height:1.4; color:var(--text); white-space:pre-wrap; margin:10px 0;"></p>
 <button class="menu-btn" style="width:100%; margin:0; padding:6px; font-size:0.85rem;" onclick="hideAllModals()">とじる</button>
 </div>
+
+<div class="modal" id="historyModal">
+<h3 style="margin-top:0; font-size:1.1rem; color:var(--primary);">🏆 トップ10 きろく</h3>
+<div id="historyContainer" class="history-list"></div>
+<button class="menu-btn" style="width:100%; margin-top:15px; padding:6px; font-size:0.85rem;" onclick="hideAllModals()">とじる</button>
+<button class="menu-btn" style="width:100%; margin-top:5px; padding:6px; font-size:0.7rem; background:#95A5A6;" onclick="clearHistory()">きろくを ぜんぶけす</button>
+</div>
+
 <div class="modal" id="resultModal">
 <div id="winMsg" class="win-display"></div>
 <div id="scoreSummary" style="font-size:0.9rem; margin-bottom:15px; line-height:1.5;"></div>
 <button class="menu-btn" style="width:100%;" onclick="location.reload()">タイトルへ</button>
 </div>
 </div>
+
 <script>
-// --- 基本設定・グローバル変数 ---
-const SKYWAY_KEY = '9ac938db-1230-4a41-a827-ae374c0b5676';
-let myPlayerId = 1;
-let dataChannel = null;
 const GAME_STATE = {
 mode: 'com', comLevel: 1, turn: 1, rollsLeft: 3,
 dice: [1, 1, 1, 1, 1], held: [false, false, false, false, false],
@@ -206,6 +198,7 @@ small_str: "【4れんぞく】\nすうじが 4つ つながると（れい：1-
 large_str: "【5れんぞく】\nすうじが 5つ つながると（れい：1-2-3-4-5）【40てん】もらえます！",
 yacht: "【ヨット】\nぜび おなじめに なると【50てん】もらえます！いちばん むずかしい やくです。"
 };
+
 function initBoard() {
 const diceArea = document.getElementById('diceArea');
 diceArea.innerHTML = '';
@@ -219,29 +212,26 @@ tbody.innerHTML += `<tr><td class="role-name-td" onclick="showRuleDetail('${key}
 if(key === 'sixes') tbody.innerHTML += `<tr style="background:#FCF3CF; font-size:0.65rem; height:16px;"><td>①〜⑥のボーナス(63てんで+35)</td><td id="p1_bonus">0/63</td><td id="p2_bonus">0/63</td></tr>`;
 });
 }
+
 function startGame(mode, level) {
 GAME_STATE.mode = mode; GAME_STATE.comLevel = level;
 document.getElementById('titleScreen').classList.remove('active');
-document.getElementById('waitingScreen').classList.remove('active');
 document.getElementById('gameScreen').classList.add('active');
 initBoard();
-if(mode === 'com') { myPlayerId = 1; document.getElementById('p1Header').innerText = "あなた"; document.getElementById('p2Header').innerText = "レベル" + level; }
-else if(mode === 'local') { myPlayerId = 1; document.getElementById('p1Header').innerText = "1にんめ"; document.getElementById('p2Header').innerText = "2にんめ"; }
-else {
-document.getElementById('p1Header').innerText = myPlayerId === 1 ? "あなた" : "あいて";
-document.getElementById('p2Header').innerText = myPlayerId === 2 ? "あなた" : "あいて";
-}
+if(mode === 'com') { document.getElementById('p1Header').innerText = "あなた"; document.getElementById('p2Header').innerText = (level===3 ? "最強COM" : "レベル"+level); }
+else { document.getElementById('p1Header').innerText = "1にんめ"; document.getElementById('p2Header').innerText = "2にんめ"; }
 resetVisuals(); updateUI();
 }
+
 function rollDice() {
-const currentActivePlayer = (GAME_STATE.mode === 'online') ? myPlayerId : GAME_STATE.turn;
-if (GAME_STATE.turn !== currentActivePlayer || GAME_STATE.rollsLeft <= 0) return;
+if (GAME_STATE.rollsLeft <= 0) return;
 document.getElementById('rollBtn').disabled = true;
 for (let i = 0; i < 5; i++) { if (!GAME_STATE.held[i]) { const result = Math.floor(Math.random() * 6) + 1;
 GAME_STATE.dice[i] = result; execute3DRotation(i, result); } }
 GAME_STATE.rollsLeft--;
-setTimeout(() => { updateUI(); calculateAllProbabilities(); if (GAME_STATE.mode === 'online') syncToNetwork(); }, 600);
+setTimeout(() => { updateUI(); calculateAllProbabilities(); }, 600);
 }
+
 function execute3DRotation(i, result) {
 const cube = document.getElementById(`die${i}`);
 cube.style.transition = 'none';
@@ -253,14 +243,15 @@ const rotY = Math.floor(Math.random() * 3 + 3) * 360 + (result===2?180:result===
 cube.style.transform = `rotateX(${rotX}deg) rotateY(${rotY}deg)`;
 }, 50);
 }
+
 function toggleHold(index) {
-const currentActivePlayer = (GAME_STATE.mode === 'online') ? myPlayerId : GAME_STATE.turn;
-if (GAME_STATE.rollsLeft === 3 || GAME_STATE.turn !== currentActivePlayer || GAME_STATE.rollsLeft === 0) return;
+if (GAME_STATE.rollsLeft === 3 || GAME_STATE.rollsLeft === 0) return;
+if (GAME_STATE.mode === 'com' && GAME_STATE.turn === 2) return;
 GAME_STATE.held[index] = !GAME_STATE.held[index];
 document.getElementById(`scene${index}`).classList.toggle('held', GAME_STATE.held[index]);
 calculateAllProbabilities();
-if (GAME_STATE.mode === 'online') syncToNetwork();
 }
+
 function calculateAllProbabilities() {
 Object.keys(CATEGORY_NAMES).forEach(k => { const badge = document.getElementById(`prob_${k}`); if (badge) badge.style.display = 'none'; });
 if (GAME_STATE.rollsLeft === 3 || GAME_STATE.rollsLeft === 0) return;
@@ -299,6 +290,7 @@ const pct = ((count / totalPatterns) * 100).toFixed(0); badge.innerText = `${pct
 }
 });
 }
+
 function calcScore(category, dArr) {
 const counts = [0,0,0,0,0,0,0]; let sum = 0; dArr.forEach(d => { counts[d]++; sum += d; });
 switch(category) {
@@ -314,28 +306,27 @@ case 'large_str': const l = counts.map(c=>c>0?1:0).join(''); return (l.includes(
 }
 return 0;
 }
+
 function updateUI() {
-const activeP = GAME_STATE.turn; const isMyTurn = (GAME_STATE.mode === 'online') ? (GAME_STATE.turn === myPlayerId) : true;
+const activeP = GAME_STATE.turn;
 const container = document.getElementById('appContainer');
 container.className = activeP === 1 ? "app-container p1-turn" : "app-container p2-turn";
 document.getElementById('rollsLeft').innerText = `のこり: ${GAME_STATE.rollsLeft}かい`;
 const guide = document.getElementById('holdGuide');
-guide.style.display = (isMyTurn && GAME_STATE.rollsLeft > 0 && GAME_STATE.rollsLeft < 3) ? 'inline-block' : 'none';
-if (GAME_STATE.mode === 'online') {
-if (GAME_STATE.turn === myPlayerId) document.getElementById('turnDisplay').innerText = GAME_STATE.rollsLeft === 0 ? "⚠️ やくを えらんでね" : `🟢 あなたの番 (${myPlayerId===1?'あお':'あか'})`;
-else document.getElementById('turnDisplay').innerText = "⏳ あいての つうしんを まっています...";
-} else {
+guide.style.display = (GAME_STATE.rollsLeft > 0 && GAME_STATE.rollsLeft < 3) ? 'inline-block' : 'none';
+
 if (GAME_STATE.turn === 1) document.getElementById('turnDisplay').innerText = GAME_STATE.rollsLeft === 0 ? "🔵 やくを えらんでね" : "🔵 あなたの ばん";
-else document.getElementById('turnDisplay').innerText = GAME_STATE.mode === 'com' ? "🔴 コンピューターが かんがえ中..." : (GAME_STATE.rollsLeft === 0 ? "🔴 やくを えらんでね" : "🔴 2にんめの ばん");
-}
+else document.getElementById('turnDisplay').innerText = GAME_STATE.mode === 'com' ? (GAME_STATE.comLevel===3 ? "🔥 最強COMが 計算中..." : "🔴 コンピューターが かんがえ中...") : (GAME_STATE.rollsLeft === 0 ? "🔴 やくを えらんでね" : "🔴 2にんめの ばん");
+
 const rollBtn = document.getElementById('rollBtn');
-if (GAME_STATE.rollsLeft === 0 && isMyTurn) { rollBtn.innerText = "やくをえらんでね"; rollBtn.disabled = true; }
-else { rollBtn.innerText = "サイコロを ふる"; rollBtn.disabled = (!isMyTurn || (GAME_STATE.mode === 'com' && GAME_STATE.turn === 2)); }
+if (GAME_STATE.rollsLeft === 0) { rollBtn.innerText = "やくをえらんでね"; rollBtn.disabled = true; }
+else { rollBtn.innerText = "サイコロを ふる"; rollBtn.disabled = (GAME_STATE.mode === 'com' && GAME_STATE.turn === 2); }
+
 [1, 2].forEach(p => {
 Object.keys(GAME_STATE.scores[p]).forEach(key => {
 const cell = document.getElementById(`p${p}_${key}`); const val = GAME_STATE.scores[p][key];
 if (val === null) {
-if (GAME_STATE.turn === p && GAME_STATE.rollsLeft < 3 && (GAME_STATE.mode !== 'online' || myPlayerId === p) && (GAME_STATE.mode !== 'com' || p === 1)) {
+if (GAME_STATE.turn === p && GAME_STATE.rollsLeft < 3 && (GAME_STATE.mode !== 'com' || p === 1)) {
 cell.innerText = calcScore(key, GAME_STATE.dice); cell.className = (GAME_STATE.rollsLeft === 0) ? 'score-cell valid must-select' : 'score-cell valid';
 } else { cell.innerText = ''; cell.className = 'score-cell'; }
 } else { cell.innerText = val; cell.className = 'score-cell filled'; }
@@ -345,159 +336,179 @@ document.getElementById(`p${p}_bonus`).innerText = `${upper}/63`;
 document.getElementById(`p${p}Total`).innerText = Object.values(s).reduce((a,b)=>a+(b||0), 0) + (upper >= 63 ? 35 : 0);
 });
 }
+
 function selectScore(category, playerNum) {
-const activeP = (GAME_STATE.mode === 'online') ? myPlayerId : GAME_STATE.turn;
-if (GAME_STATE.turn !== activeP || playerNum !== activeP || GAME_STATE.rollsLeft === 3 || GAME_STATE.scores[activeP][category] !== null) return;
-GAME_STATE.scores[activeP][category] = calcScore(category, GAME_STATE.dice); endTurn();
+if (GAME_STATE.turn !== playerNum || GAME_STATE.rollsLeft === 3 || GAME_STATE.scores[playerNum][category] !== null) return;
+GAME_STATE.scores[playerNum][category] = calcScore(category, GAME_STATE.dice); endTurn();
 }
+
 function resetVisuals() { for(let i=0; i<5; i++) { if(document.getElementById(`scene${i}`)) document.getElementById(`scene${i}`).classList.remove('held'); if(document.getElementById(`die${i}`)) document.getElementById(`die${i}`).style.transform = `rotateX(0deg) rotateY(0deg)`; } }
+
 function endTurn() {
 updateUI();
 if (Object.values(GAME_STATE.scores[1]).every(v=>v!==null) && Object.values(GAME_STATE.scores[2]).every(v=>v!==null)) {
 const p1T = parseInt(document.getElementById('p1Total').innerText); const p2T = parseInt(document.getElementById('p2Total').innerText);
-let winTitle = "";
-if (p1T > p2T) { winTitle = (GAME_STATE.mode === 'com') ? "あなたのかち！" : ((GAME_STATE.mode === 'online' && myPlayerId === 1) ? "あなたのかち！" : "1にんめのかち！"); }
-else if (p2T > p1T) { winTitle = (GAME_STATE.mode === 'com') ? "コンピューターのかち！" : ((GAME_STATE.mode === 'online' && myPlayerId === 2) ? "あなたのかち！" : "2にんめのかち！"); }
-else { winTitle = "ひきわけ！"; }
+let winTitle = p1T > p2T ? "1にんめのかち！" : (p2T > p1T ? "2にんめのかち！" : "ひきわけ！");
+if(GAME_STATE.mode === 'com') winTitle = p1T > p2T ? "あなたのかち！" : (p1T < p2T ? "最強COMのかち！" : "ひきわけ！");
 document.getElementById('winMsg').innerText = "🎉 " + winTitle;
 const p1Label = (GAME_STATE.mode === 'com') ? "あなた" : "1にんめ";
-const p2Label = (GAME_STATE.mode === 'com') ? "コンピューター" : "2にんめ";
+const p2Label = (GAME_STATE.mode === 'com') ? (GAME_STATE.comLevel===3?"最強COM":"COM") : "2にんめ";
 document.getElementById('scoreSummary').innerHTML = `${p1Label}：${p1T}てん<br>${p2Label}：${p2T}てん`;
 document.getElementById('modalOverlay').style.display = 'block';
 document.getElementById('resultModal').style.display = 'block';
-if(GAME_STATE.mode === 'online') syncToNetwork(); return;
+saveScoreRecord(p1T, p2T); return;
 }
 GAME_STATE.turn = GAME_STATE.turn === 1 ? 2 : 1; GAME_STATE.rollsLeft = 3; GAME_STATE.held = [false, false, false, false, false];
-resetVisuals(); updateUI(); calculateAllProbabilities(); if (GAME_STATE.mode === 'online') syncToNetwork();
+resetVisuals(); updateUI(); calculateAllProbabilities();
 if (GAME_STATE.mode === 'com' && GAME_STATE.turn === 2) setTimeout(startCOMTurn, 1200);
 }
+
+function saveScoreRecord(p1Score, p2Score) {
+const history = JSON.parse(localStorage.getItem('mathmiru_yacht_history') || '[]');
+const now = new Date();
+const dateStr = `${now.getMonth()+1}/${now.getDate()} ${now.getHours()}:${now.getMinutes().toString().padStart(2,'0')}`;
+const modeStr = GAME_STATE.mode === 'com' ? `VS レベル${GAME_STATE.comLevel}` : "2にん対戦";
+const bestOfGame = Math.max(p1Score, p2Score);
+history.push({ date: dateStr, p1: p1Score, p2: p2Score, max: bestOfGame, mode: modeStr });
+history.sort((a, b) => b.max - a.max);
+localStorage.setItem('mathmiru_yacht_history', JSON.stringify(history.slice(0, 50))); 
+}
+
+function showHistory() {
+const history = JSON.parse(localStorage.getItem('mathmiru_yacht_history') || '[]');
+const container = document.getElementById('historyContainer');
+container.innerHTML = history.length === 0 ? '<p style="text-align:center; color:#95A5A6; padding:20px;">まだ きろくが ありません</p>' : '';
+const topTen = [...history].sort((a,b) => b.max - a.max).slice(0, 10);
+topTen.forEach((item, index) => {
+container.innerHTML += `<div class="history-item"><div style="display:flex; align-items:center;"><span class="rank-badge">${index + 1}い</span><span>${item.date}<br><small>${item.mode}</small></span></div><span style="font-weight:bold; color:var(--accent); font-size:1rem;">${item.p1} : ${item.p2}</span></div>`;
+});
+document.getElementById('modalOverlay').style.display = 'block';
+document.getElementById('historyModal').style.display = 'block';
+}
+
+function clearHistory() { if(confirm('きろくを ぜんぶ けしますか？')) { localStorage.removeItem('mathmiru_yacht_history'); showHistory(); } }
+
+// --- AI思考セクション ---
 async function startCOMTurn() {
 const sleep = ms => new Promise(res => setTimeout(res, ms));
-await sleep(500); comExecuteRoll(); await sleep(1800);
-comExecuteHold(); await sleep(1200); comExecuteRoll(); await sleep(1800);
-comExecuteHold(); await sleep(1200); comExecuteRoll(); await sleep(1800);
+await sleep(400); comExecuteRoll(); await sleep(1200);
+if(GAME_STATE.rollsLeft > 0) { comExecuteHold(); await sleep(800); comExecuteRoll(); await sleep(1200); }
+if(GAME_STATE.rollsLeft > 0) { comExecuteHold(); await sleep(800); comExecuteRoll(); await sleep(1200); }
 comSelectBestScore();
 }
+
 function comExecuteRoll() {
 for (let i = 0; i < 5; i++) { if (!GAME_STATE.held[i]) { const res = Math.floor(Math.random() * 6) + 1;
 GAME_STATE.dice[i] = res; execute3DRotation(i, res); } }
 GAME_STATE.rollsLeft--; updateUI(); calculateAllProbabilities();
 }
+
 function comExecuteHold() {
-GAME_STATE.held = [false, false, false, false, false];
 const available = Object.keys(GAME_STATE.scores[2]).filter(k => GAME_STATE.scores[2][k] === null);
-if (GAME_STATE.comLevel === 3) {
-let bestHold = [false, false, false, false, false]; let maxEV = -1;
+let bestHold = [false, false, false, false, false];
+let maxScore = -1000;
+
+// すべてのホールドパターン（32通り）を評価
 for (let i = 0; i < 32; i++) {
-const currentHold = i.toString(2).padStart(5, '0').split('').map(b => b === '1');
-let ev = calculateEV(currentHold, available);
-if (ev > maxEV) { maxEV = ev; bestHold = currentHold; }
+const pattern = i.toString(2).padStart(5, '0').split('').map(b => b === '1');
+const val = evaluateHoldPattern(pattern, available);
+if (val > maxScore) { maxScore = val; bestHold = pattern; }
 }
 GAME_STATE.held = bestHold;
-} else if (GAME_STATE.comLevel === 2) {
-const counts = [0,0,0,0,0,0,0]; GAME_STATE.dice.forEach(d => counts[d]++);
-const maxC = Math.max(...counts); const mostF = counts.indexOf(maxC);
-if (maxC >= 2) GAME_STATE.dice.forEach((d, i) => { if(d === mostF) GAME_STATE.held[i] = true; });
-} else { GAME_STATE.dice.forEach((d, i) => { if(d >= 4) GAME_STATE.held[i] = true; }); }
 for(let i=0; i<5; i++) document.getElementById(`scene${i}`).classList.toggle('held', GAME_STATE.held[i]);
 }
-function calculateEV(holdPattern, available) {
-const unheld = []; holdPattern.forEach((h, i) => { if(!h) unheld.push(i); });
-if (unheld.length === 0) return getBestInstantScore(GAME_STATE.dice, available);
-let total = 0; const virtualDice = [...GAME_STATE.dice];
-const samples = unheld.length > 3 ? 50 : Math.pow(6, unheld.length);
-if (unheld.length > 3) {
+
+function evaluateHoldPattern(pattern, available) {
+const level = GAME_STATE.comLevel;
+const unheld = []; pattern.forEach((h, i) => { if(!h) unheld.push(i); });
+if (unheld.length === 0) return scoreState(GAME_STATE.dice, available, level);
+
+// シミュレーションによる期待値算出
+let total = 0;
+const samples = unheld.length >= 4 ? (level === 3 ? 60 : 20) : Math.pow(6, unheld.length);
+const virtualDice = [...GAME_STATE.dice];
+
+if (unheld.length >= 4 || (unheld.length === 3 && samples < Math.pow(6, 3))) {
 for(let s=0; s<samples; s++) {
 unheld.forEach(idx => virtualDice[idx] = Math.floor(Math.random()*6)+1);
-total += getBestInstantScore(virtualDice, available);
+total += scoreState(virtualDice, available, level);
 }
 } else {
 function iterate(depth) {
-if (depth === unheld.length) { total += getBestInstantScore(virtualDice, available); return; }
+if (depth === unheld.length) { total += scoreState(virtualDice, available, level); return; }
 for(let v=1; v<=6; v++) { virtualDice[unheld[depth]] = v; iterate(depth + 1); }
 }
 iterate(0);
 }
 return total / samples;
 }
-function getBestInstantScore(dArr, available) {
-let max = 0;
-available.forEach(cat => { let s = calcScore(cat, dArr); if(s > max) max = s; });
-return max;
+
+// 現在のダイスの状態が、残り枠に対してどれだけ価値があるか
+function scoreState(dArr, available, level) {
+let bestVal = -50;
+const sArr = available.map(cat => ({ cat, score: calcScore(cat, dArr) }));
+
+sArr.forEach(item => {
+let val = item.score;
+if (level === 3) {
+// 【大局観】ボーナスへの寄与度を評価
+if (['ones','twos','threes','fours','fives','sixes'].includes(item.cat)) {
+const target = {'ones':1,'twos':2,'threes':3,'fours':4,'fives':5,'sixes':6}[item.cat];
+const count = dArr.filter(d => d === target).length;
+// ボーナス(63)達成には各目3つが目安。3つ以上なら高く評価
+if (count >= 3) val += (target * 1.5); 
+else if (count === 2) val += (target * 0.5);
 }
+// 高難易度役の評価
+if (item.cat === 'yacht' && item.score > 0) val += 40;
+if (item.cat === 'large_str' && item.score > 0) val += 25;
+if (item.cat === 'full_house' && item.score > 0) val += 10;
+// 0点になるリスク（残り回数が少ないほど痛い）
+if (item.score === 0) val = -15; 
+} else if (level === 2) {
+if (item.score > 0) val += 5;
+}
+if (val > bestVal) bestVal = val;
+});
+return bestVal;
+}
+
 async function comSelectBestScore() {
 const available = Object.keys(GAME_STATE.scores[2]).filter(k => GAME_STATE.scores[2][k] === null);
-let best = available[0]; let maxS = -1;
-available.forEach(c => {
-let s = calcScore(c, GAME_STATE.dice);
-if (GAME_STATE.comLevel === 3 && ['ones','twos','threes','fours','fives','sixes'].includes(c)) s += 2;
-if (s > maxS) { maxS = s; best = c; }
+let bestCat = available[0];
+let maxUtility = -1000;
+
+const sArr = available.map(cat => ({ cat, score: calcScore(cat, GAME_STATE.dice) }));
+const currentUpper = ['ones','twos','threes','fours','fives','sixes'].reduce((sum, k) => sum + (GAME_STATE.scores[2][k] || 0), 0);
+
+sArr.forEach(item => {
+let utility = item.score;
+if (GAME_STATE.comLevel === 3) {
+// 1〜6の目はボーナスへの距離で価値が変わる
+if (['ones','twos','threes','fours','fives','sixes'].includes(item.cat)) {
+const target = {'ones':1,'twos':2,'threes':3,'fours':4,'fives':5,'sixes':6}[item.cat];
+// ボーナス圏内(3つ以上)ならプラス評価。0点でも後半なら捨てる判断
+if (item.score >= target * 3) utility += 10;
+if (item.score === 0) utility -= 5;
+}
+// 役の保存価値（今取るべきか）
+if (item.cat === 'choice' && item.score < 20) utility -= 10; // 低いチョイスは極力避ける
+if (item.cat === 'yacht' && item.score === 0) utility = -20; // ヨット0点は最終手段
+} else if (GAME_STATE.comLevel === 1) {
+utility = item.score + (Math.random() * 2); // レベル1は少しランダム
+}
+
+if (utility > maxUtility) { maxUtility = utility; bestCat = item.cat; }
 });
-const cell = document.getElementById(`p2_${best}`);
+
+const cell = document.getElementById(`p2_${bestCat}`);
 cell.classList.add('com-selecting');
-await new Promise(res => setTimeout(res, 1200));
+await new Promise(res => setTimeout(res, 1000));
 cell.classList.remove('com-selecting');
-GAME_STATE.scores[2][best] = calcScore(best, GAME_STATE.dice);
+GAME_STATE.scores[2][bestCat] = calcScore(bestCat, GAME_STATE.dice);
 endTurn();
 }
-// --- オンライン対戦用 SkyWay ロジック ---
-async function connectToSkyWay() {
-const pin = document.getElementById('roomPin').value;
-if (pin.length < 1) return alert("4けたの すうじを いれてね");
-if (typeof skyway_room === 'undefined') return alert("SkyWayライブラリを読み込み中です。");
-document.getElementById('displayPin').innerText = pin;
-hideAllModals();
-document.getElementById('titleScreen').classList.remove('active');
-document.getElementById('waitingScreen').classList.add('active');
-try {
-const { SkyWayContext, SkyWayRoom, SkyWayStreamFactory } = skyway_room;
-const context = await SkyWayContext.Create(SKYWAY_KEY);
-const room = await SkyWayRoom.FindOrCreate(context, { type: 'p2p', name: 'mathmiru-yacht-' + pin });
-const me = await room.join();
-me.onPublicationSubscribed.add(({ stream }) => {
-if (stream.contentType === 'data') {
-stream.onData.add((data) => { receiveNetworkState(data); });
-}
-});
-dataChannel = await SkyWayStreamFactory.createDataStream();
-await me.publish(dataChannel);
-if (room.members.length === 1) {
-myPlayerId = 1;
-document.getElementById('waitMsg').innerText = "あいてを まっています";
-} else {
-myPlayerId = 2;
-startGame('online');
-syncToNetwork();
-}
-room.onMemberJoined.add(() => {
-if (myPlayerId === 1) { startGame('online'); syncToNetwork(); }
-});
-room.onMemberLeft.add(() => { alert("あいてが 退出しました"); location.reload(); });
-} catch (err) { alert("つうしんエラー: " + err.message); location.reload(); }
-}
-function syncToNetwork() {
-if (GAME_STATE.mode !== 'online' || !dataChannel) return;
-dataChannel.write(GAME_STATE);
-}
-function receiveNetworkState(incoming) {
-if (!incoming) return;
-if (incoming.turn === GAME_STATE.turn && incoming.rollsLeft < GAME_STATE.rollsLeft) {
-for (let i = 0; i < 5; i++) if (!incoming.held[i]) execute3DRotation(i, incoming.dice[i]);
-}
-Object.assign(GAME_STATE, JSON.parse(JSON.stringify(incoming)));
-setTimeout(() => {
-for(let i=0; i<5; i++) {
-const scene = document.getElementById(`scene${i}`);
-if(scene) scene.classList.toggle('held', GAME_STATE.held[i]);
-}
-updateUI();
-calculateAllProbabilities();
-}, 250);
-}
-function showOnlineModal() {
-document.getElementById('modalOverlay').style.display='block';
-document.getElementById('onlineModal').style.display='block';
-}
+
 function showRuleDetail(key) {
 document.getElementById('ruleModalTitle').innerText = CATEGORY_NAMES[key];
 document.getElementById('ruleModalDesc').innerText = RULE_DESCRIPTIONS[key];
@@ -506,14 +517,10 @@ document.getElementById('ruleDetailModal').style.display = 'block';
 }
 function hideAllModals() {
 document.getElementById('modalOverlay').style.display='none';
-document.getElementById('onlineModal').style.display='none';
 document.getElementById('ruleDetailModal').style.display='none';
+document.getElementById('historyModal').style.display='none';
 document.getElementById('resultModal').style.display='none';
 }
-window.toggleHold = toggleHold;
-window.showOnlineModal = showOnlineModal;
-window.showRuleDetail = showRuleDetail;
-window.hideAllModals = hideAllModals;
 </script>
 </body>
 </html>
