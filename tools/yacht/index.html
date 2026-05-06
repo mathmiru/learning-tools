@@ -83,6 +83,12 @@ th { background: var(--primary); color: white; font-weight: bold; padding: 4px 1
 .role-name-td { text-align: left; background: rgba(255,255,255,0.8); font-weight: bold; width: 52%; padding-left: 4px; cursor: pointer; line-height: 1.1; }
 .prob-badge.normal { font-size: 0.65rem; color: var(--info); font-weight: 900; background: #EBF5FB; padding: 0px 2px; border-radius: 3px; margin-left: 3px; display: none; font-family: monospace; }
 .prob-badge.digits { display: none; font-size: 0.58rem; color: var(--info); font-weight: normal; background: #EBF5FB; padding: 0px 2px; border-radius: 3px; margin-top: 1px; text-align: left; font-family: monospace; white-space: nowrap; }
+
+.prob-badge.flash-blue { animation: flash-blue 0.7s infinite; border: 1.5px solid var(--info); }
+.prob-badge.flash-red { background: #FFDADA; color: #FF0000; animation: flash-red 0.7s infinite; font-weight: bold; border: 1.5px solid #FF0000; }
+@keyframes flash-blue { 0%, 100% { opacity: 1; background: #EBF5FB; } 50% { opacity: 0.3; background: #FFF; } }
+@keyframes flash-red { 0%, 100% { opacity: 1; background: #FFDADA; } 50% { opacity: 0.3; background: #FFF; } }
+
 .score-cell { font-size: 0.85rem; transition: background 0.1s; background: rgba(255,255,255,0.5); }
 .score-cell.valid { cursor: pointer; color: var(--accent); font-weight: bold; background: #FFF; }
 @keyframes pulse-select { 0% { background-color: #D5F5E3; } 50% { background-color: #A9DFBF; } 100% { background-color: #D5F5E3; } }
@@ -99,7 +105,6 @@ th { background: var(--primary); color: white; font-weight: bold; padding: 4px 1
 .history-item { border-bottom: 1px solid #eee; padding: 6px 0; display: flex; justify-content: space-between; align-items: center; }
 .rank-badge { background: var(--primary); color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 0.7rem; margin-right: 5px; }
 
-/* ズル演出用のカットイン */
 #cheatCutIn {
     display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
     width: 100%; background: rgba(0,0,0,0.9); color: #FFD700; font-size: 1.6rem; font-weight: 900;
@@ -109,7 +114,6 @@ th { background: var(--primary); color: white; font-weight: bold; padding: 4px 1
     animation: cutIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 #cheatCutIn .cheat-face { font-size: 5rem; display: block; margin-bottom: 10px; }
-
 @keyframes cutIn {
     0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
     100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
@@ -117,11 +121,7 @@ th { background: var(--primary); color: white; font-weight: bold; padding: 4px 1
 </style>
 </head>
 <body>
-<div id="cheatCutIn">
-    <span class="cheat-face">😏</span>
-    ニヤリ…！<br>
-    456サイをつかうぜ…！
-</div>
+<div id="cheatCutIn"><span class="cheat-face">😏</span>ニヤリ…！<br>456サイをつかうぜ…！</div>
 
 <div class="app-container" id="appContainer">
 <div id="titleScreen" class="screen active title-screen">
@@ -258,6 +258,8 @@ if(mode === 'com') {
     document.getElementById('p1Header').innerText = "1にんめ"; document.getElementById('p2Header').innerText = "2にんめ"; 
 }
 resetVisuals(); updateUI();
+// 初期の確率を表示（全て振り直す前提）
+calculateAllProbabilities();
 }
 
 function rollDice(isZuru = false) {
@@ -270,7 +272,7 @@ for (let i = 0; i < 5; i++) {
     } 
 }
 GAME_STATE.rollsLeft--;
-setTimeout(() => { updateUI(); calculateAllProbabilities(); }, 600);
+setTimeout(() => { updateUI(); calculateAllProbabilities(isZuru); }, 600);
 }
 
 function execute3DRotation(i, result) {
@@ -292,16 +294,25 @@ document.getElementById(`scene${index}`).classList.toggle('held', GAME_STATE.hel
 calculateAllProbabilities();
 }
 
-function calculateAllProbabilities() {
-Object.keys(CATEGORY_NAMES).forEach(k => { const badge = document.getElementById(`prob_${k}`); if (badge) badge.style.display = 'none'; });
-if (GAME_STATE.rollsLeft === 3 || GAME_STATE.rollsLeft === 0) return;
+function calculateAllProbabilities(isZuru = false, isFlash = false, prevProbMap = null) {
+Object.keys(CATEGORY_NAMES).forEach(k => { 
+    const badge = document.getElementById(`prob_${k}`); 
+    if (badge) { 
+        badge.style.display = 'none'; 
+        badge.classList.remove('flash-blue', 'flash-red');
+    } 
+});
+
 const unheldIndices = [];
 for (let i = 0; i < 5; i++) { if (!GAME_STATE.held[i]) unheldIndices.push(i); }
-if (unheldIndices.length === 0) return;
-const totalPatterns = Math.pow(6, unheldIndices.length);
+if (unheldIndices.length === 0) return {};
+
+const dieSides = isZuru ? [4,5,6] : [1,2,3,4,5,6];
+const totalPatterns = Math.pow(dieSides.length, unheldIndices.length);
 const patternCounts = {};
 Object.keys(CATEGORY_NAMES).forEach(k => { patternCounts[k] = {}; });
 const virtualDice = [...GAME_STATE.dice];
+
 function search(depth) {
 if (depth === unheldIndices.length) {
 Object.keys(CATEGORY_NAMES).forEach(key => {
@@ -312,23 +323,49 @@ patternCounts[key][matchCount] = (patternCounts[key][matchCount] || 0) + 1;
 } else { if (calcScore(key, virtualDice) > 0) patternCounts[key]['success'] = (patternCounts[key]['success'] || 0) + 1; }
 }); return;
 }
-for (let v = 1; v <= 6; v++) { virtualDice[unheldIndices[depth]] = v; search(depth + 1); }
+for (let v of dieSides) { virtualDice[unheldIndices[depth]] = v; search(depth + 1); }
 }
 search(0);
+
+const currentProbMap = {};
 const activeP = GAME_STATE.turn;
 Object.keys(CATEGORY_NAMES).forEach(key => {
 const badge = document.getElementById(`prob_${key}`);
 if (!badge || GAME_STATE.scores[activeP][key] !== null) return;
-if (['ones', 'twos', 'threes', 'fours', 'fives', 'sixes'].includes(key)) {
-badge.className = 'prob-badge digits'; let textArr = [];
-for (let c = 1; c <= 5; c++) { const count = patternCounts[key][c] || 0;
-if (count > 0) { const pct = ((count / totalPatterns) * 100).toFixed(0); if (pct > 0) textArr.push(`${c}こ:${pct}%`); } }
-if(textArr.length > 0) { badge.innerHTML = textArr.join(' '); badge.style.display = 'block'; }
+
+let currentText = "";
+const isUpper = ['ones', 'twos', 'threes', 'fours', 'fives', 'sixes'].includes(key);
+
+if (isUpper) {
+    let textArr = [];
+    for (let c = 1; c <= 5; c++) { 
+        const count = patternCounts[key][c] || 0;
+        if (count > 0) { const pct = ((count / totalPatterns) * 100).toFixed(0); if (pct > 0) textArr.push(`${c}枚:${pct}%`); } 
+    }
+    currentText = textArr.join(' ');
 } else {
-badge.className = 'prob-badge normal'; const count = patternCounts[key]['success'] || 0;
-const pct = ((count / totalPatterns) * 100).toFixed(0); badge.innerText = `${pct}%`; badge.style.display = 'inline-block';
+    const count = patternCounts[key]['success'] || 0;
+    currentText = `${((count / totalPatterns) * 100).toFixed(0)}%`;
+}
+currentProbMap[key] = currentText;
+
+if (isFlash) { badge.classList.add(isZuru ? 'flash-red' : 'flash-blue'); }
+
+let displayText = currentText;
+// 上のめ（isUpper）はやじるしいらない、数字が変わるだけ
+if (isZuru && prevProbMap && prevProbMap[key] && !isUpper) {
+    displayText = `<span style="opacity:0.6; font-size:0.5rem;">${prevProbMap[key]}</span> → ${currentText}`;
+}
+
+if (isUpper) {
+    badge.className = 'prob-badge digits' + (isFlash ? (isZuru ? ' flash-red' : ' flash-blue') : '');
+    if(displayText) { badge.innerHTML = displayText; badge.style.display = 'block'; }
+} else {
+    badge.className = 'prob-badge normal' + (isFlash ? (isZuru ? ' flash-red' : ' flash-blue') : '');
+    badge.innerHTML = displayText; badge.style.display = 'inline-block';
 }
 });
+return currentProbMap;
 }
 
 function calcScore(category, dArr) {
@@ -354,10 +391,8 @@ container.className = activeP === 1 ? "app-container p1-turn" : "app-container p
 document.getElementById('rollsLeft').innerText = `のこり: ${GAME_STATE.rollsLeft}かい`;
 const guide = document.getElementById('holdGuide');
 guide.style.display = (GAME_STATE.rollsLeft > 0 && GAME_STATE.rollsLeft < 3) ? 'inline-block' : 'none';
-
 if (GAME_STATE.turn === 1) document.getElementById('turnDisplay').innerText = GAME_STATE.rollsLeft === 0 ? "🔵 やくを えらんでね" : "🔵 あなたの ばん";
 else document.getElementById('turnDisplay').innerText = (GAME_STATE.comLevel >= 3) ? "🔥 計算中..." : "🔴 コンピューターの ばん";
-
 [1, 2].forEach(p => {
 Object.keys(GAME_STATE.scores[p]).forEach(key => {
 const cell = document.getElementById(`p${p}_${key}`); const val = GAME_STATE.scores[p][key];
@@ -395,6 +430,7 @@ saveScoreRecord(p1T, p2T); return;
 }
 GAME_STATE.turn = GAME_STATE.turn === 1 ? 2 : 1; GAME_STATE.rollsLeft = 3; GAME_STATE.held = [false, false, false, false, false];
 resetVisuals(); updateUI();
+calculateAllProbabilities(); // 次のターンの初期期待値表示
 if (GAME_STATE.mode === 'com' && GAME_STATE.turn === 2) setTimeout(startCOMTurn, 1000);
 }
 
@@ -422,28 +458,70 @@ document.getElementById('historyModal').style.display = 'block';
 
 function clearHistory() { if(confirm('きろくを ぜんぶ けしますか？')) { localStorage.removeItem('mathmiru_yacht_history'); showHistory(); } }
 
-// --- AI & ズルロジック ---
 async function startCOMTurn() {
 const sleep = ms => new Promise(res => setTimeout(res, ms));
 await sleep(400); 
+
+// 1投目
 await aiRollProcess(); await sleep(1200);
-if(GAME_STATE.rollsLeft > 0) { aiHoldProcess(); await sleep(800); await aiRollProcess(); await sleep(1200); }
-if(GAME_STATE.rollsLeft > 0) { aiHoldProcess(); await sleep(800); await aiRollProcess(); await sleep(1200); }
+
+for(let i=0; i<2; i++) {
+    if(GAME_STATE.rollsLeft > 0) {
+        const available = Object.keys(GAME_STATE.scores[2]).filter(k => GAME_STATE.scores[2][k] === null);
+        // すでに強い役が確定しており、これ以上スコアを伸ばせないなら終了（無駄に振らない）
+        if (isPerfectScoreAchieved(GAME_STATE.dice, available)) {
+            break;
+        }
+        aiHoldProcess(); await sleep(800); 
+        await aiRollProcess(); await sleep(1200);
+    }
+}
 aiSelectBestScore();
+}
+
+function isPerfectScoreAchieved(dice, available) {
+    if (calcScore('yacht', dice) === 50 && available.includes('yacht')) return true;
+    if (calcScore('large_str', dice) === 40 && available.includes('large_str') && !available.includes('yacht')) return true;
+    // 役が確定していて他に狙える高得点がない場合もスキップ
+    return false;
 }
 
 async function aiRollProcess() {
     let isZuru = false;
     if (GAME_STATE.comLevel === 4) {
         const available = Object.keys(GAME_STATE.scores[2]).filter(k => GAME_STATE.scores[2][k] === null);
-        if ((available.length > 0) && Math.random() > 0.5) {
-            isZuru = true;
+        // レベル4（ズル）の思考：456を使った方が期待値が高いなら常に使う
+        const normalEV = getExpectation(false, available);
+        const zuruEV = getExpectation(true, available);
+        if (zuruEV > normalEV) isZuru = true;
+
+        if (isZuru) {
             document.getElementById('cheatCutIn').style.display = 'block';
-            await new Promise(r => setTimeout(r, 1000));
+            await new Promise(r => setTimeout(r, 1600));
             document.getElementById('cheatCutIn').style.display = 'none';
+
+            const normalProbMap = calculateAllProbabilities(false, true);
+            await new Promise(r => setTimeout(r, 2200));
+
+            calculateAllProbabilities(true, true, normalProbMap);
+            await new Promise(r => setTimeout(r, 2800));
         }
     }
     rollDice(isZuru);
+}
+
+function getExpectation(isZuru, available) {
+    const unheld = []; for(let i=0; i<5; i++) { if(!GAME_STATE.held[i]) unheld.push(i); }
+    if(unheld.length === 0) return scoreState(GAME_STATE.dice, available);
+    let total = 0;
+    const samples = 20;
+    const vDice = [...GAME_STATE.dice];
+    const sides = isZuru ? [4,5,6] : [1,2,3,4,5,6];
+    for(let s=0; s<samples; s++) {
+        unheld.forEach(idx => vDice[idx] = sides[Math.floor(Math.random()*sides.length)]);
+        total += scoreState(vDice, available);
+    }
+    return total / samples;
 }
 
 function aiHoldProcess() {
@@ -457,13 +535,14 @@ function aiHoldProcess() {
     }
     GAME_STATE.held = bestHold;
     for(let i=0; i<5; i++) document.getElementById(`scene${i}`).classList.toggle('held', GAME_STATE.held[i]);
+    calculateAllProbabilities();
 }
 
 function evaluateHold(pattern, available) {
     const unheld = []; pattern.forEach((h, i) => { if(!h) unheld.push(i); });
     if (unheld.length === 0) return scoreState(GAME_STATE.dice, available);
     let total = 0;
-    const samples = unheld.length >= 4 ? 20 : 50;
+    const samples = 30;
     const vDice = [...GAME_STATE.dice];
     for(let s=0; s<samples; s++) {
         unheld.forEach(idx => vDice[idx] = Math.floor(Math.random()*6)+1);
@@ -479,7 +558,8 @@ function scoreState(dArr, available) {
         if (GAME_STATE.comLevel >= 3) {
             const target = {'ones':1,'twos':2,'threes':3,'fours':4,'fives':5,'sixes':6}[cat];
             if (target && s >= target * 3) s += (target * 1.5);
-            if (cat === 'yacht' && s > 0) s += 40;
+            if (cat === 'yacht' && s > 0) s += 50;
+            if (cat === 'large_str' && s > 0) s += 40;
         }
         if (s > best) best = s;
     });
