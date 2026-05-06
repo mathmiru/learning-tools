@@ -25,13 +25,11 @@ margin: 0;
 padding: 0;
 display: flex;
 justify-content: center;
-/* スクロールを許可 */
 overflow-y: auto;
 }
 .app-container {
 width: 100%;
 max-width: 420px;
-/* 高さ固定を解除し、最小高さを設定 */
 min-height: 100vh;
 background: #FFFFFF;
 box-shadow: 0 0 20px rgba(0,0,0,0.1);
@@ -42,7 +40,6 @@ display: flex;
 flex-direction: column;
 transition: background-color 0.4s ease;
 }
-
 .app-container.p1-turn { background-color: var(--bg-p1); }
 .app-container.p2-turn { background-color: var(--bg-p2); }
 .screen { display: none; width: 100%; flex-direction: column; }
@@ -50,7 +47,6 @@ transition: background-color 0.4s ease;
 .title-screen { text-align: center; justify-content: center; }
 .title-logo { font-size: 2.5rem; font-weight: 900; color: var(--primary); letter-spacing: 4px; margin-bottom: 2px; }
 .title-sub { font-size: 0.9rem; color: #7F8C8D; margin-bottom: 12px; font-weight: bold; }
-
 .rule-box {
 text-align: left; font-size: 0.72rem; background: rgba(255,255,255,0.8);
 padding: 10px; border-radius: 8px; margin: 0 auto 10px auto;
@@ -89,18 +85,15 @@ table { width: 100%; border-collapse: collapse; font-size: 0.72rem; }
 th, td { border: 1px solid #BDC3C7; padding: 2px 1px; text-align: center; height: 20px; box-sizing: border-box; }
 th { background: var(--primary); color: white; font-weight: bold; padding: 4px 1px; }
 .role-name-td { text-align: left; background: rgba(255,255,255,0.8); font-weight: bold; width: 52%; padding-left: 4px; cursor: pointer; line-height: 1.1; }
-
 .prob-badge.normal { font-size: 0.65rem; color: var(--info); font-weight: 900; background: #EBF5FB; padding: 0px 2px; border-radius: 3px; margin-left: 3px; display: none;
 font-family: monospace; }
 .prob-badge.digits { display: none; font-size: 0.58rem; color: var(--info); font-weight: normal; background: #EBF5FB; padding: 0px 2px; border-radius: 3px; margin-top: 1px;
 text-align: left; font-family: monospace; white-space: nowrap; }
-
 .score-cell { font-size: 0.85rem; transition: background 0.1s; background: rgba(255,255,255,0.5); }
 .score-cell.valid { cursor: pointer; color: var(--accent); font-weight: bold; background: #FFF; }
 @keyframes pulse-select { 0% { background-color: #D5F5E3; } 50% { background-color: #A9DFBF; } 100% { background-color: #D5F5E3; } }
 .score-cell.valid.must-select { animation: pulse-select 1s infinite; border: 1.5px solid var(--success) !important; }
 .score-cell.filled { cursor: default; color: var(--text); font-weight: normal; background: rgba(200,200,200,0.2); }
-
 @keyframes flash-com { 0%, 100% { background-color: #F1C40F; } 50% { background-color: white; } }
 .score-cell.com-selecting { animation: flash-com 0.4s 3; }
 .modal { display: none; position: fixed; top: 45%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 15px;
@@ -126,7 +119,7 @@ padding: 3px; }
 <p>5つのサイコロを3かいふって「やく」をつくります。のこしたいめをタッチして ふりなおせます。</p>
 <p style="color:var(--info); font-weight:bold;">★サイコロをふると「やく」ができる％（かくりつ）がわかるよ！のこすサイコロをえらぶと、かくりつもかわるから よくみてね！</p>
 <h4>【やくの なまえ】</h4>
-<p>・1〜6のめ：えらんだ すうじを ぜんぶたす<br>・チョイス：ぜんぶの めを たす<br>・3つ/4つおなじ：おなじめが 3つ/4つあるとき ぜんぶたす<br>・フルハウス：おなじめ 3つ ＋ べつの おなじめ 2つ(25てん)<br>・4れんぞく：すうじが 4つ つながる(30てん)<br>・5れんぞく：すうじが 5つ つながる(40てん)<br>・ヨット：ぜんぶ おなじ め(50てん)</p>
+<p>・1〜6のめ：えらんだ すうじを ぜんぶたす<br>・チョイス：ぜんぶの めを たす<br>・3つ/4つおなじ：おなじめが 3つ/4つあるとき ぜんぶたす<br>・フルハウス：おなじめ 3つ ＋ べつの おなじめ 2つ(25てん)<br>・4れんぞく：すうじが 4つ つながる(30てん)<br>・5れんぞく：すうじが 5つ つながる(40てん)<br>・ヨット：ぜび おなじ め(50てん)</p>
 </div>
 <button class="menu-btn" onclick="startGame('com', 1)">レベル1</button>
 <button class="menu-btn" onclick="startGame('com', 2)">レベル2</button>
@@ -182,13 +175,11 @@ padding: 3px; }
 <button class="menu-btn" style="width:100%;" onclick="location.reload()">タイトルへ</button>
 </div>
 </div>
-
 <script>
-// --- 通信エンジンを PeerJS に変更 ---
 let peer = null;
 let conn = null;
 let myPlayerId = 1;
-
+const iceConfig = { 'iceServers': [{ url: 'stun:stun.l.google.com:19302' }, { url: 'stun:stun1.l.google.com:19302' }, { url: 'stun:stun2.l.google.com:19302' }] };
 const GAME_STATE = {
 mode: 'com', comLevel: 1, turn: 1, rollsLeft: 3,
 dice: [1, 1, 1, 1, 1], held: [false, false, false, false, false],
@@ -216,7 +207,6 @@ small_str: "【4れんぞく】\nすうじが 4つ つながると（れい：1-
 large_str: "【5れんぞく】\nすうじが 5つ つながると（れい：1-2-3-4-5）【40てん】もらえます！",
 yacht: "【ヨット】\nぜび おなじめに なると【50てん】もらえます！いちばん むずかしい やくです。"
 };
-
 function initBoard() {
 const diceArea = document.getElementById('diceArea');
 diceArea.innerHTML = '';
@@ -230,7 +220,6 @@ tbody.innerHTML += `<tr><td class="role-name-td" onclick="showRuleDetail('${key}
 if(key === 'sixes') tbody.innerHTML += `<tr style="background:#FCF3CF; font-size:0.65rem; height:16px;"><td>①〜⑥のボーナス(63てんで+35)</td><td id="p1_bonus">0/63</td><td id="p2_bonus">0/63</td></tr>`;
 });
 }
-
 function startGame(mode, level) {
 GAME_STATE.mode = mode; GAME_STATE.comLevel = level;
 document.getElementById('titleScreen').classList.remove('active');
@@ -239,13 +228,12 @@ document.getElementById('gameScreen').classList.add('active');
 initBoard();
 if(mode === 'com') { myPlayerId = 1; document.getElementById('p1Header').innerText = "あなた"; document.getElementById('p2Header').innerText = "レベル" + level; }
 else if(mode === 'local') { myPlayerId = 1; document.getElementById('p1Header').innerText = "1にんめ"; document.getElementById('p2Header').innerText = "2にんめ"; }
-else { 
-document.getElementById('p1Header').innerText = myPlayerId === 1 ? "あなた" : "あいて"; 
+else {
+document.getElementById('p1Header').innerText = myPlayerId === 1 ? "あなた" : "あいて";
 document.getElementById('p2Header').innerText = myPlayerId === 2 ? "あなた" : "あいて";
 }
 resetVisuals(); updateUI();
 }
-
 function rollDice() {
 const currentActivePlayer = (GAME_STATE.mode === 'online') ? myPlayerId : GAME_STATE.turn;
 if (GAME_STATE.turn !== currentActivePlayer || GAME_STATE.rollsLeft <= 0) return;
@@ -255,7 +243,6 @@ GAME_STATE.dice[i] = result; execute3DRotation(i, result); } }
 GAME_STATE.rollsLeft--;
 setTimeout(() => { updateUI(); calculateAllProbabilities(); if (GAME_STATE.mode === 'online') syncToNetwork(); }, 600);
 }
-
 function execute3DRotation(i, result) {
 const cube = document.getElementById(`die${i}`);
 cube.style.transition = 'none';
@@ -267,7 +254,6 @@ const rotY = Math.floor(Math.random() * 3 + 3) * 360 + (result===2?180:result===
 cube.style.transform = `rotateX(${rotX}deg) rotateY(${rotY}deg)`;
 }, 50);
 }
-
 function toggleHold(index) {
 const currentActivePlayer = (GAME_STATE.mode === 'online') ? myPlayerId : GAME_STATE.turn;
 if (GAME_STATE.rollsLeft === 3 || GAME_STATE.turn !== currentActivePlayer || GAME_STATE.rollsLeft === 0) return;
@@ -276,7 +262,6 @@ document.getElementById(`scene${index}`).classList.toggle('held', GAME_STATE.hel
 calculateAllProbabilities();
 if (GAME_STATE.mode === 'online') syncToNetwork();
 }
-
 function calculateAllProbabilities() {
 Object.keys(CATEGORY_NAMES).forEach(k => { const badge = document.getElementById(`prob_${k}`); if (badge) badge.style.display = 'none'; });
 if (GAME_STATE.rollsLeft === 3 || GAME_STATE.rollsLeft === 0) return;
@@ -315,7 +300,6 @@ const pct = ((count / totalPatterns) * 100).toFixed(0); badge.innerText = `${pct
 }
 });
 }
-
 function calcScore(category, dArr) {
 const counts = [0,0,0,0,0,0,0]; let sum = 0; dArr.forEach(d => { counts[d]++; sum += d; });
 switch(category) {
@@ -331,7 +315,6 @@ case 'large_str': const l = counts.map(c=>c>0?1:0).join(''); return (l.includes(
 }
 return 0;
 }
-
 function updateUI() {
 const activeP = GAME_STATE.turn; const isMyTurn = (GAME_STATE.mode === 'online') ? (GAME_STATE.turn === myPlayerId) : true;
 const container = document.getElementById('appContainer');
@@ -339,13 +322,14 @@ container.className = activeP === 1 ? "app-container p1-turn" : "app-container p
 document.getElementById('rollsLeft').innerText = `のこり: ${GAME_STATE.rollsLeft}かい`;
 const guide = document.getElementById('holdGuide');
 guide.style.display = (isMyTurn && GAME_STATE.rollsLeft > 0 && GAME_STATE.rollsLeft < 3) ? 'inline-block' : 'none';
-
 if (GAME_STATE.mode === 'online') {
-if (GAME_STATE.turn === myPlayerId) document.getElementById('turnDisplay').innerText = GAME_STATE.rollsLeft === 0 ? "⚠️ やくを えらんでね" : ` 🟢  あなたの番 (${myPlayerId===1?'あお':'あか'})`;
-else document.getElementById('turnDisplay').innerText = " ⏳  あいての つうしんを まっています...";
+if (GAME_STATE.turn === myPlayerId) document.getElementById('turnDisplay').innerText = GAME_STATE.rollsLeft === 0 ?
+"⚠️ やくを えらんでね" : `  🟢   あなたの番 (${myPlayerId===1?'あお':'あか'})`;
+else document.getElementById('turnDisplay').innerText = "  ⏳   あいての つうしんを まっています...";
 } else {
-if (GAME_STATE.turn === 1) document.getElementById('turnDisplay').innerText = GAME_STATE.rollsLeft === 0 ? " 🔵  やくを えらんでね" : " 🔵  あなたの ばん";
-else document.getElementById('turnDisplay').innerText = GAME_STATE.mode === 'com' ? " 🔴  コンピューターが かんがえ中..." : (GAME_STATE.rollsLeft === 0 ? " 🔴  やくを えらんでね" : " 🔴  2にんめの ばん");
+if (GAME_STATE.turn === 1) document.getElementById('turnDisplay').innerText = GAME_STATE.rollsLeft === 0 ?
+"  🔵   やくを えらんでね" : "  🔵   あなたの ばん";
+else document.getElementById('turnDisplay').innerText = GAME_STATE.mode === 'com' ? "  🔴   コンピューターが かんがえ中..." : (GAME_STATE.rollsLeft === 0 ? "  🔴   やくを えらんでね" : "  🔴   2にんめの ばん");
 }
 const rollBtn = document.getElementById('rollBtn');
 if (GAME_STATE.rollsLeft === 0 && isMyTurn) { rollBtn.innerText = "やくをえらんでね"; rollBtn.disabled = true; }
@@ -364,24 +348,23 @@ document.getElementById(`p${p}_bonus`).innerText = `${upper}/63`;
 document.getElementById(`p${p}Total`).innerText = Object.values(s).reduce((a,b)=>a+(b||0), 0) + (upper >= 63 ? 35 : 0);
 });
 }
-
 function selectScore(category, playerNum) {
 const activeP = (GAME_STATE.mode === 'online') ? myPlayerId : GAME_STATE.turn;
 if (GAME_STATE.turn !== activeP || playerNum !== activeP || GAME_STATE.rollsLeft === 3 || GAME_STATE.scores[activeP][category] !== null) return;
 GAME_STATE.scores[activeP][category] = calcScore(category, GAME_STATE.dice); endTurn();
 }
-
 function resetVisuals() { for(let i=0; i<5; i++) { document.getElementById(`scene${i}`).classList.remove('held'); document.getElementById(`die${i}`).style.transform = `rotateX(0deg) rotateY(0deg)`; } }
-
 function endTurn() {
 updateUI();
 if (Object.values(GAME_STATE.scores[1]).every(v=>v!==null) && Object.values(GAME_STATE.scores[2]).every(v=>v!==null)) {
 const p1T = parseInt(document.getElementById('p1Total').innerText); const p2T = parseInt(document.getElementById('p2Total').innerText);
 let winTitle = "";
-if (p1T > p2T) { winTitle = (GAME_STATE.mode === 'com') ? "あなたのかち！" : ((GAME_STATE.mode === 'online' && myPlayerId === 1) ? "あなたのかち！" : "1にんめのかち！"); }
-else if (p2T > p1T) { winTitle = (GAME_STATE.mode === 'com') ? "コンピューターのかち！" : ((GAME_STATE.mode === 'online' && myPlayerId === 2) ? "あなたのかち！" : "2にんめのかち！"); }
+if (p1T > p2T) { winTitle = (GAME_STATE.mode === 'com') ?
+"あなたのかち！" : ((GAME_STATE.mode === 'online' && myPlayerId === 1) ? "あなたのかち！" : "1にんめのかち！"); }
+else if (p2T > p1T) { winTitle = (GAME_STATE.mode === 'com') ?
+"コンピューターのかち！" : ((GAME_STATE.mode === 'online' && myPlayerId === 2) ? "あなたのかち！" : "2にんめのかち！"); }
 else { winTitle = "ひきわけ！"; }
-document.getElementById('winMsg').innerText = " 🎉  " + winTitle;
+document.getElementById('winMsg').innerText = "  🎉   " + winTitle;
 const p1Label = (GAME_STATE.mode === 'com') ? "あなた" : "1にんめ";
 const p2Label = (GAME_STATE.mode === 'com') ? "コンピューター" : "2にんめ";
 document.getElementById('scoreSummary').innerHTML = `${p1Label}：${p1T}てん<br>${p2Label}：${p2T}てん`;
@@ -393,7 +376,6 @@ GAME_STATE.turn = GAME_STATE.turn === 1 ? 2 : 1; GAME_STATE.rollsLeft = 3; GAME_
 resetVisuals(); updateUI(); calculateAllProbabilities(); if (GAME_STATE.mode === 'online') syncToNetwork();
 if (GAME_STATE.mode === 'com' && GAME_STATE.turn === 2) setTimeout(startCOMTurn, 1200);
 }
-
 async function startCOMTurn() {
 const sleep = ms => new Promise(res => setTimeout(res, ms));
 await sleep(500); comExecuteRoll(); await sleep(1800);
@@ -463,8 +445,7 @@ cell.classList.remove('com-selecting');
 GAME_STATE.scores[2][best] = calcScore(best, GAME_STATE.dice);
 endTurn();
 }
-
-// --- PeerJS を使ったオンライン対戦ロジック ---
+// --- 遠隔対戦用 STUNサーバー設定を追加した PeerJS ロジック ---
 function connectToPeer() {
 const pin = document.getElementById('roomPin').value;
 if (pin.length < 1) return alert("4けたの すうじを いれてね");
@@ -472,10 +453,9 @@ document.getElementById('displayPin').innerText = pin;
 hideAllModals();
 document.getElementById('titleScreen').classList.remove('active');
 document.getElementById('waitingScreen').classList.add('active');
-
 const peerId = 'mathmiru-yacht-' + pin;
-peer = new Peer(peerId + '-host');
-
+// ホストとしてPeerを作成（STUNサーバー設定を追加）
+peer = new Peer(peerId + '-host', { config: iceConfig });
 peer.on('open', () => {
 myPlayerId = 1;
 document.getElementById('waitMsg').innerText = "あいてを まっています";
@@ -484,10 +464,10 @@ conn = c;
 setupConnection();
 });
 });
-
 peer.on('error', (err) => {
 if (err.type === 'unavailable-id') {
-peer = new Peer();
+// クライアントとしてPeerを作成（STUNサーバー設定を追加）
+peer = new Peer({ config: iceConfig });
 peer.on('open', () => {
 myPlayerId = 2;
 conn = peer.connect(peerId + '-host');
@@ -499,7 +479,6 @@ location.reload();
 }
 });
 }
-
 function setupConnection() {
 conn.on('open', () => {
 startGame('online');
@@ -513,25 +492,22 @@ alert("あいてが 退出しました");
 location.reload();
 });
 }
-
 function syncToNetwork() {
 if (GAME_STATE.mode !== 'online' || !conn) return;
 conn.send({ type: 'sync', state: GAME_STATE });
 }
-
 function receiveNetworkState(incoming) {
 if (!incoming) return;
 if (incoming.turn === GAME_STATE.turn && incoming.rollsLeft < GAME_STATE.rollsLeft) {
 for (let i = 0; i < 5; i++) if (!incoming.held[i]) execute3DRotation(i, incoming.dice[i]);
 }
 Object.assign(GAME_STATE, JSON.parse(JSON.stringify(incoming)));
-setTimeout(() => { 
-for(let i=0; i<5; i++) document.getElementById(`scene${i}`).classList.toggle('held', GAME_STATE.held[i]); 
-updateUI(); 
-calculateAllProbabilities(); 
+setTimeout(() => {
+for(let i=0; i<5; i++) document.getElementById(`scene${i}`).classList.toggle('held', GAME_STATE.held[i]);
+updateUI();
+calculateAllProbabilities();
 }, 250);
 }
-
 window.toggleHold = toggleHold;
 window.showOnlineModal = () => { document.getElementById('modalOverlay').style.display='block'; document.getElementById('onlineModal').style.display='block'; };
 window.showRuleDetail = (key) => { document.getElementById('ruleModalTitle').innerText = CATEGORY_NAMES[key]; document.getElementById('ruleModalDesc').innerText = RULE_DESCRIPTIONS[key]; document.getElementById('modalOverlay').style.display = 'block'; document.getElementById('ruleDetailModal').style.display = 'block'; };
