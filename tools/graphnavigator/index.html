@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>グラフ・ナビゲーター</title>
+<style>
+  :root { --p: #4a90e2; --a: #ff6b6b; --b: #f5f7fa; --pb: #ffffff; --gc: #2ecc71; --qc: #9b59b6; --sc: #2ecc71; --gd: #f1c40f; }
+  * { box-sizing: border-box; -webkit-user-select: none; user-select: none; }
+  body { font-family: 'Hiragino Kaku Gothic ProN', 'Helvetica Neue', Arial, sans-serif; margin: 0; padding: 0; background: var(--b); color: #333; overflow: hidden; width: 100vw; height: 100vh; display: flex; flex-direction: column; }
+  header { background: var(--pb); padding: 10px 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); z-index: 10; display: flex; flex-wrap: wrap; gap: 15px; justify-content: space-between; align-items: center; }
+  ._t-a { display: flex; align-items: center; gap: 12px; }
+  h1 { margin: 0; font-size: 16px; color: #2c3e50; font-weight: bold; }
+  ._b-b { background: #e2e8f0; color: #4a5568; border: none; padding: 4px 10px; font-size: 11px; font-weight: bold; border-radius: 4px; cursor: pointer; transition: all 0.2s; }
+  ._b-b:hover { background: #cbd5e1; }
+  ._h-c { display: flex; gap: 15px; align-items: center; }
+  ._m-t { display: flex; background: #eee; padding: 4px; border-radius: 30px; }
+  ._t-b { border: none; background: transparent; padding: 6px 14px; font-size: 12px; font-weight: bold; color: #666; cursor: pointer; border-radius: 25px; transition: all 0.2s; }
+  ._t-b._ac-g { background: var(--gc); color: white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+  ._t-b._ac-f { background: var(--p); color: white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+  ._s-c { display: flex; align-items: center; background: #2c3e50; border-radius: 20px; padding: 2px 12px; }
+  ._s-b { color: var(--gd); font-weight: bold; font-size: 13px; }
+  ._s-g { color: #95a5a6; font-size: 10px; margin-left: 6px; border-left: 1px solid #7f8c8d; padding-left: 6px; }
+  ._m-c { flex: 1; display: flex; position: relative; justify-content: center; align-items: center; height: calc(100vh - 60px); }
+  #_scr-t { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(245, 247, 250, 0.98); z-index: 100; display: flex; justify-content: center; align-items: center; padding: 20px; }
+  ._c-t { background: #fff; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); max-width: 500px; width: 100%; text-align: center; }
+  ._n-t { font-size: 26px; font-weight: bold; color: #2c3e50; margin-bottom: 20px; letter-spacing: 1px; }
+  ._b-r { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 15px; text-align: left; margin-bottom: 25px; font-size: 14px; line-height: 1.6; color: #4a5568; }
+  ._b-r ul { margin: 5px 0 0 0; padding-left: 20px; }
+  ._btn-s { background: var(--p); color: white; border: none; padding: 15px 40px; font-size: 17px; font-weight: bold; border-radius: 30px; cursor: pointer; box-shadow: 0 5px 15px rgba(74, 144, 226, 0.3); }
+  #_scr-c { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(44, 62, 80, 0.96); z-index: 110; display: flex; justify-content: center; align-items: center; padding: 20px; opacity: 0; pointer-events: none; transition: opacity 0.5s ease; }
+  #_scr-c._shw { opacity: 1; pointer-events: auto; }
+  ._c-c { background: white; padding: 40px; border-radius: 24px; box-shadow: 0 20px 50px rgba(0,0,0,0.3); max-width: 480px; width: 100%; text-align: center; transform: translateY(30px); transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); position: relative; overflow: hidden; }
+  #_scr-c._shw ._c-c { transform: translateY(0); }
+  ._i-t { font-size: 80px; color: var(--gd); margin-bottom: 15px; animation: _flt 2s ease-in-out infinite; }
+  @keyframes _flt { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-10px) rotate(3deg); } }
+  ._tl-c { font-size: 28px; font-weight: bold; color: #2c3e50; margin-bottom: 10px; }
+  ._msg-c { font-size: 15px; color: #7f8c8d; margin-bottom: 30px; line-height: 1.6; }
+  ._bg-c { display: flex; flex-direction: column; gap: 10px; }
+  ._btn-c { border: none; padding: 14px; font-size: 16px; font-weight: bold; border-radius: 12px; cursor: pointer; transition: all 0.2s; }
+  ._btn-c._prm { background: var(--p); color: white; box-shadow: 0 5px 15px rgba(74, 144, 226, 0.3); }
+  ._btn-c._scd { background: #e2e8f0; color: #4a5568; }
+  ._cf { position: absolute; width: 10px; height: 10px; background: var(--gd); animation: _cff 3s linear infinite; top: -10px; border-radius: 2px; }
+  @keyframes _cff { 0% { transform: translateY(0) rotate(0deg); opacity: 1; } 100% { transform: translateY(450px) rotate(720deg); opacity: 0; } }
+  ._c-p { display: flex; flex-direction: column; align-items: center; justify-content: center; background: #fff; padding: 10px; gap: 10px; width: 100%; max-width: 620px; }
+  ._t-cb { display: flex; align-items: center; justify-content: space-between; background: #f8fafc; border: 2px dashed #cbd5e1; border-radius: 12px; padding: 8px 15px; width: 100%; gap: 15px; }
+  ._f-d { font-size: 28px; font-weight: bold; color: #2c3e50; display: flex; align-items: center; justify-content: center; flex: 1; }
+  ._v_x9 { font-family: 'Times New Roman', Times, serif; font-style: italic; padding: 0 4px; }
+  ._f_z2 { display: inline-flex; flex-direction: column; align-items: center; vertical-align: middle; padding: 0 5px; }
+  ._n_w1 { border-bottom: 3px solid #2c3e50; padding: 0 4px; color: var(--a); }
+  ._d_v8 { padding: 0 4px; color: #34495e; }
+  ._q-b { display: flex; gap: 6px; }
+  ._a-b { border: none; padding: 10px 20px; font-size: 15px; font-weight: bold; color: white; border-radius: 8px; cursor: pointer; white-space: nowrap; transition: all 0.2s; }
+  #_btn-chk { background: var(--qc); }
+  #_btn-chk:disabled { background: #cbd5e1; cursor: not-allowed; }
+  #_btn-nxt { background: #e67e22; }
+  ._c-ct { position: relative; display: flex; justify-content: center; align-items: center; }
+  canvas { background: #ffffff; box-shadow: 0 0 20px rgba(0,0,0,0.05); touch-action: none; cursor: crosshair; }
+  ._r-o { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; pointer-events: none; z-index: 50; }
+  ._r-b { padding: 15px 40px; font-size: 40px; font-weight: bold; color: white; border-radius: 50px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); transform: scale(0); transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275); display: none; }
+  ._r-b._scs { background: rgba(46, 204, 113, 0.95); }
+  ._r-b._err { background: rgba(231, 76, 60, 0.95); }
+  ._r-b._shw { display: block; transform: scale(1); }
+  @media (max-width: 768px) { header { padding: 10px; justify-content: center; } ._m-c { height: auto; padding: 10px 0; } ._t-cb { flex-direction: column; padding: 10px; } ._q-b { width: 100%; } ._a-b { flex: 1; text-align: center; } canvas { max-width: 100%; height: auto; } }
+</style>
+</head>
+<body>
+
+<div id="_scr-t">
+  <div class="_c-t">
+    <div class="_n-t">グラフ・ナビゲーター</div>
+    <div class="_b-r">
+      <strong>【あそびかた】</strong>
+      <ul>
+        <li>出題される式を見て、そのグラフが通りそうな場所を予想しよう。</li>
+        <li>グラフ上のマスの交わるところをタップして、<strong>「2つの点」</strong>を選ぼう。</li>
+        <li>「答える」を押すと、正解の線がのびてくるぞ。</li>
+        <li>正解するとポイントが入って、自動的に次の問題へ進むぞ！</li>
+        <li>連続正解ボーナスを狙って、<strong>目標の 3,000 pt </strong>を目指そう！</li>
+      </ul>
+    </div>
+    <button class="_btn-s" onclick="_0x11fa()">ゲームスタート</button>
+  </div>
+</div>
+
+<div id="_scr-c">
+  <div class="_c-c" id="_c-card">
+    <div class="_i-t">🏆</div>
+    <div class="_tl-c">ミッションクリア！</div>
+    <div class="_msg-c">すばらしい！グラフの規則性を完全に見抜き、目標の 3,000 pt を見事に達成しました！</div>
+    <div class="_bg-c">
+      <button class="_btn-c _prm" onclick="_0x2b8a()">もう一度はじめから遊ぶ</button>
+      <button class="_btn-c _scd" onclick="_0x3c9d()">タイトルにもどる</button>
+    </div>
+  </div>
+</div>
+
+<header>
+  <div class="_t-a">
+    <h1>グラフ・ナビゲーター</h1>
+    <button class="_b-b" onclick="_0x3c9d()">タイトルへ</button>
+  </div>
+  <div class="_h-c">
+    <div class="_m-t">
+      <button id="_grd-e" class="_t-b _ac-g" onclick="_0x52ab('elem')">小学生</button>
+      <button id="_grd-j" class="_t-b" onclick="_0x52ab('junior')">中学生</button>
+    </div>
+    <div class="_m-t">
+      <button id="_btn-prp" class="_t-b _ac-f" onclick="_0x44cd('proportion')">比例</button>
+      <button id="_btn-inv" class="_t-b" onclick="_0x44cd('inverse')">反比例</button>
+    </div>
+    <div class="_s-c">
+      <div class="_s-b" id="_scr-v">0 pt</div>
+      <div class="_s-g">GOAL: 3000pt</div>
+    </div>
+  </div>
+</header>
+
+<div class="_m-c">
+  <div class="_c-p">
+    <div class="_t-cb">
+      <div class="_f-d" id="_fml"></div>
+      <div class="_q-b">
+        <button id="_btn-chk" class="_a-b" onclick="_0x4f6e()" disabled>答える (0/2)</button>
+        <button id="_btn-nxt" class="_a-b" onclick="_0x1a2b()" style="display:none;">つぎへ</button>
+      </div>
+    </div>
+    <div class="_c-ct">
+      <canvas id="_g-cvs" width="600" height="600"></canvas>
+      <div class="_r-o">
+        <div id="_res-b" class="_r-b"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const _0x5f31 = document.getElementById("_g-cvs");
+const _0x4c22 = _0x5f31.getContext("2d");
+let _0x1c2d = "elem", _0x3a4f = "proportion", _0xaa = 6.0, _0xfa = false, _0xap = 0, _0xai = null;
+const _0xsc = 35;
+let _0xup = [], _0xqe = false, _0xat = null, _0xscv = 0, _0xcb = 0;
+const _0xgl = 3000;
+let _0xla = null, _0xlf = false;
+
+window.onload = () => { _0x14de(); _0x58ef(); };
+function _0x11fa() { document.getElementById("_scr-t").style.display = "none"; _0x1a2b(); }
+function _0x3c9d() { if(_0xat) clearTimeout(_0xat); document.getElementById("_scr-t").style.display = "flex"; document.getElementById("_scr-c").classList.remove("_shw"); }
+function _0x2b8a() { _0xscv = 0; _0xcb = 0; _0x39df(); document.getElementById("_scr-c").classList.remove("_shw"); _0x1a2b(); }
+function _0x14de() { const p = _0x5f31.parentElement; const s = Math.min(p.clientWidth, p.clientHeight, 600); _0x5f31.width = s; _0x5f31.height = s; _0x99ff(); }
+window.addEventListener('resize', _0x14de);
+
+function _0x58ef() {
+  _0x5f31.addEventListener("click", (e) => {
+    if (_0xqe) return;
+    const r = _0x5f31.getBoundingClientRect();
+    const cx = e.clientX - r.left, cy = e.clientY - r.top;
+    const { cX, cY } = _0x22ee();
+    const tx = Math.round((cx - cX) / _0xsc), ty = Math.round((cY - cy) / _0xsc);
+    if (_0x1c2d === "elem" && (tx < 0 || ty < 0)) return;
+    const idx = _0xup.findIndex(p => p.x === tx && p.y === ty);
+    if (idx > -1) { _0xup.splice(idx, 1); } else { if (_0xup.length < 2) _0xup.push({ x: tx, y: ty }); }
+    _0x44b2(); _0x99ff();
+  });
+}
+
+function _0x52ab(g) { if(_0xat) clearTimeout(_0xat); _0x1c2d = g; document.getElementById("_grd-e").classList.toggle("_ac-g", g === "elem"); document.getElementById("_grd-j").classList.toggle("_ac-g", g === "junior"); _0xla = null; _0x1a2b(); }
+function _0x44cd(m) { if(_0xat) clearTimeout(_0xat); if (_0x3a4f === m) return; _0x3a4f = m; document.getElementById("_btn-prp").classList.toggle("_ac-f", m === "proportion"); document.getElementById("_btn-inv").classList.toggle("_ac-f", m === "inverse"); _0xla = null; _0x1a2b(); }
+
+function _0x1a2b() {
+  if(_0xat) clearTimeout(_0xat); _0xup = []; _0xqe = false; _0xap = 0;
+  const b = document.getElementById("_res-b"); b.className = "_r-b";
+  document.getElementById("_btn-nxt").style.display = "none";
+  document.getElementById("_btn-chk").style.display = "block";
+  _0x44b2();
+  let nA = 1, nF = false, att = 0;
+  while (att < 50) {
+    nF = false;
+    if (_0x1c2d === "elem") {
+      if (_0x3a4f === "proportion") { nA = Math.floor(Math.random() * 5) + 1; } 
+      else { const p = [4, 6, 8, 9, 12, 16, 18, 24]; nA = p[Math.floor(Math.random() * p.length)]; }
+    } else {
+      if (_0x3a4f === "proportion") {
+        if (Math.random() < 0.4) { nF = true; const p = [0.5, 0.3333, 0.6666, 1.5, 0.75, -0.5, -0.3333]; nA = p[Math.floor(Math.random() * p.length)]; }
+        else { const p = [-4, -3, -2, -1, 1, 2, 3, 4]; nA = p[Math.floor(Math.random() * p.length)]; }
+      } else { const p = [-16, -12, -9, -8, -6, -4, -3, -2, 2, 3, 4, 6, 8, 9, 12, 16]; nA = p[Math.floor(Math.random() * p.length)]; }
+    }
+    if (nA !== _0xla || nF !== _0xlf) break;
+    att++;
+  }
+  _0xaa = nA; _0xfa = nF; _0xla = nA; _0xlf = nF;
+  _0x77bc(); _0x99ff();
+}
+
+function _0x44b2() { const b = document.getElementById("_btn-chk"); b.textContent = `答える (${_0xup.length}/2)`; b.disabled = (_0xup.length !== 2 || _0xqe); }
+
+function _0x4f6e() {
+  if (_0xqe) return; _0xqe = true;
+  document.getElementById("_btn-chk").disabled = true;
+  let cc = 0;
+  _0xup.forEach(p => {
+    let eY = _0x3a4f === "proportion" ? _0xaa * p.x : _0xaa / p.x;
+    if (Math.abs(p.y - eY) < 0.05) cc++;
+  });
+  const b = document.getElementById("_res-b");
+  if (cc === 2) {
+    _0xcb++; _0xscv += (100 + (_0xcb - 1) * 20);
+    b.textContent = "◯ 正解！"; b.className = "_r-b _scs _shw";
+    if (_0xscv >= _0xgl) { _0xat = setTimeout(() => { _0x88ee(); }, 1000); } 
+    else { _0xat = setTimeout(() => { _0x1a2b(); }, 1500); }
+  } else {
+    _0xcb = 0; b.textContent = cc === 1 ? "▲ おしい！" : "× ざんねん"; b.className = "_r-b _err _shw";
+    document.getElementById("_btn-chk").style.display = "none";
+    document.getElementById("_btn-nxt").style.display = "block";
+  }
+  _0x39df(); _0x66bb();
+}
+
+function _0x88ee() {
+  const s = document.getElementById("_scr-c"), c = document.getElementById("_c-card");
+  c.querySelectorAll('._cf').forEach(e => e.remove());
+  for (let i = 0; i < 35; i++) {
+    const f = document.createElement('div'); f.className = '_cf'; f.style.left = Math.random() * 100 + '%'; f.style.animationDelay = Math.random() * 2 + 's';
+    f.style.backgroundColor = ['#f1c40f', '#2ecc71', '#3498db', '#e74c3c', '#e67e22'][Math.floor(Math.random() * 5)]; c.appendChild(f);
+  }
+  s.classList.add("_shw");
+}
+
+function _0x39df() { document.getElementById("_scr-v").textContent = `${_0xscv} pt`; }
+
+function _0x77bc() {
+  const el = document.getElementById("_fml");
+  if (_0x3a4f === "proportion") {
+    if (_0x1c2d === "elem") { el.innerHTML = `<span class="_v_x9">y</span> = <span class="_n_w1" style="border:none;">${_0xaa}</span> × <span class="_v_x9">x</span>`; } 
+    else {
+      if (_0xfa) {
+        let n = "1", d = "2", neg = false, absA = Math.abs(_0xaa);
+        if (Math.abs(absA - 0.5) < 0.01) { n = "1"; d = "2"; }
+        else if (Math.abs(absA - 0.3333) < 0.01) { n = "1"; d = "3"; }
+        else if (Math.abs(absA - 0.6666) < 0.01) { n = "2"; d = "3"; }
+        else if (Math.abs(absA - 1.5) < 0.01) { n = "3"; d = "2"; }
+        else if (Math.abs(absA - 0.75) < 0.01) { n = "3"; d = "4"; }
+        if (_0xaa < 0) neg = true;
+        el.innerHTML = `<span class="_v_x9">y</span> = ${neg ? "-" : ""}<div class="_f_z2"><span class="_n_w1">${n}</span><span class="_d_v8">${d}</span></div><span class="_v_x9">x</span>`;
+      } else { el.innerHTML = `<span class="_v_x9">y</span> = <span class="_n_w1" style="border:none;">${_0xaa}</span><span class="_v_x9">x</span>`; }
+    }
+  } else {
+    if (_0x1c2d === "elem") { el.innerHTML = `<span class="_v_x9">x</span> × <span class="_v_x9">y</span> = <span class="_n_w1" style="border:none;">${_0xaa}</span>`; } 
+    else { el.innerHTML = `<span class="_v_x9">y</span> = <div class="_f_z2"><span class="_n_w1">${_0xaa}</span><span class="_d_v8" style="color:#2c3e50;"><span class="_v_x9">x</span></span></div>`; }
+  }
+}
+
+function _0x66bb() {
+  if (_0xai) cancelAnimationFrame(_0xai); _0xap = 0;
+  function anim() { _0xap += 0.02; if (_0xap > 1) _0xap = 1; _0x99ff(); if (_0xap < 1) { _0xai = requestAnimationFrame(anim); } }
+  anim();
+}
+function _0x22ee() { return { cX: _0x1c2d === "elem" ? _0x5f31.width * 0.12 : _0x5f31.width / 2, cY: _0x1c2d === "elem" ? _0x5f31.height * 0.88 : _0x5f31.height / 2 }; }
+
+function _0x31ff() {
+  const { cX, cY } = _0x22ee(); _0x4c22.strokeStyle = "#f1f2f6"; _0x4c22.lineWidth = 1;
+  for (let x = cX % _0xsc; x < _0x5f31.width; x += _0xsc) { _0x4c22.beginPath(); _0x4c22.moveTo(x, 0); _0x4c22.lineTo(x, _0x5f31.height); _0x4c22.stroke(); }
+  for (let y = cY % _0xsc; y < _0x5f31.height; y += _0xsc) { _0x4c22.beginPath(); _0x4c22.moveTo(0, y); _0x4c22.lineTo(_0x5f31.width, y); _0x4c22.stroke(); }
+  _0x4c22.strokeStyle = "#718093"; _0x4c22.lineWidth = 2;
+  _0x4c22.beginPath(); _0x4c22.moveTo(cX, 0); _0x4c22.lineTo(cX, _0x5f31.height); _0x4c22.stroke();
+  _0x4c22.beginPath(); _0x4c22.moveTo(0, cY); _0x4c22.lineTo(_0x5f31.width, cY); _0x4c22.stroke();
+  _0x4c22.fillStyle = "#a5b1c2"; _0x4c22.font = "10px sans-serif"; _0x4c22.textAlign = "center"; _0x4c22.textBaseline = "top";
+  for (let x = 1; cX + x * _0xsc < _0x5f31.width; x++) { _0x4c22.fillText(x, cX + x * _0xsc, cY + 5); }
+  if (_0x1c2d === "junior") { for (let x = -1; cX + x * _0xsc > 0; x--) { _0x4c22.fillText(x, cX + x * _0xsc, cY + 5); } }
+  _0x4c22.textAlign = "right"; _0x4c22.textBaseline = "middle";
+  for (let y = 1; cY - y * _0xsc > 0; y++) { _0x4c22.fillText(y, cX - 5, cY - y * _0xsc); }
+  if (_0x1c2d === "junior") { for (let y = -1; cY - y * _0xsc < _0x5f31.height; y--) { _0x4c22.fillText(y, cX - 5, cY - y * _0xsc); } }
+  _0x4c22.fillStyle = "#718093"; _0x4c22.font = "italic 14px sans-serif"; _0x4c22.fillText("x", _0x5f31.width - 15, cY + 18); _0x4c22.fillText("y", cX + 15, 18); _0x4c22.fillText("O", cX - 10, cY + 12);
+}
+
+function _0x99ff() {
+  _0x4c22.clearRect(0, 0, _0x5f31.width, _0x5f31.height); _0x31ff();
+  const { cX, cY } = _0x22ee();
+  _0xup.forEach((p, idx) => {
+    let sX = cX + p.x * _0xsc, sY = cY - p.y * _0xsc;
+    _0x4c22.fillStyle = "rgba(74, 144, 226, 0.3)"; _0x4c22.beginPath(); _0x4c22.arc(sX, sY, 16, 0, Math.PI * 2); _0x4c22.fill();
+    _0x4c22.fillStyle = "#4a90e2"; _0x4c22.beginPath(); _0x4c22.arc(sX, sY, 8, 0, Math.PI * 2); _0x4c22.fill();
+    _0x4c22.fillStyle = "white"; _0x4c22.font = "bold 11px sans-serif"; _0x4c22.textAlign = "center"; _0x4c22.textBaseline = "middle"; _0x4c22.fillText(idx + 1, sX, sY);
+  });
+  _0x4c22.textAlign = "left"; _0x4c22.textBaseline = "alphabetic";
+  if (_0xqe) {
+    let miX = _0x1c2d === "elem" ? 1 : -Math.ceil(cX / _0xsc), maX = Math.ceil((_0x5f31.width - cX) / _0xsc);
+    _0x4c22.fillStyle = `rgba(255, 107, 107, ${1 - _0xap})`;
+    for (let x = Math.ceil(miX); x <= Math.floor(maX); x++) {
+      if (x === 0 && _0x3a4f === "inverse") continue;
+      let y = _0x3a4f === "proportion" ? _0xaa * x : _0xaa / x;
+      if (_0x1c2d === "elem" && y < 0) continue;
+      let sX = cX + x * _0xsc, sY = cY - y * _0xsc;
+      if (sX >= 0 && sX <= _0x5f31.width && sY >= 0 && sY <= _0x5f31.height) { _0x4c22.beginPath(); _0x4c22.arc(sX, sY, 5, 0, Math.PI * 2); _0x4c22.fill(); }
+    }
+    if (_0xap > 0) {
+      _0x4c22.strokeStyle = `rgba(74, 144, 226, ${_0xap})`; _0x4c22.lineWidth = 4; _0x4c22.lineCap = "round"; _0x4c22.lineJoin = "round";
+      if (_0x3a4f === "proportion") {
+        _0x4c22.beginPath(); let fst = true;
+        if (_0x1c2d === "elem") {
+          let mPx = (_0x5f31.width - cX) * _0xap;
+          for (let px = 0; px <= mPx; px += 2) {
+            let x = px / _0xsc, y = _0xaa * x, sx = cX + px, sy = cY - y * _0xsc;
+            if (sy < 0) break;
+            if (fst) { _0x4c22.moveTo(sx, sy); fst = false; } else { _0x4c22.lineTo(sx, sy); }
+          }
+        } else {
+          let mRch = (_0x5f31.width / 2) * _0xap;
+          for (let px = -mRch; px <= mRch; px += 2) {
+            let x = px / _0xsc, y = _0xaa * x, sx = cX + px, sy = cY - y * _0xsc;
+            if (fst) { _0x4c22.moveTo(sx, sy); fst = false; } else { _0x4c22.lineTo(sx, sy); }
+          }
+        }
+        _0x4c22.stroke();
+      } else {
+        const mPx = 2;
+        if (_0x1c2d === "elem") {
+          _0x4c22.beginPath(); let fstR = true; let rLmt = mPx + (_0x5f31.width - cX - mPx) * _0xap;
+          for (let px = mPx; px <= rLmt; px += 2) {
+            let x = px / _0xsc, y = _0xaa / x, sx = cX + px, sy = cY - y * _0xsc;
+            if (sx > _0x5f31.width || sy < 0 || sy > _0x5f31.height) continue;
+            if (fstR) { _0x4c22.moveTo(sx, sy); fstR = false; } else { _0x4c22.lineTo(sx, sy); }
+          }
+          _0x4c22.stroke();
+        } else {
+          let rLmt = mPx + (_0x5f31.width / 2 - mPx) * _0xap; _0x4c22.beginPath(); let fstL = true;
+          for (let px = -rLmt; px <= -mPx; px += 2) {
+            let x = px / _0xsc, y = _0xaa / x, sx = cX + px, sy = cY - y * _0xsc;
+            if (sx < 0 || sy < 0 || sy > _0x5f31.height) continue;
+            if (fstL) { _0x4c22.moveTo(sx, sy); fstL = false; } else { _0x4c22.lineTo(sx, sy); }
+          }
+          _0x4c22.stroke(); _0x4c22.beginPath(); let fstR = true;
+          for (let px = mPx; px <= rLmt; px += 2) {
+            let x = px / _0xsc, y = _0xaa / x, sx = cX + px, sy = cY - y * _0xsc;
+            if (sx > _0x5f31.width || sy < 0 || sy > _0x5f31.height) continue;
+            if (fstR) { _0x4c22.moveTo(sx, sy); fstR = false; } else { _0x4c22.lineTo(sx, sy); }
+          }
+          _0x4c22.stroke();
+        }
+      }
+    }
+  }
+}
+</script>
+</body>
+</html>
