@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>比例・反比例 - 視覚化モード</title>
+
+<style>
+  :root {
+    --primary: #4a90e2;
+    --accent: #ff6b6b;
+    --bg: #f5f7fa;
+    --panel-bg: #ffffff;
+    --grade-color: #2ecc71;
+  }
+
+  * {
+    box-sizing: border-box;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  body {
+    font-family: 'Hiragino Kaku Gothic ProN', 'Helvetica Neue', Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: #333;
+    overflow: hidden;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  header {
+    background: var(--panel-bg);
+    padding: 10px 20px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    z-index: 10;
+  }
+
+  h1 {
+    margin: 0;
+    font-size: 20px;
+    color: #2c3e50;
+  }
+
+  .main-container {
+    flex: 1;
+    display: flex;
+    position: relative;
+    height: calc(100vh - 50px);
+  }
+
+  .canvas-area {
+    flex: 1;
+    position: relative;
+    background: #fff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+  }
+
+  canvas {
+    background: #ffffff;
+    box-shadow: 0 0 20px rgba(0,0,0,0.05);
+    touch-action: none;
+    max-width: 100%;
+    max-height: 100%;
+  }
+
+  .sidebar {
+    width: 320px;
+    background: var(--panel-bg);
+    border-left: 1px solid #e1e8ed;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    box-shadow: -2px 0 10px rgba(0,0,0,0.02);
+    z-index: 5;
+    overflow-y: auto;
+  }
+
+  .slider-container {
+    background: #fdfdfd;
+    padding: 10px;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+  }
+  .slider-label {
+    display: flex;
+    justify-content: space-between;
+    font-weight: bold;
+    margin-bottom: 8px;
+  }
+  input[type=range] {
+    width: 100%;
+    height: 12px;
+    background: #ddd;
+    border-radius: 6px;
+    outline: none;
+    cursor: pointer;
+  }
+
+  .tabs-container {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .tabs-title {
+    font-size: 12px;
+    font-weight: bold;
+    color: #7f8c8d;
+  }
+  .mode-tabs {
+    display: flex;
+    background: #eee;
+    padding: 4px;
+    border-radius: 30px;
+  }
+  .tab-btn {
+    flex: 1;
+    border: none;
+    background: transparent;
+    padding: 8px;
+    font-size: 13px;
+    font-weight: bold;
+    color: #666;
+    cursor: pointer;
+    border-radius: 25px;
+    transition: all 0.2s;
+  }
+  .tab-btn.active-grade {
+    background: var(--grade-color);
+    color: white;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  }
+  .tab-btn.active-func {
+    background: var(--primary);
+    color: white;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  }
+
+  .formula-box {
+    background: #f8fafc;
+    border-radius: 12px;
+    padding: 12px;
+    text-align: center;
+    border: 2px dashed #cbd5e1;
+  }
+  .formula-sub {
+    font-size: 12px;
+    color: #e67e22;
+    margin-top: 5px;
+    font-weight: bold;
+  }
+  .formula-display {
+    font-size: 26px;
+    font-weight: bold;
+    min-height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #2c3e50;
+  }
+  .fraction {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    vertical-align: middle;
+    padding: 0 5px;
+  }
+  .numerator {
+    border-bottom: 3px solid #2c3e50;
+    padding: 0 4px;
+    color: var(--accent);
+    transition: color 0.2s;
+  }
+  .denominator {
+    padding: 0 4px;
+    color: #34495e;
+  }
+
+  .guide-text {
+    font-size: 13px;
+    color: #7f8c8d;
+    background: #eef5fc;
+    padding: 12px;
+    border-radius: 8px;
+    border-left: 4px solid var(--primary);
+    line-height: 1.5;
+  }
+
+  .char-box {
+    margin-top: auto;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    padding: 12px;
+    border-radius: 12px;
+  }
+  .char-avatar {
+    font-size: 40px;
+    animation: float 3s ease-in-out infinite;
+  }
+  .char-bubble {
+    background: white;
+    border: 1px solid #e2e8f0;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    flex: 1;
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-5px); }
+  }
+
+  @media (max-width: 768px) {
+    body { overflow: auto; }
+    .main-container { flex-direction: column; height: auto; }
+    .sidebar { width: 100%; border-left: none; border-top: 1px solid #e1e8ed; height: auto; }
+    .canvas-area { height: 50vh; min-height: 350px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>比例・反比例あそびラボ 🧪【視覚化モード】</h1>
+</header>
+
+<div class="main-container">
+  
+  <div class="canvas-area">
+    <canvas id="graph" width="600" height="600"></canvas>
+  </div>
+
+  <div class="sidebar">
+    
+    <div class="slider-container">
+      <div class="slider-label">
+        <span id="label-a">きまった数 (a)</span>
+        <span id="aValue" style="color:var(--accent); font-size: 20px; font-weight: bold;">6.0</span>
+      </div>
+      <input type="range" min="0.1" max="24" step="0.1" value="6" id="slider">
+    </div>
+
+    <div class="tabs-container">
+      <div class="tabs-title">対象学年</div>
+      <div class="mode-tabs">
+        <button id="grade-elem" class="tab-btn active-grade" onclick="setGradeMode('elem')">小学生</button>
+        <button id="grade-junior" class="tab-btn" onclick="setGradeMode('junior')">中学生</button>
+      </div>
+    </div>
+
+    <div class="tabs-container">
+      <div class="tabs-title">グラフの種類</div>
+      <div class="mode-tabs">
+        <button id="btn-prop" class="tab-btn active-func" onclick="setGraphMode('proportion')">比例</button>
+        <button id="btn-inv" class="tab-btn" onclick="setGraphMode('inverse')">反比例</button>
+      </div>
+    </div>
+
+    <div class="formula-box">
+      <div style="font-size:12px; color:#7f8c8d; margin-bottom:5px;">現在の数式</div>
+      <div class="formula-display" id="formula"></div>
+      <div class="formula-sub" id="formula-sub"></div>
+    </div>
+
+    <div class="guide-text" id="guideText">
+      スライダーが「0.1刻み」で細かく動かせます！<br>
+      反比例の0〜3あたりの急激なカーブの変化も、これならバッチリゆっくり確認できます。
+    </div>
+
+    <div class="char-box">
+      <div class="char-avatar" id="charAvatar">🧪</div>
+      <div class="char-bubble" id="charBubble">0.1ずつの変化が見られるよ！1より小さいときのグラフの形に注目してみてね！</div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// グローバルな設定と環境文字列の定義
+const _0x4d1a = ["graph", "getContext", "slider", "elem", "proportion", "oninput", "value", "toFixed", "aValue", "getElementById", "active-grade", "classList", "toggle", "active-func", "きまった数 (a)", "label-a", "textContent", "小学生モード！0.1刻みで、原点近くのダイナミックな変化がなめらかに見えるよ！", "charBubble", "比例定数 (a)", "中学生モード！マイナスからプラスへの滑らかな変化を楽しんでね。", "formula", "formula-sub", "y = <span class=\"numerator\" style=\"border:none;\">", "</span>x", "（ x が 2倍, 3倍になると、y も 2倍, 3倍になるよ ）", "inverse", "y = \n      <div class=\"fraction\">\n        <span class=\"numerator\">", "</span>\n        <span class=\"denominator\">x</span>\n      </div>", "小学校の形： x × y = ", "width", "parentElement", "clientWidth", "clientHeight", "height", "clearRect", "#f1f2f6", "strokeStyle", "lineWidth", "beginPath", "moveTo", "lineTo", "stroke", "#718093", "fillStyle", "italic 14px sans-serif", "font", "fillText", "x", "y", "O", "arc", "fill", "round", "lineCap", "lineJoin"];
+const _0x5b2c = function(i) { return _0x4d1a[i]; };
+
+const _0x1a2b = document[_0x5b2c(9)](_0x5b2c(0));
+const _0x3c4d = _0x1a2b[_0x5b2c(1)]("2d");
+const _0x5e6f = document[_0x5b2c(9)](_0x5b2c(2));
+
+let _0x7a8b = _0x5b2c(3); 
+let _0x9c0d = _0x5b2c(4); 
+let _0x1f2e = 6.0; 
+
+let _0x3a4b = 0; 
+let _0x5c6d = null;
+
+const _0x7e8f = 22; 
+
+window.onload = () => {
+  _0x2b3c();
+  _0x4d5e();
+  _0x8f9a();
+};
+
+function _0x2b3c() {
+  const p = _0x1a2b[_0x5b2c(31)];
+  const s = Math.min(p[_0x5b2c(32)], p[_0x5b2c(33)], 600);
+  _0x1a2b[_0x5b2c(30)] = s;
+  _0x1a2b[_0x5b2c(34)] = s;
+  _0x6a7b();
+}
+window.addEventListener('resize', _0x2b3c);
+
+function _0x4d5e() {
+  _0x5e6f[_0x5b2c(5)] = () => {
+    _0x1f2e = Number(_0x5e6f[_0x5b2c(6)]);
+    document[_0x5b2c(9)](_0x5b2c(8))[_0x5b2c(16)] = _0x1f2e[_0x5b2c(7)](1);
+    _0x9e0f();
+    _0x1c2d();
+  };
+}
+
+function setGradeMode(g) {
+  _0x7a8b = g;
+  document[_0x5b2c(9)]("grade-elem")[_0x5b2c(11)][_0x5b2c(12)](_0x5b2c(10), g === _0x5b2c(3));
+  document[_0x5b2c(9)]("grade-junior")[_0x5b2c(11)][_0x5b2c(12)](_0x5b2c(10), g === "junior");
+  
+  if (_0x7a8b === _0x5b2c(3)) {
+    _0x5e6f.min = "0.1";
+    _0x5e6f.max = "24";
+    _0x5e6f.step = "0.1";
+    if (_0x1f2e <= 0) _0x1f2e = 6.0; 
+  } else {
+    _0x5e6f.min = "-20";
+    _0x5e6f.max = "20";
+    _0x5e6f.step = "0.1";
+    if (Math.abs(_0x1f2e) < 0.1) _0x1f2e = 6.0;
+  }
+  _0x5e6f[_0x5b2c(6)] = _0x1f2e;
+  document[_0x5b2c(9)](_0x5b2c(8))[_0x5b2c(16)] = _0x1f2e[_0x5b2c(7)](1);
+
+  _0x8f9a();
+}
+
+function setGraphMode(m) {
+  _0x9c0d = m;
+  document[_0x5b2c(9)]("btn-prop")[_0x5b2c(11)][_0x5b2c(12)](_0x5b2c(13), m === _0x5b2c(4));
+  document[_0x5b2c(9)]("btn-inv")[_0x5b2c(11)][_0x5b2c(12)](_0x5b2c(13), m === _0x5b2c(26));
+  _0x9e0f();
+  _0x1c2d();
+}
+
+function _0x8f9a() {
+  if (_0x7a8b === _0x5b2c(3)) {
+    document[_0x5b2c(9)](_0x5b2c(15))[_0x5b2c(16)] = _0x5b2c(14);
+    document[_0x5b2c(9)](_0x5b2c(18))[_0x5b2c(16)] = _0x5b2c(17);
+  } else {
+    document[_0x5b2c(9)](_0x5b2c(15))[_0x5b2c(16)] = _0x5b2c(19);
+    document[_0x5b2c(9)](_0x5b2c(18))[_0x5b2c(16)] = _0x5b2c(20);
+  }
+  _0x9e0f();
+  _0x1c2d();
+}
+
+function _0x9e0f() {
+  const f = document[_0x5b2c(9)](_0x5b2c(21));
+  const s = document[_0x5b2c(9)](_0x5b2c(22));
+  const dA = _0x1f2e[_0x5b2c(7)](1);
+
+  if (_0x9c0d === _0x5b2c(4)) {
+    f.innerHTML = _0x5b2c(23) + dA + _0x5b2c(24);
+    s.innerHTML = _0x7a8b === _0x5b2c(3) ? _0x5b2c(25) : "";
+  } else {
+    f.innerHTML = _0x5b2c(27) + dA + _0x5b2c(28);
+    s.innerHTML = _0x7a8b === _0x5b2c(3) ? _0x5b2c(29) + dA : "";
+  }
+}
+
+function _0x1c2d() {
+  if (_0x5c6d) cancelAnimationFrame(_0x5c6d);
+  _0x3a4b = 0;
+
+  function a() {
+    _0x3a4b += 0.01; 
+    if (_0x3a4b > 1) _0x3a4b = 1;
+    _0x6a7b();
+    if (_0x3a4b < 1) {
+      _0x5c6d = requestAnimationFrame(a);
+    }
+  }
+  a();
+}
+
+function _0x0f1e() {
+  const cX = _0x7a8b === _0x5b2c(3) ? _0x1a2b[_0x5b2c(30)] * 0.08 : _0x1a2b[_0x5b2c(30)] / 2;
+  const cY = _0x7a8b === _0x5b2c(3) ? _0x1a2b[_0x5b2c(34)] * 0.92 : _0x1a2b[_0x5b2c(34)] / 2;
+  return { cX, cY };
+}
+
+function _0x4a5b() {
+  const { cX, cY } = _0x0f1e();
+  _0x3c4d[_0x5b2c(37)] = _0x5b2c(36);
+  _0x3c4d[_0x5b2c(38)] = 1;
+
+  for (let x = cX % _0x7e8f; x < _0x1a2b[_0x5b2c(30)]; x += _0x7e8f) {
+    _0x3c4d[_0x5b2c(39)](); _0x3c4d[_0x5b2c(40)](x, 0); _0x3c4d[_0x5b2c(41)](x, _0x1a2b[_0x5b2c(34)]); _0x3c4d[_0x5b2c(42)]();
+  }
+  for (let y = cY % _0x7e8f; y < _0x1a2b[_0x5b2c(34)]; y += _0x7e8f) {
+    _0x3c4d[_0x5b2c(39)](); _0x3c4d[_0x5b2c(40)](0, y); _0x3c4d[_0x5b2c(41)](_0x1a2b[_0x5b2c(30)], y); _0x3c4d[_0x5b2c(42)]();
+  }
+
+  _0x3c4d[_0x5b2c(37)] = _0x5b2c(43);
+  _0x3c4d[_0x5b2c(38)] = 2;
+  _0x3c4d[_0x5b2c(39)](); _0x3c4d[_0x5b2c(40)](cX, 0); _0x3c4d[_0x5b2c(41)](cX, _0x1a2b[_0x5b2c(34)]); _0x3c4d[_0x5b2c(42)]();
+  _0x3c4d[_0x5b2c(39)](); _0x3c4d[_0x5b2c(40)](0, cY); _0x3c4d[_0x5b2c(41)](_0x1a2b[_0x5b2c(30)], cY); _0x3c4d[_0x5b2c(42)]();
+
+  _0x3c4d[_0x5b2c(44)] = _0x5b2c(43);
+  _0x3c4d[_0x5b2c(46)] = _0x5b2c(45);
+  _0x3c4d[_0x5b2c(47)](_0x5b2c(48), _0x1a2b[_0x5b2c(30)] - 15, cY + 18);
+  _0x3c4d[_0x5b2c(47)](_0x5b2c(49), cX + 8, 18);
+  _0x3c4d[_0x5b2c(47)](_0x5b2c(50), cX - 15, cY + 18);
+}
+
+function _0x6a7b() {
+  _0x3c4d[_0x5b2c(35)](0, 0, _0x1a2b[_0x5b2c(30)], _0x1a2b[_0x5b2c(34)]);
+  _0x4a5b();
+
+  const { cX, cY } = _0x0f1e();
+  let miX = _0x7a8b === _0x5b2c(3) ? 1 : -Math.ceil(cX / _0x7e8f);
+  let maX = Math.ceil((_0x1a2b[_0x5b2c(30)] - cX) / _0x7e8f);
+
+  _0x3c4d[_0x5b2c(44)] = `rgba(255, 107, 107, ${1 - _0x3a4b})`; 
+  
+  for (let x = Math.ceil(miX); x <= Math.floor(maX); x++) {
+    if (x === 0 && _0x9c0d === _0x5b2c(26)) continue;
+    
+    let y = _0x9c0d === _0x5b2c(4) ? _0x1f2e * x : _0x1f2e / x;
+    if (_0x7a8b === _0x5b2c(3) && y < 0) continue;
+
+    let sX = cX + x * _0x7e8f;
+    let sY = cY - y * _0x7e8f;
+
+    if (sX >= 0 && sX <= _0x1a2b[_0x5b2c(30)] && sY >= 0 && sY <= _0x1a2b[_0x5b2c(34)]) {
+      _0x3c4d[_0x5b2c(39)](); 
+      _0x3c4d[_0x5b2c(51)](sX, sY, 4, 0, Math.PI * 2); 
+      _0x3c4d[_0x5b2c(52)]();
+    }
+  }
+
+  if (_0x3a4b > 0) {
+    _0x3c4d[_0x5b2c(37)] = `rgba(74, 144, 226, ${_0x3a4b})`;
+    _0x3c4d[_0x5b2c(38)] = 4;
+    _0x3c4d[_0x5b2c(54)] = _0x5b2c(53);
+    _0x3c4d[_0x5b2c(55)] = _0x5b2c(53);
+
+    if (_0x9c0d === _0x5b2c(4)) {
+      _0x3c4d[_0x5b2c(39)]();
+      let f = true;
+
+      if (_0x7a8b === _0x5b2c(3)) {
+        let mP = (_0x1a2b[_0x5b2c(30)] - cX) * _0x3a4b;
+        for (let px = 0; px <= mP; px += 2) {
+          let x = px / _0x7e8f;
+          let y = _0x1f2e * x;
+          let sx = cX + px;
+          let sy = cY - y * _0x7e8f;
+          if (sy < 0) break;
+          if (f) { _0x3c4d[_0x5b2c(40)](sx, sy); f = false; }
+          else { _0x3c4d[_0x5b2c(41)](sx, sy); }
+        }
+      } else {
+        let mR = (_0x1a2b[_0x5b2c(30)] / 2) * _0x3a4b;
+        for (let px = -mR; px <= mR; px += 2) {
+          let x = px / _0x7e8f;
+          let y = _0x1f2e * x;
+          let sx = cX + px;
+          let sy = cY - y * _0x7e8f;
+          if (f) { _0x3c4d[_0x5b2c(40)](sx, sy); f = false; }
+          else { _0x3c4d[_0x5b2c(41)](sx, sy); }
+        }
+      }
+      _0x3c4d[_0x5b2c(42)]();
+
+    } else {
+      const nP = 2; 
+
+      if (_0x7a8b === _0x5b2c(3)) {
+        _0x3c4d[_0x5b2c(39)]();
+        let fR = true;
+        let rL = nP + (_0x1a2b[_0x5b2c(30)] - cX - nP) * _0x3a4b;
+
+        for (let px = nP; px <= rL; px += 2) {
+          let x = px / _0x7e8f;
+          let y = _0x1f2e / x;
+          let sx = cX + px;
+          let sy = cY - y * _0x7e8f;
+          if (sx > _0x1a2b[_0x5b2c(30)] || sy < 0 || sy > _0x1a2b[_0x5b2c(34)]) continue;
+
+          if (fR) { _0x3c4d[_0x5b2c(40)](sx, sy); fR = false; }
+          else { _0x3c4d[_0x5b2c(41)](sx, sy); }
+        }
+        _0x3c4d[_0x5b2c(42)]();
+
+      } else {
+        let rL = nP + (_0x1a2b[_0x5b2c(30)] / 2 - nP) * _0x3a4b;
+
+        _0x3c4d[_0x5b2c(39)]();
+        let fL = true;
+        for (let px = -rL; px <= -nP; px += 2) {
+          let x = px / _0x7e8f;
+          let y = _0x1f2e / x;
+          let sx = cX + px;
+          let sy = cY - y * _0x7e8f;
+          if (sx < 0 || sy < 0 || sy > _0x1a2b[_0x5b2c(34)]) continue;
+
+          if (fL) { _0x3c4d[_0x5b2c(40)](sx, sy); fL = false; }
+          else { _0x3c4d[_0x5b2c(41)](sx, sy); }
+        }
+        _0x3c4d[_0x5b2c(42)]();
+
+        _0x3c4d[_0x5b2c(39)]();
+        let fR = true;
+        for (let px = nP; px <= rL; px += 2) {
+          let x = px / _0x7e8f;
+          let y = _0x1f2e / x;
+          let sx = cX + px;
+          let sy = cY - y * _0x7e8f;
+          if (sx > _0x1a2b[_0x5b2c(30)] || sy < 0 || sy > _0x1a2b[_0x5b2c(34)]) continue;
+
+          if (fR) { _0x3c4d[_0x5b2c(40)](sx, sy); fR = false; }
+          else { _0x3c4d[_0x5b2c(41)](sx, sy); }
+        }
+        _0x3c4d[_0x5b2c(42)]();
+      }
+    }
+  }
+}
+</script>
+</body>
+</html>
