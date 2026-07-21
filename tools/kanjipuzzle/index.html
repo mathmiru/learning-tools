@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>かん字がったいパズル</title>
+    <style>
+        body {
+            font-family: 'Hiragino Maru Gothic ProN', 'Rounded M+ 1c', 'Meiryo', sans-serif;
+            background-color: #f0f8ff;
+            text-align: center;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            -webkit-tap-highlight-color: transparent;
+        }
+        h1 {
+            color: #ff6b6b;
+            text-shadow: 2px 2px 0px #fff;
+        }
+        p { font-size: 1.2em; font-weight: bold; }
+        #title-screen, #game-screen { display: none; }
+        #title-screen.active, #game-screen.active {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        
+        /* タイトル画面ボタン */
+        .grade-buttons {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            max-width: 400px;
+            margin: 30px auto;
+        }
+        .grade-btn {
+            font-size: 24px;
+            padding: 15px;
+            background-color: #4ecdc4;
+            color: white;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            box-shadow: 0 4px 0px #3dbbb3;
+            transition: transform 0.1s;
+        }
+        .grade-btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 0px 0px #3dbbb3;
+        }
+
+        /* パズルエリア */
+        .puzzle-area {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        .drop-zone {
+            width: 90px;
+            height: 90px;
+            background-color: #fff;
+            border: 4px dashed #4ecdc4;
+            border-radius: 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            font-size: 40px;
+            font-weight: bold;
+        }
+        .symbol { font-size: 35px; font-weight: bold; color: #555; }
+        .result-box {
+            width: 100px;
+            height: 100px;
+            background-color: #ffe66d;
+            border: 4px solid #ffcc00;
+            border-radius: 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 50px;
+            font-weight: bold;
+            color: #ff4757;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: color 0.3s;
+        }
+
+        /* パーツ置き場 */
+        .parts-container {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin: 20px auto;
+            max-width: 500px;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            min-height: 80px;
+        }
+        .part {
+            width: 60px;
+            height: 60px;
+            background-color: #ff9ff3;
+            color: white;
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 30px;
+            font-weight: bold;
+            cursor: pointer;
+            user-select: none;
+            box-shadow: 0 4px 0px #f368e0;
+        }
+        .part:hover { transform: scale(1.05); }
+        .part:active { transform: translateY(4px); box-shadow: 0 0px 0px #f368e0; }
+
+        /* ボタン類 */
+        .action-btn {
+            font-size: 18px;
+            padding: 10px 20px;
+            background-color: #1dd1a1;
+            color: white;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            box-shadow: 0 4px 0px #10ac84;
+            font-weight: bold;
+            margin: 5px;
+        }
+        .action-btn:active { transform: translateY(4px); box-shadow: 0 0px 0px #10ac84; }
+        .hint-btn { background-color: #3498db; box-shadow: 0 4px 0px #2980b9; }
+        .reset-btn { background-color: #ff9f43; box-shadow: 0 4px 0px #ee5253; }
+        .back-btn { background-color: #a4b0be; box-shadow: 0 4px 0px #747d8c; }
+        .next-btn { 
+            background-color: #ff6b6b; box-shadow: 0 4px 0px #ee5253; 
+            display: none; font-size: 22px; padding: 15px 30px; 
+            animation: bounce 1s infinite;
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        #message {
+            font-size: 22px;
+            font-weight: bold;
+            color: #ff4757;
+            height: 30px;
+            margin-top: 15px;
+        }
+
+        /* コレクションエリア */
+        .collection-area {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .collection-area h3 {
+            margin-top: 0;
+            color: #ff9f43;
+        }
+        .collected-kanji {
+            font-size: 28px;
+            font-weight: bold;
+            color: #333;
+            background-color: #ffe66d;
+            border: 2px solid #ffcc00;
+            border-radius: 8px;
+            padding: 5px 10px;
+            margin: 5px;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="title-screen" class="active">
+        <h1>🧩かん字がったいパズル🧩</h1>
+        <p>あそぶ学年をえらんでね！</p>
+        <div class="grade-buttons">
+            <button class="grade-btn" onclick="startGame(1)">1年生</button>
+            <button class="grade-btn" onclick="startGame(2)">2年生</button>
+            <button class="grade-btn" onclick="startGame(3)">3年生</button>
+            <button class="grade-btn" onclick="startGame(4)">4年生</button>
+            <button class="grade-btn" onclick="startGame(5)">5年生</button>
+            <button class="grade-btn" onclick="startGame(6)">6年生</button>
+        </div>
+    </div>
+
+    <div id="game-screen">
+        <h2 id="grade-title" style="margin: 0; color: #4ecdc4;"></h2>
+        
+        <p>パーツをタッチして、四角の中に入れてみよう！</p>
+        
+        <div class="puzzle-area">
+            <div class="drop-zone" id="zone-left"></div>
+            <div class="symbol">＋</div>
+            <div class="drop-zone" id="zone-right"></div>
+            <div class="symbol">＝</div>
+            <div class="result-box" id="result-kanji">？</div>
+        </div>
+
+        <div>
+            <button class="action-btn" onclick="checkAnswer()">がったい！</button>
+            <button class="action-btn hint-btn" onclick="showHint()">💡ヒント</button>
+            <button class="action-btn reset-btn" onclick="resetPuzzle()">やりなおす</button>
+        </div>
+        
+        <div id="message"></div>
+        <button id="next-btn" class="action-btn next-btn" onclick="nextProblem()">✨つぎの問題へ✨</button>
+        
+        <div class="parts-container" id="parts-container"></div>
+
+        <!-- コレクション表示エリア -->
+        <div class="collection-area">
+            <h3>✨あつめた漢字✨</h3>
+            <div id="collected-list">
+                <!-- ここに作った漢字が追加されます -->
+            </div>
+        </div>
+
+        <div style="margin-top: 30px;">
+            <button class="action-btn back-btn" onclick="showTitle()">もどる</button>
+        </div>
+    </div>
+
+    <script>
+        // 【修正版：学年別 漢字データ】
+        // 腹や複などの間違いを修正しました！
+        const kanjiData = {
+            1: { "亻木":"休", "木木":"林", "木交":"校", "田力":"男", "田丁":"町", "日十":"早", "艹早":"草", "木寸":"村", "夕口":"名", "日月":"明", "立日":"音", "宀子":"字", "穴工":"空", "宀八":"穴", "艹化":"花", "ナ口":"右", "ナ工":"左", "目儿":"見", "木林":"森", "大丶":"犬" },
+            2: { "亻可":"何", "禾斗":"科", "氵毎":"海", "糸会":"絵", "夕卜":"外", "言己":"記", "孝攵":"教", "言十":"計", "言吾":"語", "言売":"読", "言舌":"話", "口鳥":"鳴", "氵也":"池", "土也":"地", "矢口":"知", "艹余":"茶", "女市":"姉", "田心":"思", "糸氏":"紙", "日寺":"時", "宀至":"室", "禾火":"秋", "辶周":"週", "土昜":"場", "日生":"星", "日青":"晴", "糸泉":"線", "糸且":"組", "亻本":"体", "广占":"店", "占灬":"点", "竹合":"答", "豆頁":"頭", "門耳":"聞", "女未":"妹", "里予":"野", "王里":"理", "亻乍":"作", "辶斤":"近", "山石":"岩", "七刀":"切" },
+            3: { "食欠":"飲", "辶軍":"運", "氵永":"泳", "馬尺":"駅", "其月":"期", "木喬":"橋", "言寺":"詩", "金失":"鉄", "氵青":"清", "氵羊":"洋", "亻匕":"化", "艹何":"荷", "田介":"界", "宀各":"客", "穴九":"究", "糸及":"級", "宀呂":"宮", "王求":"球", "金艮":"銀", "艹古":"苦", "尹口":"君", "亻系":"係", "氵夬":"決", "广車":"庫", "氵胡":"湖", "氵巷":"港", "木艮":"根", "亻士":"仕", "歹匕":"死", "亻吏":"使", "女台":"始", "扌旨":"指", "冫欠":"次", "扌寺":"持", "宀寸":"守", "耳又":"取", "氵酉":"酒", "扌合":"拾", "糸冬":"終", "亻主":"住", "日者":"暑", "且力":"助", "日召":"昭", "氵肖":"消", "立早":"章", "木直":"植", "礻申":"神", "辶束":"速", "扌丁":"打", "文寸":"対", "彳寺":"待", "亻弋":"代", "矢豆":"短", "言炎":"談", "氵主":"注", "木主":"柱", "巾長":"帳", "言周":"調", "宀正":"定", "竹由":"笛", "車云":"転", "者阝":"都", "扌殳":"投", "氵昜":"湯", "竹寺":"等", "重力":"動", "立里":"童", "氵皮":"波", "酉己":"配", "亻咅":"倍", "竹相":"箱", "火田":"畑", "土反":"坂", "木反":"板", "竹聿":"筆", "禾少":"秒", "疒丙":"病", "⺈貝":"負", "礻畐":"福", "牛勿":"物", "辶反":"返", "免力":"勉", "方攵":"放", "口未":"味", "門口":"問", "艹楽":"薬", "氵由":"油", "ナ月":"有", "阝昜":"陽", "氵㐬":"流", "歹刂":"列", "糸東":"練", "足各":"路", "禾口":"和" },
+            4: { "食反":"飯", "糸吉":"結", "亻建":"健", "亻昔":"借", "口昌":"唱", "糸売":"続", "亻云":"伝", "木不":"杯", "木毎":"梅", "木幾":"機", "言義":"議", "求攵":"救", "氵立":"泣", "言川":"訓", "冖車":"軍", "君阝":"郡",  "刑土":"型", "日京":"景", "氵魚":"漁", "糸合":"給", "女子":"好", "牛口":"告", "艹采":"菜", "日乍":"昨", "宀祭":"察", "工力":"功", "囗古":"固", "禾重":"種", "言司":"詞", "氵台":"治", "舌辛":"辞", "夫見":"規", "木公":"松", "昭灬":"照", "尚貝":"賞", "亻言":"信", "少目":"省", "青争":"静", "禾責":"積", "扌斤":"折", "竹即":"節", "単戈":"戦", "辶巽":"選", "亻中":"仲", "罒直":"置", "貝宁":"貯", "亻氐":"低", "广氐":"底", "亻亭":"停", "白勺":"的", "貝弗":"費", "今心":"念", "貝攵":"敗", "彳走":"徒", "奴力":"努", "火丁":"灯", "尚土":"堂", "亻動":"働", "牛寺":"特", "木票":"標", "亻寸":"付", "米分":"粉", "辶刀":"辺", "亻更":"便", "氵去":"法", "牛攵":"牧", "广付":"府", "畐刂":"副", "覀女":"要", "糸勺":"約", "氵谷":"浴", "禾刂":"利", "阝坴":"陸", "米斗":"料", "旦里":"量", "車侖":"輪", "冫令":"冷", "亻列":"例", "辶車":"連" },
+            5: { "木支":"枝", "食司":"飼", "亻以":"似", "言殳":"設", "糸色":"絶", "金同":"銅", "石皮":"破", "半刂":"判", "月巴":"肥", "禾多":"移", "厂土":"圧", "囗大":"因", "氵夜":"液", "氵寅":"演", "日勿":"易", "广心":"応", "彳主":"往", "因心":"恩", "丁口":"可", "亻反":"仮", "氵可":"河", "辶咼":"過", "加貝":"賀", "忄夬":"快", "木各":"格", "客頁":"額", "干刂":"刊", "目艮":"眼", "土其":"基", "宀奇":"寄", "忄貫":"慣", "辶屰":"逆", "扌支":"技", "土竟":"境", "丨日":"旧", "尸古":"居", "言午":"許", "土匀":"均", "勹口":"句", "君羊":"群", "氵絜":"潔", "亻牛":"件", "龹刀":"券", "王見":"現", "氵咸":"減", "古攵":"故", "阝艮":"限", "亻固":"個", "言蒦":"護", "交力":"効", "金広":"鉱", "木冓":"構", "言冓":"講", "氵昆":"混", "木且":"査", "一冉":"再", "巛火":"災", "扌采":"採", "阝祭":"際", "罒非":"罪", "貝才":"財", "酉夋":"酸", "士心":"志", "十又":"支", "貝次":"資", "二小":"示", "言戠":"識", "辶朮":"述", "氵隼":"準", "行朮":"術", "言射":"謝", "扌受":"授", "扌召":"招", "广予":"序", "言正":"証", "尚巾":"常", "忄青":"情", "耳戠":"職", "糸戠":"織", "忄生":"性", "正攵":"政", "米青":"精", "衣制":"製", "糸責":"績", "扌妾":"接", "千口":"舌", "糸忩":"総", "礻且":"祖", "辶告":"造", "亻象":"像", "土曽":"増", "貝刂":"則", "氵則":"測", "扌員":"損", "辶艮":"退", "代貝":"貸", "能心":"態", "囗寸":"団", "弓長":"張", "禾呈":"程", "扌是":"提", "辶啇":"適", "啇攵":"敵", "糸充":"統", "道寸":"導", "犭虫":"独", "亻壬":"任", "火然":"燃", "片反":"版", "言平":"評", "亻表":"俵", "𠂇巾":"布", "女帚":"婦", "分貝":"貧", "弋止":"武", "宀畐":"富", "衤复":"複", "亻ム":"仏", "厶廾":"弁", "阝方":"防", "曲豆":"豊", "亻呆":"保", "敄力":"務", "辶米":"迷", "予頁":"預", "宀谷":"容", "田各":"略", "令頁":"領" },
+            6: { "扌広":"拡", "扌軍":"揮", "木几":"机", "菫力":"勤", "氵敫":"激", "糸肙":"絹", "言呉":"誤", "石少":"砂", "石茲":"磁", "身寸":"射", "扌舎":"捨", "氵先":"洗", "任貝":"賃", "言寸":"討", "月市":"肺", "辶貴":"遺", "土或":"域", "宀于":"宇", "日央":"映", "廴正":"延", "田共":"異", "手戈":"我", "厂火":"灰", "十一":"干", "木朱":"株", "害刂":"割", "門各":"閣", "龹己":"巻", "竹間":"簡", "手目":"看", "口及":"吸", "亻共":"供", "竹肋":"筋", "苟攵":"敬", "宀八":"穴", "敬言":"警", "丿糸":"系", "氵原":"源", "口乎":"呼", "亥刂":"刻", "金岡":"鋼", "阝夅":"降", "白王":"皇", "糸工":"紅", "广坐":"座", "囗木":"困", "冎月":"骨", "天虫":"蚕", "竹朿":"策", "𢦏衣":"裁", "氵斉":"済", "次女":"姿", "禾厶":"私", "示見":"視", "言司":"詞", "言志":"誌", "艹右":"若", "宀示":"宗", "京尤":"就", "糸従":"縦", "孰灬":"熟", "糸宿":"縮", "罒者":"署", "夂几":"処", "言者":"諸", "阝余":"除", "金十":"針", "亻二":"仁", "艹烝":"蒸", "土成":"城", "阝章":"障", "扌隹":"推", "宀亘":"宣", "成皿":"盛", "耳呈":"聖", "言成":"誠", "白水":"泉", "𡗗天":"奏", "倉刂":"創", "壮衣":"装", "尸曽":"層", "扌喿":"操", "艹臧":"蔵", "月蔵":"臓", "宀乇":"宅", "扌旦":"担", "言延":"誕", "亻直":"値", "宀由":"宙", "中心":"忠", "艹者":"著", "广丁":"庁", "丁頁":"頂", "氵朝":"潮", "疒甬":"痛", "米唐":"糖", "尸由":"届", "言忍":"認", "糸内":"納", "氵派":"派", "北月":"背", "亻非":"俳", "日免":"晩", "不口":"否", "扌比":"批", "禾必":"秘", "月复":"腹", "阝坒":"陛", "䒑业":"並", "衤甫":"補", "艹莫":"暮", "宀玉":"宝", "言方":"訪", "亠乚":"亡", "亡心":"忘", "木奉":"棒", "木攵":"枚", "宀必":"密", "明皿":"盟", "木莫":"模", "言尺":"訳", "垂阝":"郵", "亻憂":"優", "幺力":"幼", "谷欠":"欲", "羽立":"翌", "舌乚":"乱", "彳聿":"律", "良月":"朗", "言侖":"論" }
+        };
+
+        let currentGrade = 1;
+        let currentDictionary = {};
+        let currentCorrectKanji = "";
+        let collectedKanji = []; 
+
+        function showScreen(screenId) {
+            document.getElementById('title-screen').classList.remove('active');
+            document.getElementById('game-screen').classList.remove('active');
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        function showTitle() { showScreen('title-screen'); }
+
+        function startGame(grade) {
+            currentGrade = grade;
+            collectedKanji = []; 
+            updateCollection();
+            
+            document.getElementById('grade-title').innerText = grade + "年生のかん字";
+            currentDictionary = kanjiData[grade];
+            showScreen('game-screen');
+            generateProblem();
+        }
+
+        function generateProblem() {
+            const resultBox = document.getElementById("result-kanji");
+            document.getElementById("zone-left").innerHTML = "";
+            document.getElementById("zone-right").innerHTML = "";
+            resultBox.innerText = "？";
+            resultBox.style.color = "#ff4757"; 
+            document.getElementById("message").innerText = "";
+            document.getElementById("next-btn").style.display = "none";
+
+            const container = document.getElementById("parts-container");
+            container.innerHTML = ""; 
+
+            const keys = Object.keys(currentDictionary);
+            const randomKey = keys[Math.floor(Math.random() * keys.length)];
+            currentCorrectKanji = currentDictionary[randomKey]; 
+            
+            // サロゲートペア（特殊な文字）を正しく分割するために Array.from を使用
+            const keyChars = Array.from(randomKey);
+            let part1 = keyChars[0];
+            let part2 = keyChars.slice(1).join('');
+
+            let partsToDisplay = [part1, part2];
+            let usedDummies = new Set([part1, part2]); 
+
+            let dummyCount = 0;
+            let attempts = 0; 
+            while(dummyCount < 4 && attempts < 100) {
+                attempts++;
+                const randomDummyKey = keys[Math.floor(Math.random() * keys.length)];
+                
+                const dKeyChars = Array.from(randomDummyKey);
+                let dPart1 = dKeyChars[0];
+                let dPart2 = dKeyChars.slice(1).join('');
+                
+                let dummyPart = Math.random() < 0.5 ? dPart1 : dPart2;
+                
+                if(dummyPart.trim() !== "" && !usedDummies.has(dummyPart)) {
+                    partsToDisplay.push(dummyPart);
+                    usedDummies.add(dummyPart);
+                    dummyCount++;
+                }
+            }
+
+            partsToDisplay.sort(() => Math.random() - 0.5).forEach((partText, index) => {
+                const div = document.createElement("div");
+                div.className = "part";
+                div.innerText = partText;
+                if(partText.length > 1) div.style.fontSize = "20px";
+                div.onclick = function() { movePart(this); };
+                container.appendChild(div);
+            });
+        }
+
+        function showHint() {
+            if (document.getElementById("next-btn").style.display === "inline-block") return;
+            
+            const resultBox = document.getElementById("result-kanji");
+            resultBox.innerText = currentCorrectKanji; 
+            resultBox.style.color = "rgba(255, 71, 87, 0.25)"; 
+        }
+
+        function nextProblem() {
+            generateProblem();
+        }
+
+        function movePart(partElement) {
+            if (document.getElementById("next-btn").style.display === "inline-block") return;
+
+            const leftZone = document.getElementById("zone-left");
+            const rightZone = document.getElementById("zone-right");
+            const container = document.getElementById("parts-container");
+            const message = document.getElementById("message");
+
+            document.getElementById("result-kanji").innerText = "？";
+            document.getElementById("result-kanji").style.color = "#ff4757";
+            message.innerText = "";
+
+            if (partElement.parentElement.id === "parts-container") {
+                if (leftZone.children.length === 0) {
+                    leftZone.appendChild(partElement);
+                } else if (rightZone.children.length === 0) {
+                    rightZone.appendChild(partElement);
+                } else {
+                    message.innerText = "四角がいっぱいだよ！";
+                    message.style.color = "#ff9f43";
+                }
+            } else {
+                container.appendChild(partElement);
+            }
+        }
+
+        function checkAnswer() {
+            const leftZone = document.getElementById("zone-left");
+            const rightZone = document.getElementById("zone-right");
+            const resultBox = document.getElementById("result-kanji");
+            const message = document.getElementById("message");
+            const nextBtn = document.getElementById("next-btn");
+
+            resultBox.style.color = "#ff4757";
+
+            if (leftZone.children.length === 0 || rightZone.children.length === 0) {
+                message.innerText = "パーツを２つセットしてね！";
+                message.style.color = "#ff9f43";
+                return;
+            }
+
+            const leftPart = leftZone.children[0].innerText;
+            const rightPart = rightZone.children[0].innerText;
+            const combinedText1 = leftPart + rightPart;
+            const combinedText2 = rightPart + leftPart;
+
+            if (currentDictionary[combinedText1] || currentDictionary[combinedText2]) {
+                const correctKanji = currentDictionary[combinedText1] || currentDictionary[combinedText2];
+                resultBox.innerText = correctKanji;
+                message.innerText = "大せいかい！「" + correctKanji + "」ができたよ！🎉";
+                message.style.color = "#1dd1a1";
+                nextBtn.style.display = "inline-block";
+
+                if (!collectedKanji.includes(correctKanji)) {
+                    collectedKanji.push(correctKanji);
+                    updateCollection();
+                }
+
+            } else {
+                resultBox.innerText = "？";
+                message.innerText = "ざんねん！ちがうかん字みたい…💦";
+                message.style.color = "#ff4757";
+            }
+        }
+
+        function resetPuzzle() {
+            if (document.getElementById("next-btn").style.display === "inline-block") return;
+            const container = document.getElementById("parts-container");
+            const leftZone = document.getElementById("zone-left");
+            const rightZone = document.getElementById("zone-right");
+
+            if(leftZone.children.length > 0) container.appendChild(leftZone.children[0]);
+            if(rightZone.children.length > 0) container.appendChild(rightZone.children[0]);
+            
+            document.getElementById("result-kanji").innerText = "？";
+            document.getElementById("result-kanji").style.color = "#ff4757"; 
+            document.getElementById("message").innerText = "";
+        }
+
+        function updateCollection() {
+            const listDiv = document.getElementById("collected-list");
+            listDiv.innerHTML = ""; 
+            
+            if (collectedKanji.length === 0) {
+                listDiv.innerHTML = "<span style='color:#999; font-size:16px;'>まだないよ</span>";
+                return;
+            }
+
+            collectedKanji.forEach(kanji => {
+                const span = document.createElement("span");
+                span.className = "collected-kanji";
+                span.innerText = kanji;
+                listDiv.appendChild(span);
+            });
+        }
+    </script>
+
+</body>
+</html>
+
