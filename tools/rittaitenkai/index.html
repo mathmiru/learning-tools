@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>立方体の展開図 全11パターン・シミュレーター（UI最適化版）</title>
+  <style>
+    body { margin: 0; overflow: hidden; background-color: #1a1a2e; font-family: sans-serif; color: white; display: flex; flex-direction: column; height: 100vh; }
+    
+    /* 3D表示領域を上部に配置し、高さを自動調整 */
+    #canvas-container { flex-grow: 1; width: 100vw; overflow: hidden; position: relative; }
+    
+    /* 下部UIコンテナ：高さをautoにして中身に合わせる */
+    #ui-container {
+      width: 100vw; height: auto;
+      background: rgba(15, 15, 30, 0.9); padding: 20px 30px;
+      box-shadow: 0 -8px 32px rgba(0,0,0,0.5);
+      backdrop-filter: blur(8px); border-top: 1px solid rgba(255,255,255,0.1);
+      display: flex; flex-direction: column; gap: 15px; box-sizing: border-box;
+      z-index: 20;
+    }
+    
+    /* UI内部のレイアウト調整 */
+    .ui-inner { width: 80%; max-width: 600px; margin: 0 auto; display: flex; flex-direction: column; gap: 15px; }
+
+    .top-controls {
+      position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
+      background: rgba(15, 15, 30, 0.85); padding: 10px 20px; border-radius: 8px;
+      backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.1);
+      display: flex; align-items: center; gap: 10px; z-index: 10;
+      box-sizing: border-box; white-space: nowrap;
+    }
+    select {
+      background: #2a2a40; color: white; border: 1px solid #4facfe;
+      padding: 8px 12px; border-radius: 6px; font-size: 0.95rem; cursor: pointer; outline: none;
+    }
+    .slider-group { display: flex; align-items: center; gap: 15px; }
+    input[type="range"] { flex-grow: 1; cursor: pointer; height: 8px; accent-color: #4facfe; }
+    #progress-text { font-size: 1.2rem; font-weight: bold; font-variant-numeric: tabular-nums; min-width: 60px; text-align: right; }
+    .controls-label { display: flex; justify-content: space-between; align-items: center; font-size: 0.9rem; color: #a0a0b0; }
+    button {
+      background: #4facfe; color: white; border: none; padding: 10px 20px;
+      border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s;
+    }
+    button:hover { background: #00f2fe; }
+
+    /* スマホ向けのレイアウト微調整 */
+    @media (max-width: 600px) {
+      .top-controls {
+        width: 90%; top: 10px; flex-direction: column; padding: 10px; gap: 8px;
+      }
+      select { width: 100%; box-sizing: border-box; }
+      #ui-container { padding: 15px; gap: 10px; }
+      .ui-inner { width: 100%; gap: 10px; }
+      #progress-text { font-size: 1rem; min-width: 50px; }
+    }
+  </style>
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+      }
+    }
+  </script>
+</head>
+<body>
+  
+  <!-- 3D表示領域 -->
+  <div id="canvas-container">
+    <div class="top-controls">
+      <label for="pattern-select" style="font-weight: bold;">展開図パターン:</label>
+      <select id="pattern-select">
+        <option value="p1_4_1_cross">1. 十字型 (1-4-1 中央)</option>
+        <option value="p1_4_1_t">2. T字型 (1-4-1 端)</option>
+        <option value="p1_4_1_shift1">3. 1マスずれA (1-4-1)</option>
+        <option value="p1_4_1_shift2">4. 1マスずれB (1-4-1)</option>
+        <option value="p1_4_1_shift3">5. 2マスずれ (1-4-1)</option>
+        <option value="p1_4_1_center_shift">6. 中央ずれ (1-4-1)</option>
+        <option value="p2_3_1_a">7. 2-3-1型 A</option>
+        <option value="p2_3_1_b">8. 2-3-1型 B</option>
+        <option value="p2_3_1_c">9. 2-3-1型 C</option>
+        <option value="p2_2_2">10. 階段型 (2-2-2)</option>
+        <option value="p3_3">11. 二列型 (3-3)</option>
+      </select>
+    </div>
+  </div>
+  
+  <!-- 下部UIエリア -->
+  <div id="ui-container">
+    <div class="ui-inner">
+      <div class="controls-label">
+        <span>展開図 (0%)</span>
+        <span>立方体 (100%)</span>
+      </div>
+      <div class="slider-group">
+        <input type="range" id="fold-slider" min="0" max="100" value="0">
+        <div id="progress-text">0%</div>
+      </div>
+      <div style="text-align: center;">
+        <button id="auto-play-btn">自動再生 / 停止</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+    const container = document.getElementById('canvas-container');
+    const scene = new THREE.Scene();
+    
+    // 初期カメラ設定をコンテナサイズに合わせる
+    const camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 100);
+    camera.position.set(4, 5, 6);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    // レンダラーサイズをコンテナサイズに合わせる
+    renderer.setSize(container.clientWidth, container.clientHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.shadowMap.enabled = true;
+    container.appendChild(renderer.domElement);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+
+    scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+    const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
+    dirLight.position.set(5, 10, 5);
+    dirLight.castShadow = true;
+    scene.add(dirLight);
+
+    const netPatterns = {
+      p1_4_1_cross: [{ id: 2, parent: 1, dir: 'right' }, { id: 3, parent: 2, dir: 'right' }, { id: 4, parent: 3, dir: 'right' }, { id: 5, parent: 2, dir: 'top' }, { id: 6, parent: 2, dir: 'bottom' }],
+      p1_4_1_t: [{ id: 2, parent: 1, dir: 'right' }, { id: 3, parent: 2, dir: 'right' }, { id: 4, parent: 3, dir: 'right' }, { id: 5, parent: 1, dir: 'top' }, { id: 6, parent: 1, dir: 'bottom' }],
+      p1_4_1_shift1: [{ id: 2, parent: 1, dir: 'right' }, { id: 3, parent: 2, dir: 'right' }, { id: 4, parent: 3, dir: 'right' }, { id: 5, parent: 1, dir: 'top' }, { id: 6, parent: 2, dir: 'bottom' }],
+      p1_4_1_shift2: [{ id: 2, parent: 1, dir: 'right' }, { id: 3, parent: 2, dir: 'right' }, { id: 4, parent: 3, dir: 'right' }, { id: 5, parent: 1, dir: 'top' }, { id: 6, parent: 3, dir: 'bottom' }],
+      p1_4_1_shift3: [{ id: 2, parent: 1, dir: 'right' }, { id: 3, parent: 2, dir: 'right' }, { id: 4, parent: 3, dir: 'right' }, { id: 5, parent: 1, dir: 'top' }, { id: 6, parent: 4, dir: 'bottom' }],
+      p1_4_1_center_shift: [{ id: 2, parent: 1, dir: 'right' }, { id: 3, parent: 2, dir: 'right' }, { id: 4, parent: 3, dir: 'right' }, { id: 5, parent: 2, dir: 'top' }, { id: 6, parent: 3, dir: 'bottom' }],
+      p2_3_1_a: [{ id: 2, parent: 1, dir: 'right' }, { id: 3, parent: 2, dir: 'right' }, { id: 4, parent: 1, dir: 'top' }, { id: 5, parent: 4, dir: 'left' }, { id: 6, parent: 3, dir: 'bottom' }],
+      p2_3_1_b: [{ id: 2, parent: 1, dir: 'right' }, { id: 3, parent: 2, dir: 'right' }, { id: 4, parent: 1, dir: 'top' }, { id: 5, parent: 4, dir: 'left' }, { id: 6, parent: 2, dir: 'bottom' }],
+      p2_3_1_c: [{ id: 2, parent: 1, dir: 'right' }, { id: 3, parent: 2, dir: 'right' }, { id: 4, parent: 1, dir: 'top' }, { id: 5, parent: 4, dir: 'left' }, { id: 6, parent: 1, dir: 'bottom' }],
+      p2_2_2: [{ id: 2, parent: 1, dir: 'bottom' }, { id: 3, parent: 2, dir: 'left' }, { id: 4, parent: 1, dir: 'right' }, { id: 5, parent: 4, dir: 'top' }, { id: 6, parent: 5, dir: 'right' }],
+      p3_3: [{ id: 2, parent: 1, dir: 'left' }, { id: 3, parent: 2, dir: 'left' }, { id: 4, parent: 1, dir: 'bottom' }, { id: 5, parent: 4, dir: 'right' }, { id: 6, parent: 5, dir: 'right' }]
+    };
+
+    const size = 1;
+    const geometry = new THREE.PlaneGeometry(size, size);
+    const netGroup = new THREE.Group();
+    scene.add(netGroup);
+
+    let activeHinges = [];
+
+    function createFaceMaterial(number, colorHex) {
+      const canvas = document.createElement('canvas');
+      canvas.width = 256; canvas.height = 256;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = colorHex; ctx.fillRect(0, 0, 256, 256);
+      ctx.strokeStyle = '#222'; ctx.lineWidth = 8; ctx.strokeRect(0, 0, 256, 256);
+      ctx.fillStyle = '#222'; ctx.font = 'bold 120px Arial';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.translate(128, 128); ctx.fillText(number, 0, 10);
+      return new THREE.MeshStandardMaterial({ map: new THREE.CanvasTexture(canvas), side: THREE.DoubleSide });
+    }
+
+    const faceColors = { 1: '#ff9a9e', 2: '#a1c4fd', 3: '#fbc2eb', 4: '#8fd3f4', 5: '#d4fc79', 6: '#cfd9df' };
+
+    function buildNet(patternKey) {
+      netGroup.clear();
+      activeHinges = [];
+      const pattern = netPatterns[patternKey];
+      const facesData = {};
+
+      const face1 = new THREE.Mesh(geometry, createFaceMaterial('1', faceColors[1]));
+      face1.rotation.x = -Math.PI / 2;
+      face1.receiveShadow = true;
+      netGroup.add(face1);
+      
+      facesData[1] = { group: netGroup, facePos: new THREE.Vector3(0, 0, 0) };
+
+      pattern.forEach(def => {
+        const parentNode = facesData[def.parent];
+        let pivotOffset = new THREE.Vector3();
+        let rotAxis = 'z', rotSign = 1;
+
+        if (def.dir === 'right') { pivotOffset.set(size/2, 0, 0); rotAxis = 'z'; rotSign = 1; }
+        else if (def.dir === 'left') { pivotOffset.set(-size/2, 0, 0); rotAxis = 'z'; rotSign = -1; }
+        else if (def.dir === 'top') { pivotOffset.set(0, 0, -size/2); rotAxis = 'x'; rotSign = 1; }
+        else if (def.dir === 'bottom') { pivotOffset.set(0, 0, size/2); rotAxis = 'x'; rotSign = -1; }
+
+        const pivotPos = parentNode.facePos.clone().add(pivotOffset);
+        const facePos = pivotOffset.clone();
+
+        const pivot = new THREE.Group();
+        pivot.position.copy(pivotPos);
+        parentNode.group.add(pivot);
+
+        const face = new THREE.Mesh(geometry, createFaceMaterial(def.id.toString(), faceColors[def.id]));
+        face.position.copy(facePos);
+        face.rotation.x = -Math.PI / 2;
+        face.castShadow = true; face.receiveShadow = true;
+        pivot.add(face);
+
+        facesData[def.id] = { group: pivot, facePos: facePos };
+        activeHinges.push({ pivot, rotAxis, rotSign });
+      });
+
+      const box = new THREE.Box3().setFromObject(netGroup);
+      const center = new THREE.Vector3();
+      box.getCenter(center);
+      netGroup.position.set(-center.x, 0, -center.z);
+    }
+
+    const slider = document.getElementById('fold-slider');
+    const progressText = document.getElementById('progress-text');
+    let isAutoPlaying = false;
+    let autoPlayDirection = 1;
+
+    function updateFolding() {
+      const progress = slider.value / 100;
+      progressText.innerText = `${slider.value}%`;
+      const angle = progress * (Math.PI / 2);
+      activeHinges.forEach(h => { h.pivot.rotation[h.rotAxis] = angle * h.rotSign; });
+    }
+
+    document.getElementById('pattern-select').addEventListener('change', (e) => {
+      buildNet(e.target.value);
+      slider.value = 0; updateFolding(); isAutoPlaying = false;
+    });
+
+    slider.addEventListener('input', () => { isAutoPlaying = false; updateFolding(); });
+    document.getElementById('auto-play-btn').addEventListener('click', () => { isAutoPlaying = !isAutoPlaying; });
+
+    function animate() {
+      requestAnimationFrame(animate); controls.update();
+      if (isAutoPlaying) {
+        let val = parseFloat(slider.value) + (autoPlayDirection * 0.5);
+        if (val >= 100) { val = 100; autoPlayDirection = -1; }
+        if (val <= 0)   { val = 0;   autoPlayDirection = 1; }
+        slider.value = val; updateFolding();
+      }
+      renderer.render(scene, camera);
+    }
+
+    buildNet('p1_4_1_cross');
+    animate();
+
+    // リサイズ処理をコンテナサイズに合わせる
+    window.addEventListener('resize', () => {
+      const width = container.clientWidth;
+      const height = container.clientHeight;
+      camera.aspect = width / height;
+      camera.updateProjectionMatrix();
+      renderer.setSize(width, height);
+    });
+  </script>
+</body>
+</html>
+
