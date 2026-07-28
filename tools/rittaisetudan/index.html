@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>マルチ立体切断シミュレーター</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: "Hiragino Kaku Gothic ProN", "Meiryo", sans-serif;
+            background-color: #1e272e;
+            color: #ecf0f1;
+        }
+        
+        /* =========================================
+           タイトル画面（スタート画面）
+           ========================================= */
+        #start-screen {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: #1e272e;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 20;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        
+        .start-card {
+            background: rgba(47, 54, 64, 0.95);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            max-width: 400px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .start-card h1 { font-size: 1.4rem; color: #00d8d6; margin-bottom: 5px; }
+        .start-card .description { color: #ff7675; font-size: 0.9rem; font-weight: bold; margin-bottom: 25px;}
+        
+        .instruction {
+            background: #2f3640;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #57606f;
+            text-align: left;
+            font-size: 0.85rem;
+            color: #dcdde1;
+            margin-bottom: 20px;
+            line-height: 1.8;
+        }
+
+        #start-btn {
+            background-color: #0be881;
+            color: #1e272e;
+            font-size: 1.1rem;
+            font-weight: bold;
+            padding: 12px 0;
+            width: 100%;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        #start-btn:active { background-color: #05c46b; transform: scale(0.98); }
+
+        /* =========================================
+           操作画面（シミュレーター画面のパネル）
+           ========================================= */
+        #ui-panel {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(47, 54, 64, 0.95);
+            padding: 15px 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            z-index: 10;
+            width: 300px;
+            box-sizing: border-box;
+            display: none;
+        }
+        
+        #back-btn {
+            background: none;
+            border: none;
+            color: #00d8d6;
+            font-size: 0.9rem;
+            padding: 0;
+            margin-bottom: 15px;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+
+        label { display: block; margin-bottom: 8px; font-size: 0.9rem; font-weight: bold; line-height: 1.6; text-align: left;}
+        select, input[type="range"] {
+            width: 100%;
+            margin-bottom: 15px;
+            padding: 8px;
+            cursor: pointer;
+            border-radius: 4px;
+            border: none;
+            box-sizing: border-box;
+        }
+        select { background-color: #ecf0f1; color: #2c3e50; font-size: 1rem;}
+        rt { color: #dcdde1; font-size: 0.65em; }
+
+        /* =========================================
+           スマホ版の上書き設定
+           ========================================= */
+        @media screen and (max-width: 600px) {
+            #ui-panel {
+                top: auto;
+                bottom: 0;
+                left: 0;
+                width: 100%;
+                height: 45vh; /* パネルの高さを下から45%に固定 */
+                border-radius: 15px 15px 0 0;
+                padding: 15px;
+                box-shadow: 0 -4px 15px rgba(0,0,0,0.5);
+                overflow-y: auto;
+            }
+            label { font-size: 0.85rem; }
+            select { font-size: 0.9rem; padding: 6px; }
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://unpkg.com/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+</head>
+<body>
+
+    <div id="start-screen">
+        <div class="start-card">
+            <h1><ruby>立体<rt>りったい</rt></ruby><ruby>切断<rt>せつだん</rt></ruby>シミュレーター</h1>
+            <p class="description"><ruby>切断面<rt>せつだんめん</rt></ruby>が<ruby>赤<rt>あか</rt></ruby>く<ruby>表示<rt>ひょうじ</rt></ruby>されます</p>
+            
+            <div class="instruction">
+                <strong>💡 <ruby>操作<rt>そうさ</rt></ruby><ruby>方法<rt>ほうほう</rt></ruby></strong><br>
+                ・<ruby>何<rt>なに</rt></ruby>もない<ruby>場所<rt>ばしょ</rt></ruby>をドラッグ（スワイプ）すると、<ruby>立体<rt>りったい</rt></ruby>をぐるぐる<ruby>回<rt>まわ</rt></ruby>して<ruby>見<rt>み</rt></ruby>ることができます。<br>
+                ・ホイール（ピンチ）でズームできます。
+            </div>
+
+            <label style="text-align: center;"><ruby>切<rt>き</rt></ruby>る<ruby>立体<rt>りったい</rt></ruby>を<ruby>選<rt>えら</rt></ruby>んでね</label>
+            <select id="geometry-select">
+                <option value="cube">立方体（りっぽうたい）</option>
+                <option value="cuboid">直方体（ちょくほうたい）</option>
+                <option value="sphere">球（きゅう）</option>
+                <option value="cylinder">円柱（えんちゅう）</option>
+                <option value="triangular_prism">三角柱（さんかくちゅう）</option>
+                <option value="pentagonal_prism">五角柱（ごかくちゅう）</option>
+                <option value="cone">円錐（えんすい）</option>
+                <option value="triangular_pyramid">三角錐（さんかくすい）</option>
+                <option value="square_pyramid">四角錐（しかくすい）</option>
+                <option value="pentagonal_pyramid">五角錐（ごかくすい）</option>
+            </select>
+
+            <button id="start-btn">スタート</button>
+        </div>
+    </div>
+
+    <div id="ui-panel">
+        <button id="back-btn">← <ruby>別<rt>べつ</rt></ruby>の<ruby>立体<rt>りったい</rt></ruby>を<ruby>選<rt>えら</rt></ruby>ぶ</button>
+
+        <label><ruby>基本<rt>きほん</rt></ruby>の<ruby>切<rt>き</rt></ruby>り<ruby>方<rt>かた</rt></ruby>:</label>
+        <select id="preset-select">
+            <option value="35,45">ななめ</option>
+            <option value="0,90">たて</option>
+            <option value="90,0">よこ</option>
+            <option value="45,90">かどからななめ</option>
+            <option value="custom" hidden>自分で調整（カスタム）</option>
+        </select>
+        
+        <label><ruby>自由<rt>じゆう</rt></ruby>な<ruby>角度<rt>かくど</rt></ruby>（スライダー）:</label>
+        <div style="font-size: 0.85rem; margin-bottom: 5px;">
+            <ruby>縦<rt>たて</rt></ruby>の<ruby>傾<rt>かたむ</rt></ruby>き: <span id="pitch-val">35</span>°
+        </div>
+        <input type="range" id="angle-pitch" min="-90" max="90" step="1" value="35">
+        
+        <div style="font-size: 0.85rem; margin-bottom: 5px;">
+            <ruby>横<rt>よこ</rt></ruby>の<ruby>回転<rt>かいてん</rt></ruby>: <span id="yaw-val">45</span>°
+        </div>
+        <input type="range" id="angle-yaw" min="0" max="360" step="1" value="45">
+
+        <label><ruby>切断<rt>せつだん</rt></ruby>の<ruby>位置<rt>いち</rt></ruby>:</label>
+        <input type="range" id="depth-slider" min="-1.5" max="1.5" step="0.01" value="0">
+    </div>
+
+    <div id="viewport"></div>
+
+    <script>
+        const startScreen = document.getElementById('start-screen');
+        const uiPanel = document.getElementById('ui-panel');
+        const startBtn = document.getElementById('start-btn');
+        const backBtn = document.getElementById('back-btn');
+
+        startBtn.addEventListener('click', () => {
+            startScreen.style.display = 'none';
+            uiPanel.style.display = 'block';
+            updateSlice();
+        });
+
+        backBtn.addEventListener('click', () => {
+            uiPanel.style.display = 'none';
+            startScreen.style.display = 'flex';
+        });
+
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
+        camera.position.set(4, 3, 5);
+        
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setClearColor(0x1e272e);
+        document.getElementById('viewport').appendChild(renderer.domElement);
+        
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enablePan = false;
+
+        scene.add(new THREE.AmbientLight(0x404040));
+        const light = new THREE.DirectionalLight(0xffffff, 1);
+        light.position.set(5, 5, 5);
+        scene.add(light);
+
+        let solidMesh = null;
+        
+        const sliceMat = new THREE.MeshBasicMaterial({ 
+            color: 0xff3f34, side: THREE.DoubleSide,
+            polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 1
+        });
+        const sliceMesh = new THREE.Mesh(new THREE.BufferGeometry(), sliceMat);
+        scene.add(sliceMesh);
+
+        const sliceEdgeMat = new THREE.LineBasicMaterial({ color: 0xffeaa7, linewidth: 2 });
+        const sliceEdges = new THREE.LineSegments(new THREE.BufferGeometry(), sliceEdgeMat);
+        scene.add(sliceEdges);
+
+        const planeGeom = new THREE.PlaneGeometry(6, 6);
+        const planeMat = new THREE.MeshBasicMaterial({ 
+            color: 0x0be881, side: THREE.DoubleSide, transparent: true, opacity: 0.2,
+            polygonOffset: true, polygonOffsetFactor: 2, polygonOffsetUnits: 2
+        });
+        const planeMesh = new THREE.Mesh(planeGeom, planeMat);
+        scene.add(planeMesh);
+
+        // === カメラの位置をスマホ・PCで自動調整する関数 ===
+        function adjustCamera() {
+            const w = window.innerWidth;
+            const h = window.innerHeight;
+            camera.aspect = w / h;
+            
+            if (w <= 600) {
+                // スマホの場合: パネルが下45%にあるので、上55%の中心に立体が来るように「カメラのレンズ」を上へずらす
+                const offsetY = h * 0.225; 
+                camera.setViewOffset(w, h, 0, offsetY, w, h);
+            } else {
+                // PCの場合: 画面のど真ん中に表示（ずらしをリセット）
+                camera.clearViewOffset();
+            }
+            
+            camera.updateProjectionMatrix();
+            renderer.setSize(w, h);
+        }
+
+        // リサイズ時にカメラ調整を実行するように変更
+        window.addEventListener('resize', adjustCamera);
+
+        function createGeometry(type) {
+            if (solidMesh) scene.remove(solidMesh);
+
+            let geom;
+            switch (type) {
+                case 'cube': geom = new THREE.BoxGeometry(2, 2, 2); break;
+                case 'cuboid': geom = new THREE.BoxGeometry(1.5, 2.5, 2); break;
+                case 'sphere': geom = new THREE.SphereGeometry(1.2, 32, 32); break;
+                case 'cylinder': geom = new THREE.CylinderGeometry(1.2, 1.2, 2.4, 32); break;
+                case 'triangular_prism': geom = new THREE.CylinderGeometry(1.2, 1.2, 2.4, 3); break;
+                case 'pentagonal_prism': geom = new THREE.CylinderGeometry(1.2, 1.2, 2.4, 5); break;
+                case 'cone': geom = new THREE.ConeGeometry(1.2, 2.4, 32); geom.translate(0, -0.2, 0); break;
+                case 'triangular_pyramid': geom = new THREE.ConeGeometry(1.2, 2.4, 3); geom.translate(0, -0.2, 0); break;
+                case 'square_pyramid': geom = new THREE.ConeGeometry(1.2, 2.4, 4); geom.translate(0, -0.2, 0); break;
+                case 'pentagonal_pyramid': geom = new THREE.ConeGeometry(1.2, 2.4, 5); geom.translate(0, -0.2, 0); break;
+            }
+
+            const mat = new THREE.MeshStandardMaterial({ 
+                color: 0x3498db, transparent: true, opacity: 0.25, depthWrite: false, side: THREE.DoubleSide 
+            });
+            solidMesh = new THREE.Mesh(geom, mat);
+            solidMesh.userData.type = type;
+            scene.add(solidMesh);
+            
+            const edgesGeom = new THREE.EdgesGeometry(geom);
+            const edgesLine = new THREE.LineSegments(
+                edgesGeom, new THREE.LineBasicMaterial({ color: 0xffffff, opacity: 0.3, transparent: true })
+            );
+            solidMesh.add(edgesLine);
+        }
+
+        function updateSlice() {
+            if (uiPanel.style.display === 'none' && solidMesh) return;
+
+            const geometryType = document.getElementById('geometry-select').value;
+            
+            const pitchDeg = parseFloat(document.getElementById('angle-pitch').value);
+            const yawDeg = parseFloat(document.getElementById('angle-yaw').value);
+            document.getElementById('pitch-val').textContent = pitchDeg;
+            document.getElementById('yaw-val').textContent = yawDeg;
+
+            const pitch = pitchDeg * Math.PI / 180;
+            const yaw = yawDeg * Math.PI / 180;
+
+            const nx = Math.cos(pitch) * Math.sin(yaw);
+            const ny = Math.sin(pitch);
+            const nz = Math.cos(pitch) * Math.cos(yaw);
+            const normal = new THREE.Vector3(nx, ny, nz).normalize();
+
+            const d = parseFloat(document.getElementById('depth-slider').value);
+
+            if (!solidMesh || solidMesh.userData.type !== geometryType) {
+                createGeometry(geometryType);
+            }
+
+            planeMesh.position.copy(normal).multiplyScalar(-d);
+            planeMesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), normal);
+
+            const mathPlane = new THREE.Plane(normal, d);
+            const geom = solidMesh.geometry;
+            const position = geom.attributes.position;
+            const index = geom.index;
+            const count = index ? index.count : position.count;
+
+            const linePositions = [];
+            const a = new THREE.Vector3(), b = new THREE.Vector3(), c = new THREE.Vector3();
+
+            for (let i = 0; i < count; i += 3) {
+                if (index) {
+                    a.fromBufferAttribute(position, index.getX(i));
+                    b.fromBufferAttribute(position, index.getX(i + 1));
+                    c.fromBufferAttribute(position, index.getX(i + 2));
+                } else {
+                    a.fromBufferAttribute(position, i);
+                    b.fromBufferAttribute(position, i + 1);
+                    c.fromBufferAttribute(position, i + 2);
+                }
+
+                const pts = [];
+                const edges = [[a,b], [b,c], [c,a]];
+                
+                for (let j = 0; j < 3; j++) {
+                    const p1 = edges[j][0];
+                    const p2 = edges[j][1];
+                    const d1 = mathPlane.distanceToPoint(p1);
+                    const d2 = mathPlane.distanceToPoint(p2);
+
+                    if (d1 * d2 <= 0) {
+                        if (d1 === 0 && d2 === 0) continue; 
+                        let pt;
+                        if (Math.abs(d1) < 1e-6) pt = p1.clone();
+                        else if (Math.abs(d2) < 1e-6) pt = p2.clone();
+                        else {
+                            const t = Math.abs(d1) / (Math.abs(d1) + Math.abs(d2));
+                            pt = p1.clone().lerp(p2, t);
+                        }
+                        if (!pts.some(p => p.distanceToSquared(pt) < 1e-10)) pts.push(pt);
+                    }
+                }
+                if (pts.length === 2) {
+                    linePositions.push(pts[0], pts[1]);
+                }
+            }
+
+            const uniquePts = [];
+            for (let i = 0; i < linePositions.length; i++) {
+                if (!uniquePts.some(up => up.distanceToSquared(linePositions[i]) < 1e-8)) {
+                    uniquePts.push(linePositions[i]);
+                }
+            }
+
+            if (uniquePts.length >= 3) {
+                const center = new THREE.Vector3();
+                uniquePts.forEach(p => center.add(p));
+                center.divideScalar(uniquePts.length);
+
+                const v1 = new THREE.Vector3().subVectors(uniquePts[0], center).normalize();
+                const v2 = new THREE.Vector3().crossVectors(normal, v1).normalize();
+                
+                uniquePts.sort((ptA, ptB) => {
+                    const da = new THREE.Vector3().subVectors(ptA, center);
+                    const db = new THREE.Vector3().subVectors(ptB, center);
+                    return Math.atan2(da.dot(v2), da.dot(v1)) - Math.atan2(db.dot(v2), db.dot(v1));
+                });
+
+                const vertices = [];
+                for (let i = 1; i < uniquePts.length - 1; i++) {
+                    vertices.push(uniquePts[0].x, uniquePts[0].y, uniquePts[0].z);
+                    vertices.push(uniquePts[i].x, uniquePts[i].y, uniquePts[i].z);
+                    vertices.push(uniquePts[i+1].x, uniquePts[i+1].y, uniquePts[i+1].z);
+                }
+                sliceMesh.geometry.dispose();
+                sliceMesh.geometry = new THREE.BufferGeometry();
+                sliceMesh.geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+
+                const edgeVertices = [];
+                for (let i = 0; i < uniquePts.length; i++) {
+                    const p1 = uniquePts[i];
+                    const p2 = uniquePts[(i + 1) % uniquePts.length];
+                    edgeVertices.push(p1.x, p1.y, p1.z, p2.x, p2.y, p2.z);
+                }
+                sliceEdges.geometry.dispose();
+                sliceEdges.geometry = new THREE.BufferGeometry();
+                sliceEdges.geometry.setAttribute('position', new THREE.Float32BufferAttribute(edgeVertices, 3));
+            } else {
+                sliceMesh.geometry.dispose();
+                sliceMesh.geometry = new THREE.BufferGeometry();
+                sliceEdges.geometry.dispose();
+                sliceEdges.geometry = new THREE.BufferGeometry();
+            }
+        }
+
+        document.getElementById('geometry-select').addEventListener('change', updateSlice);
+        
+        document.getElementById('preset-select').addEventListener('change', (e) => {
+            const val = e.target.value;
+            if (val !== 'custom') {
+                const [p, y] = val.split(',').map(Number);
+                document.getElementById('angle-pitch').value = p;
+                document.getElementById('angle-yaw').value = y;
+                updateSlice();
+            }
+        });
+
+        function onSliderInput() {
+            document.getElementById('preset-select').value = 'custom';
+            updateSlice();
+        }
+        document.getElementById('angle-pitch').addEventListener('input', onSliderInput);
+        document.getElementById('angle-yaw').addEventListener('input', onSliderInput);
+        document.getElementById('depth-slider').addEventListener('input', updateSlice);
+        
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        // 初期設定を実行
+        adjustCamera();
+        createGeometry(document.getElementById('geometry-select').value);
+        animate();
+    </script>
+</body>
+</html>
+
