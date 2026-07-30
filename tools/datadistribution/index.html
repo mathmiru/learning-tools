@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>データ分布シミュレーター</title>
+    <!-- Chart.js と 箱ひげ図プラグイン -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/@sgratzl/chartjs-chart-boxplot@4"></script>
+    <style>
+        body { font-family: 'Helvetica Neue', Arial, sans-serif; background-color: #f0f4f8; color: #333; margin: 0; padding: 20px; }
+        .container { max-width: 1000px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        h1 { font-size: 1.5em; text-align: center; color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; }
+        
+        /* タイトル画面（用語解説）のスタイル */
+        #introScreen { padding: 10px 20px 30px; line-height: 1.6; }
+        #introScreen h2 { color: #2c3e50; font-size: 1.3em; margin-top: 25px; margin-bottom: 15px; border-left: 5px solid #3498db; padding-left: 10px; }
+        .term-list { list-style: none; padding: 0; margin-bottom: 30px; }
+        
+        /* 説明文のインデントを揃えるためのFlexbox設定 */
+        .term-list li { display: flex; align-items: baseline; margin-bottom: 12px; background: #f8f9fa; padding: 12px; border-radius: 6px; border: 1px solid #e9ecef; }
+        .term-list strong { flex: 0 0 140px; color: #2980b9; font-size: 1.05em; font-weight: bold; }
+        .term-desc { flex: 1; font-size: 0.95em; color: #444; line-height: 1.5; }
+        
+        .btn-start { display: block; width: 100%; max-width: 300px; margin: 30px auto 0; padding: 15px; background-color: #3498db; color: white; border: none; border-radius: 50px; font-size: 1.2em; font-weight: bold; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 6px rgba(52, 152, 219, 0.3); }
+        .btn-start:hover { background-color: #2980b9; transform: translateY(-2px); }
+
+        /* シミュレーター画面のスタイル */
+        .btn-return { display: inline-block; padding: 8px 16px; margin-bottom: 15px; background-color: #95a5a6; color: white; border: none; border-radius: 4px; font-size: 0.9em; cursor: pointer; transition: 0.2s; }
+        .btn-return:hover { background-color: #7f8c8d; }
+
+        .flex-row { display: flex; flex-wrap: wrap; gap: 20px; }
+        .panel { flex: 1; min-width: 300px; background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #e9ecef; }
+        .panel h3 { margin-top: 0; font-size: 1.1em; color: #34495e; border-bottom: 1px solid #ccc; padding-bottom: 5px; }
+
+        .control-group { display: flex; align-items: center; margin-bottom: 10px; }
+        .control-group label { width: 130px; font-weight: bold; font-size: 0.9em; }
+        .control-group input[type="range"] { flex: 1; margin: 0 10px; }
+        .control-group input[type="number"] { width: 80px; padding: 4px; border: 1px solid #ccc; border-radius: 4px; text-align: right; }
+
+        .btn-group { display: flex; gap: 10px; margin-top: 15px; }
+        .btn-regenerate { flex: 7; padding: 10px; background-color: #3498db; color: white; border: none; border-radius: 4px; font-size: 1em; cursor: pointer; transition: 0.2s; }
+        .btn-regenerate:hover { background-color: #2980b9; }
+        .btn-reset { flex: 3; padding: 10px; background-color: #95a5a6; color: white; border: none; border-radius: 4px; font-size: 1em; cursor: pointer; transition: 0.2s; }
+        .btn-reset:hover { background-color: #7f8c8d; }
+
+        .checkbox-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 8px; font-size: 0.9em; }
+        .checkbox-grid label { cursor: pointer; display: flex; align-items: center; }
+        .tag { font-size: 0.7em; padding: 2px 5px; border-radius: 3px; margin-right: 5px; color: white; }
+        .tag.elem { background: #e67e22; }
+        .tag.jr { background: #27ae60; }
+        .tag.high { background: #9b59b6; }
+
+        table.stats-table { width: 100%; border-collapse: collapse; font-size: 0.9em; margin-bottom: 10px; }
+        table.stats-table th, table.stats-table td { border: 1px solid #ddd; padding: 6px; text-align: center; }
+        table.stats-table th { background-color: #e3f2fd; }
+
+        table.data-table { width: 100%; border-collapse: collapse; font-size: 0.85em; text-align: center; }
+        table.data-table th, table.data-table td { border: 1px solid #bbb; padding: 4px; }
+        table.data-table th { background: #eee; position: sticky; top: 0; z-index: 1; }
+        table.data-table tfoot th, table.data-table tfoot td { background: #e3f2fd; font-weight: bold; position: sticky; bottom: 0; }
+
+        .scrollable-table { max-height: 350px; overflow-y: auto; border: 1px solid #ccc; }
+
+        .chart-wrapper { position: relative; height: 350px; width: 100%; margin-bottom: 20px; }
+        .box-wrapper { position: relative; height: 150px; width: 100%; }
+        
+        .hidden { display: none !important; }
+        
+        #errorMessage { color: #842029; background-color: #f8d7da; border: 1px solid #f5c2c7; padding: 15px; border-radius: 4px; font-size: 0.95em; margin-bottom: 15px; display: none; line-height: 1.6; }
+        #errorMessage strong { color: #dc3545; }
+        #errorMessage ul { margin-top: 8px; margin-bottom: 0; padding-left: 25px; }
+        #errorMessage li { margin-bottom: 6px; }
+
+        /* スマホ向けのレイアウト制御用ラッパー */
+        .main-wrapper { display: flex; flex-direction: column; }
+        .panel-controls { order: 1; }
+        .panel-stats { order: 2; margin-top: 20px; }
+        .panel-charts { order: 3; margin-top: 10px; }
+        .panel-tables { order: 4; margin-top: 20px; }
+
+        @media (max-width: 768px) {
+            .panel-charts {
+                order: 1;
+                position: sticky;
+                top: 0;
+                z-index: 100;
+                background: white;
+                margin: 0 -20px; 
+                padding: 15px 20px 5px 20px;
+                border-bottom: 2px solid #3498db;
+                box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            }
+            .panel-controls { order: 2; margin-top: 20px; }
+            .chart-wrapper { height: 200px; margin-bottom: 10px; }
+            .box-wrapper { height: 80px; }
+            .panel-stats { overflow-x: auto; }
+            table.stats-table { min-width: 600px; }
+            
+            /* スマホ時の用語解説レイアウト */
+            .term-list li { flex-direction: column; align-items: flex-start; }
+            .term-list strong { flex: none; width: 100%; display: block; margin-bottom: 5px; border-bottom: 1px dashed #ccc; padding-bottom: 3px; }
+            .term-desc { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>データ分布シミュレーター</h1>
+
+    <!-- タイトル＆用語解説画面 -->
+    <div id="introScreen">
+        <h2>代表値・散らばりに関する用語解説</h2>
+        <ul class="term-list">
+            <li>
+                <strong>平均値</strong>
+                <span class="term-desc">すべてのデータを足し合わせ、データの個数で割った値です。</span>
+            </li>
+            <li>
+                <strong>中央値</strong>
+                <span class="term-desc">データを大きさの順に並べたとき、ちょうど真ん中にくる値です。（データ数が偶数の場合は、真ん中にある2つの値の平均値になります）</span>
+            </li>
+            <li>
+                <strong>最頻値</strong>
+                <span class="term-desc">データの中で、最も多く現れる値（または階級）です。</span>
+            </li>
+            <li>
+                <strong>範囲 (レンジ)</strong>
+                <span class="term-desc">データの最大値から最小値を引いた値です。データ全体がどのくらいの幅に散らばっているかを示します。</span>
+            </li>
+            <li>
+                <strong>四分位範囲 (IQR)</strong>
+                <span class="term-desc">データを大きさ順に並べて4等分したとき、中央の50%のデータが含まれる範囲です（第3四分位数から第1四分位数を引いた値）。極端な値（外れ値）の影響を受けにくい特徴があります。</span>
+            </li>
+            <li>
+                <strong>分散</strong>
+                <span class="term-desc">それぞれのデータが平均値からどれくらい離れているか（偏差）を2乗し、その平均をとった値です。散らばりが大きいほど値が大きくなります。</span>
+            </li>
+            <li>
+                <strong>標準偏差</strong>
+                <span class="term-desc">分散の正の平方根です。分散の計算で2乗した単位を元に戻すことで、データの散らばり具合を「元のデータと同じ単位」で分かりやすく表したものです。</span>
+            </li>
+        </ul>
+
+        <h2>図表に関する用語解説</h2>
+        <ul class="term-list">
+            <li>
+                <strong>ドットプロット</strong>
+                <span class="term-desc">データを数直線上に点で表し、全体の散らばり具合を視覚的に表現した図です。データの個数が少ないときによく用いられます。</span>
+            </li>
+            <li>
+                <strong>柱グラフ (棒グラフ)</strong>
+                <span class="term-desc">データの大きさや量を、長方形（柱）の長さで表した図です。</span>
+            </li>
+            <li>
+                <strong>ヒストグラム</strong>
+                <span class="term-desc">データをいくつかの区間（階級）に分け、各区間のデータ数（度数）を柱の面積（高さ）で表した図です。柱同士がくっついているのが特徴です。</span>
+            </li>
+            <li>
+                <strong>度数分布多角形</strong>
+                <span class="term-desc">ヒストグラムの各柱の上の辺の中点を結んでできる折れ線グラフです。分布の形を線で捉えることができます。</span>
+            </li>
+            <li>
+                <strong>箱ひげ図</strong>
+                <span class="term-desc">データの最小値、第1四分位数、中央値、第3四分位数、最大値を「箱」と「線（ひげ）」で表し、データの散らばりを捉える図です。複数の集団を比較するのに適しています。</span>
+            </li>
+            <li>
+                <strong>度数分布表</strong>
+                <span class="term-desc">データをいくつかの区間（階級）に分け、各区間に含まれるデータの個数（度数）を表にまとめたものです。</span>
+            </li>
+            <li>
+                <strong>分布曲線 (正規分布)</strong>
+                <span class="term-desc">平均値を中心に左右対称な釣鐘型になるデータの分布を表した曲線です。自然界や社会の様々なデータがこの分布に近い形をとります。</span>
+            </li>
+            <li>
+                <strong>偏差の表</strong>
+                <span class="term-desc">それぞれのデータが平均値からどれくらい離れているか（偏差）と、その2乗（分散の計算に用いる数値）をまとめた表です。</span>
+            </li>
+        </ul>
+
+        <button class="btn-start" onclick="startSimulator()">シミュレーターをスタート</button>
+    </div>
+
+    <!-- シミュレーター操作画面 -->
+    <div id="simulatorScreen" style="display: none;">
+        <!-- 戻るボタン -->
+        <button class="btn-return" onclick="returnToTitle()">◀ 用語解説に戻る</button>
+        
+        <div class="main-wrapper">
+            <!-- コントロール群 -->
+            <div class="panel-controls flex-row">
+                <div class="panel" style="position: relative;">
+                    <h3>データの条件を指定</h3>
+                    <p style="font-size: 0.8em; color: #666; margin-top: -5px;">※数値枠に直接入力すれば上限を超えて設定可能です</p>
+                    
+                    <!-- エラーメッセージ -->
+                    <div id="errorMessage"></div>
+                    
+                    <div class="control-group">
+                        <label>データ数 (n)</label>
+                        <input type="range" id="countSlider" min="10" max="200" value="100">
+                        <input type="number" id="countNum" min="10" max="1000" value="100">
+                    </div>
+                    <div class="control-group">
+                        <label>最小値 (Min)</label>
+                        <input type="range" id="minSlider" min="0" max="100" value="10">
+                        <input type="number" id="minNum" min="0" max="1000" value="10">
+                    </div>
+                    <div class="control-group">
+                        <label>最大値 (Max)</label>
+                        <input type="range" id="maxSlider" min="0" max="100" value="90">
+                        <input type="number" id="maxNum" min="0" max="1000" value="90">
+                    </div>
+                    <div class="control-group">
+                        <label>目標の平均値</label>
+                        <input type="range" id="meanSlider" min="0" max="100" value="50">
+                        <input type="number" id="meanNum" min="0" max="1000" value="50">
+                    </div>
+                    <div class="control-group">
+                        <label>目標の中央値</label>
+                        <input type="range" id="medianSlider" min="0" max="100" value="50">
+                        <input type="number" id="medianNum" min="0" max="1000" value="50">
+                    </div>
+                    <div class="control-group">
+                        <label>目標の標準偏差</label>
+                        <input type="range" id="stdDevSlider" min="1" max="50" value="15">
+                        <input type="number" id="stdDevNum" min="1" max="500" value="15">
+                    </div>
+                    <div class="btn-group">
+                        <button class="btn-regenerate" onclick="updateAll(true)">同じ条件で再生成</button>
+                        <button class="btn-reset" onclick="resetAll()">リセット</button>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <h3>表示する図表の選択</h3>
+                    <div class="checkbox-grid">
+                        <label><input type="checkbox" id="viewDot" checked> <span class="tag elem">小</span>ドットプロット</label>
+                        <label><input type="checkbox" id="viewBar"> <span class="tag elem">小</span>柱グラフ</label>
+                        
+                        <label><input type="checkbox" id="viewHist" checked> <span class="tag jr">中</span>ヒストグラム</label>
+                        <label><input type="checkbox" id="viewPolygon"> <span class="tag jr">中</span>度数分布多角形</label>
+                        <label><input type="checkbox" id="viewBox" checked> <span class="tag jr">中</span>箱ひげ図</label>
+                        <label><input type="checkbox" id="viewFreqTable"> <span class="tag jr">中</span>度数分布表</label>
+                        
+                        <label><input type="checkbox" id="viewNormal" checked> <span class="tag high">高</span>分布曲線(正規分布)</label>
+                        <label><input type="checkbox" id="viewDevTable" checked> <span class="tag high">高</span>偏差の表</label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 統計データ表示 -->
+            <div class="panel-stats">
+                <h3>計算された代表値・散らばり</h3>
+                <table class="stats-table" id="statsTable">
+                    <tr>
+                        <th><span class="tag elem">小</span>平均値</th>
+                        <th><span class="tag elem">小</span>中央値</th>
+                        <th><span class="tag elem">小</span>最頻値</th>
+                        <th><span class="tag elem">小</span>最小 / 最大</th>
+                        <th><span class="tag jr">中</span>範囲(レンジ)</th>
+                        <th><span class="tag jr">中</span>Q1 / Q3</th>
+                        <th><span class="tag jr">中</span>四分位範囲(IQR)</th>
+                        <th><span class="tag high">高</span>分散</th>
+                        <th><span class="tag high">高</span>標準偏差</th>
+                    </tr>
+                    <tr id="statsRow">
+                        <!-- JSで挿入 -->
+                    </tr>
+                </table>
+            </div>
+
+            <!-- グラフエリア (スマホ版で上部に固定される部分) -->
+            <div class="panel-charts" id="dataViewArea">
+                <div id="chartAreaMain" class="chart-wrapper">
+                    <canvas id="mainChart"></canvas>
+                </div>
+                
+                <div id="chartAreaBox" class="box-wrapper">
+                    <canvas id="boxChart"></canvas>
+                </div>
+            </div>
+
+            <!-- 表エリア -->
+            <div class="panel-tables flex-row" id="tableViewArea">
+                <div class="panel hidden" id="freqTablePanel">
+                    <h3>度数分布表</h3>
+                    <div id="freqTableContainer"></div>
+                </div>
+                <div class="panel hidden" id="devTablePanel">
+                    <h3>偏差・分散の計算表</h3>
+                    <div class="scrollable-table" id="devTableContainer"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function startSimulator() {
+        document.getElementById('introScreen').style.display = 'none';
+        document.getElementById('simulatorScreen').style.display = 'block';
+        window.scrollTo(0, 0); // 画面上部へスクロール
+        updateAll(true);
+    }
+
+    function returnToTitle() {
+        document.getElementById('simulatorScreen').style.display = 'none';
+        document.getElementById('introScreen').style.display = 'block';
+        window.scrollTo(0, 0);
+    }
+
+    const controls = ['count', 'min', 'max', 'mean', 'median', 'stdDev'];
+    controls.forEach(id => {
+        const slider = document.getElementById(`${id}Slider`);
+        const num = document.getElementById(`${id}Num`);
+        slider.addEventListener('input', (e) => { num.value = e.target.value; updateAll(); });
+        num.addEventListener('input', (e) => { 
+            if(e.target.value <= parseInt(slider.max)) slider.value = e.target.value; 
+            updateAll(); 
+        });
+    });
+
+    document.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+        cb.addEventListener('change', () => updateAll(false));
+    });
+
+    let mainChart, boxChart;
+    let currentData = null; 
+
+    function resetAll() {
+        const defaults = { count: 100, min: 10, max: 90, mean: 50, median: 50, stdDev: 15 };
+        for (const [key, val] of Object.entries(defaults)) {
+            document.getElementById(`${key}Slider`).value = val;
+            document.getElementById(`${key}Num`).value = val;
+        }
+        updateAll(true);
+    }
+
+    function randNormal(mean, stdDev) {
+        let u = 1 - Math.random();
+        let v = 1 - Math.random();
+        let z = Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+        return z * stdDev + mean;
+    }
+
+    function checkPossibility(n, min, max, targetMean, targetMedian) {
+        if (min >= max) return "<strong>【エラー】</strong>最小値が最大値以上になっています。最小値を最大値より小さくしてください。";
+        if (targetMean < min || targetMean > max) return `<strong>【エラー】</strong>平均値が範囲外です。${min}から${max}の間に設定してください。`;
+        if (targetMedian < min || targetMedian > max) return `<strong>【エラー】</strong>中央値が範囲外です。${min}から${max}の間に設定してください。`;
+        return null;
+    }
+
+    function generateConstrainedData(count, minVal, maxVal, targetMean, targetMedian, targetStdDev) {
+        let data = new Array(count).fill(0);
+        let mid = Math.floor(count / 2);
+
+        for (let i = 0; i < count; i++) {
+            data[i] = randNormal(targetMean, targetStdDev);
+        }
+        data.sort((a, b) => a - b);
+        
+        data[0] = minVal; 
+        data[count - 1] = maxVal;
+        if (count % 2 === 1) data[mid] = targetMedian;
+        else { data[mid - 1] = targetMedian; data[mid] = targetMedian; }
+
+        for (let loop = 0; loop < 200; loop++) {
+            let currentMean = data.reduce((a, b) => a + b, 0) / count;
+            let currentStd = Math.sqrt(data.reduce((a, b) => a + Math.pow(b - currentMean, 2), 0) / count);
+            
+            let meanDiff = targetMean - currentMean;
+            let stdRatio = currentStd < 0.1 ? 1.1 : targetStdDev / currentStd;
+
+            if (Math.abs(meanDiff) < 0.5 && Math.abs(currentStd - targetStdDev) < 1.0) break;
+
+            for (let i = 1; i < count - 1; i++) {
+                if (i === mid || (count % 2 === 0 && i === mid - 1)) continue;
+                
+                let newVal = currentMean + (data[i] - currentMean) * stdRatio + (meanDiff * 0.5);
+                newVal += (Math.random() - 0.5) * 1.5;
+                
+                if (i < mid) newVal = Math.min(Math.max(newVal, minVal), targetMedian);
+                else newVal = Math.min(Math.max(newVal, targetMedian), maxVal);
+                
+                data[i] = newVal;
+            }
+            data.sort((a, b) => a - b);
+            
+            if (count % 2 === 1) data[mid] = targetMedian;
+            else { data[mid - 1] = targetMedian; data[mid] = targetMedian; }
+            data[0] = minVal; data[count - 1] = maxVal;
+        }
+        return data.map(v => Math.round(v));
+    }
+
+    function updateAll(forceRegenerate = true) {
+        if (document.getElementById('simulatorScreen').style.display === 'none') return;
+
+        const count = parseInt(document.getElementById('countNum').value);
+        let minVal = parseInt(document.getElementById('minNum').value);
+        let maxVal = parseInt(document.getElementById('maxNum').value);
+        let tMean = parseInt(document.getElementById('meanNum').value);
+        let tMedian = parseInt(document.getElementById('medianNum').value);
+        let tStdDev = parseFloat(document.getElementById('stdDevNum').value);
+
+        const errorMsg = document.getElementById('errorMessage');
+        const viewArea = document.getElementById('dataViewArea');
+        const tableArea = document.getElementById('tableViewArea');
+
+        let errorReason = checkPossibility(count, minVal, maxVal, tMean, tMedian);
+        if (errorReason !== null) {
+            errorMsg.innerHTML = errorReason;
+            errorMsg.style.display = 'block';
+            viewArea.style.opacity = '0.2';
+            tableArea.style.opacity = '0.2';
+            viewArea.style.pointerEvents = 'none';
+            tableArea.style.pointerEvents = 'none';
+            return;
+        }
+
+        if (forceRegenerate || !currentData || currentData.length !== count) {
+            currentData = generateConstrainedData(count, minVal, maxVal, tMean, tMedian, tStdDev);
+        }
+        const data = currentData;
+
+        const sum = data.reduce((a, b) => a + b, 0);
+        const actualMean = sum / count;
+        const variance = data.reduce((a, b) => a + Math.pow(b - actualMean, 2), 0) / count;
+        const actualStdDev = Math.sqrt(variance);
+
+        if (Math.abs(actualStdDev - tStdDev) > 1.5) {
+            let limit = actualStdDev.toFixed(1);
+            if (actualStdDev < tStdDev) {
+                errorMsg.innerHTML = `<strong>【生成不可：標準偏差の指定が高すぎます】</strong><br>
+                    現在の条件（平均値 ${tMean}、範囲 ${minVal}〜${maxVal} など）では、これ以上データを散らばらせることができません。<br>
+                    <hr style="border-top:1px solid #f5c2c7; margin:10px 0;">
+                    <b>💡 解決のための提案：</b>
+                    <ul>
+                        <li>目標の標準偏差を <strong>${limit} 以下</strong> に下げる</li>
+                        <li><strong>最大値</strong> をもっと上げる、または <strong>最小値</strong> をもっと下げる</li>
+                        <li><strong>目標の平均値</strong> を、範囲のちょうど真ん中に近づける</li>
+                    </ul>`;
+            } else {
+                errorMsg.innerHTML = `<strong>【生成不可：標準偏差の指定が低すぎます】</strong><br>
+                    現在の条件（必須である最小値 ${minVal} や最大値 ${maxVal} の存在）により、これ以上データを平均値付近に密集させることができません。<br>
+                    <hr style="border-top:1px solid #f5c2c7; margin:10px 0;">
+                    <b>💡 解決のための提案：</b>
+                    <ul>
+                        <li>目標の標準偏差を <strong>${limit} 以上</strong> に上げる</li>
+                        <li><strong>最小値</strong> と <strong>最大値</strong> を、目標の平均値（${tMean}）に近づける</li>
+                        <li><strong>データ数(n)</strong> を増やす（極端な値が全体に与える影響を薄めます）</li>
+                    </ul>`;
+            }
+            errorMsg.style.display = 'block';
+            viewArea.style.opacity = '0.2';
+            tableArea.style.opacity = '0.2';
+            viewArea.style.pointerEvents = 'none';
+            tableArea.style.pointerEvents = 'none';
+            return; 
+        }
+
+        errorMsg.style.display = 'none';
+        viewArea.style.opacity = '1';
+        tableArea.style.opacity = '1';
+        viewArea.style.pointerEvents = 'auto';
+        tableArea.style.pointerEvents = 'auto';
+
+        const actualMin = data[0];
+        const actualMax = data[count - 1];
+        const range = actualMax - actualMin;
+        
+        const getQuantile = (arr, q) => {
+            const pos = (arr.length - 1) * q;
+            const base = Math.floor(pos);
+            const rest = pos - base;
+            if(arr[base + 1] !== undefined) return arr[base] + rest * (arr[base+1] - arr[base]);
+            return arr[base];
+        };
+        const actualMedian = getQuantile(data, 0.5);
+        const q1 = getQuantile(data, 0.25);
+        const q3 = getQuantile(data, 0.75);
+        const iqr = q3 - q1;
+
+        let classWidth = Math.max(1, Math.ceil(range / 15)); 
+        if (classWidth > 5 && classWidth < 10) classWidth = 5;
+        if (classWidth >= 10) classWidth = Math.ceil(classWidth / 5) * 5;
+
+        let cMin = Math.floor(actualMin / classWidth) * classWidth;
+        let cMax = Math.ceil(actualMax / classWidth) * classWidth;
+        if (cMin === cMax) cMax += classWidth;
+
+        let freq = {};
+        let maxFreq = 0;
+        let modeClass = "";
+        for (let i = cMin; i < cMax; i += classWidth) {
+            let countInClass = data.filter(v => v >= i && v < i + classWidth).length;
+            if (i + classWidth >= cMax) countInClass += data.filter(v => v >= cMax).length;
+            freq[`${i}〜${i+classWidth}`] = countInClass;
+            
+            if(countInClass > maxFreq) {
+                maxFreq = countInClass;
+                modeClass = i + classWidth/2;
+            }
+        }
+
+        document.getElementById('statsRow').innerHTML = `
+            <td>${actualMean.toFixed(1)}</td>
+            <td>${actualMedian.toFixed(1)}</td>
+            <td>約${modeClass}</td>
+            <td>${actualMin} / ${actualMax}</td>
+            <td>${range}</td>
+            <td>${q1.toFixed(1)} / ${q3.toFixed(1)}</td>
+            <td>${iqr.toFixed(1)}</td>
+            <td>${variance.toFixed(1)}</td>
+            <td><strong style="color:#d35400;">${actualStdDev.toFixed(1)}</strong></td>
+        `;
+
+        updateCharts(data, freq, actualMean, actualStdDev, classWidth, count, cMin, cMax);
+        updateTables(data, freq, actualMean, variance);
+    }
+
+    function updateCharts(data, freq, mean, stdDev, classWidth, count, cMin, cMax) {
+        const labels = Object.keys(freq);
+        const counts = Object.values(freq);
+
+        const viewDot = document.getElementById('viewDot').checked;
+        const viewBar = document.getElementById('viewBar').checked;
+        const viewHist = document.getElementById('viewHist').checked;
+        const viewPolygon = document.getElementById('viewPolygon').checked;
+        const viewBox = document.getElementById('viewBox').checked;
+        const viewNormal = document.getElementById('viewNormal').checked;
+
+        let datasets = [];
+
+        // ヒストグラム (柱同士を完全にくっつける)
+        if (viewHist) {
+            datasets.push({
+                type: 'bar',
+                label: 'ヒストグラム (中)',
+                data: counts,
+                backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1,
+                barPercentage: 1.0,      // 柱の幅を最大に
+                categoryPercentage: 1.0, // カテゴリ枠内の幅を最大に
+                grouped: false,          // 柱グラフと同時に表示しても横にズレないようにする
+                order: 4
+            });
+        }
+
+        // 柱グラフ (少し隙間を空ける)
+        if (viewBar) {
+            datasets.push({
+                type: 'bar',
+                label: '柱グラフ (小)',
+                data: counts,
+                backgroundColor: 'rgba(243, 156, 18, 0.6)', // 違いが分かるように色を変更
+                borderColor: 'rgba(230, 126, 34, 1)',
+                borderWidth: 1,
+                barPercentage: 0.6,
+                categoryPercentage: 0.8,
+                grouped: false,          // ヒストグラムと重なるようにする
+                order: 3
+            });
+        }
+
+        if (viewPolygon) {
+            datasets.push({
+                type: 'line',
+                label: '度数分布多角形 (中)',
+                data: counts,
+                borderColor: 'rgba(255, 99, 132, 1)',
+                backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                borderWidth: 2,
+                tension: 0.1,
+                fill: true,
+                order: 2
+            });
+        }
+
+        if (viewDot) {
+            let valCounts = {}; 
+            let dotData = [];
+            
+            data.forEach(val => {
+                valCounts[val] = (valCounts[val] || 0) + 1;
+                dotData.push({ x: val, y: valCounts[val] - 0.5 });
+            });
+
+            datasets.push({
+                type: 'scatter',
+                label: 'ドットプロット (小)',
+                data: dotData,
+                backgroundColor: 'rgba(46, 204, 113, 1)',
+                pointRadius: 5,
+                order: 1,
+                xAxisID: 'x2'
+            });
+        }
+
+        if (viewNormal && stdDev > 0) {
+            let normalData = [];
+            labels.forEach((label, i) => {
+                let parts = label.split('〜');
+                let x = (parseInt(parts[0]) + parseInt(parts[1])) / 2;
+                let pdf = (1 / (stdDev * Math.sqrt(2 * Math.PI))) * Math.exp(-Math.pow(x - mean, 2) / (2 * Math.pow(stdDev, 2)));
+                let scaledY = pdf * count * classWidth;
+                normalData.push(scaledY);
+            });
+            datasets.push({
+                type: 'line',
+                label: '分布曲線(正規分布) (高)',
+                data: normalData,
+                borderColor: 'rgba(155, 89, 182, 1)',
+                borderWidth: 3,
+                borderDash: [5, 5],
+                pointRadius: 0,
+                tension: 0.4,
+                fill: false,
+                order: 0
+            });
+        }
+
+        if (mainChart) mainChart.destroy();
+        const ctxMain = document.getElementById('mainChart').getContext('2d');
+        mainChart = new Chart(ctxMain, {
+            data: { labels: labels, datasets: datasets },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                scales: { 
+                    x: { display: true },
+                    x2: { type: 'linear', display: false, min: cMin, max: cMax },
+                    y: { beginAtZero: true, title: { display: true, text: '度数（個数）' } } 
+                }
+            }
+        });
+        document.getElementById('chartAreaMain').style.display = datasets.length > 0 ? 'block' : 'none';
+
+        document.getElementById('chartAreaBox').style.display = viewBox ? 'block' : 'none';
+        if (viewBox) {
+            if (boxChart) boxChart.destroy();
+            const ctxBox = document.getElementById('boxChart').getContext('2d');
+            boxChart = new Chart(ctxBox, {
+                type: 'boxplot',
+                data: {
+                    labels: ['データ分布'],
+                    datasets: [{
+                        label: '箱ひげ図 (中)',
+                        data: [data],
+                        backgroundColor: 'rgba(255, 159, 64, 0.5)',
+                        borderColor: 'rgba(255, 159, 64, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    indexAxis: 'y'
+                }
+            });
+        }
+    }
+
+    function updateTables(data, freq, mean, variance) {
+        const viewFreq = document.getElementById('viewFreqTable').checked;
+        const viewDev = document.getElementById('viewDevTable').checked;
+        
+        const pFreq = document.getElementById('freqTablePanel');
+        const pDev = document.getElementById('devTablePanel');
+
+        if(viewFreq) {
+            pFreq.classList.remove('hidden');
+            let total = 0;
+            let html = '<table class="data-table"><tr><th>階級</th><th>階級値</th><th>度数</th><th>相対度数</th></tr>';
+            
+            Object.keys(freq).forEach(key => {
+                let parts = key.split('〜');
+                let classValue = (parseInt(parts[0]) + parseInt(parts[1])) / 2;
+                let count = freq[key];
+                let relFreq = (count / data.length).toFixed(2);
+                html += `<tr><td>${key}</td><td>${classValue}</td><td>${count}</td><td>${relFreq}</td></tr>`;
+                total += count;
+            });
+            html += `<tfoot><tr><th colspan="2">計</th><th>${total}</th><th>1.00</th></tr></tfoot></table>`;
+            document.getElementById('freqTableContainer').innerHTML = html;
+        } else {
+            pFreq.classList.add('hidden');
+        }
+
+        if(viewDev) {
+            pDev.classList.remove('hidden');
+            let html = '<table class="data-table"><thead><tr><th>No.</th><th>データ (x)</th><th>偏差 (x - x̄)</th><th>偏差の2乗</th></tr></thead><tbody>';
+            
+            let sumDev = 0;
+            let sumDevSq = 0;
+            
+            for(let i=0; i<data.length; i++) {
+                let val = data[i];
+                let dev = val - mean;
+                let dev2 = dev * dev;
+                sumDev += dev;
+                sumDevSq += dev2;
+                html += `<tr><td>${i+1}</td><td>${val}</td><td>${dev.toFixed(2)}</td><td>${dev2.toFixed(2)}</td></tr>`;
+            }
+            html += `</tbody><tfoot>
+                     <tr><th>合計</th><th>-</th><th>${Math.abs(sumDev) < 0.1 ? 0 : sumDev.toFixed(2)}</th><th>${sumDevSq.toFixed(2)}</th></tr>
+                     <tr><th>平均</th><th>${mean.toFixed(2)}</th><th>0</th><th>${variance.toFixed(2)} (分散)</th></tr>
+                     </tfoot></table>`;
+            document.getElementById('devTableContainer').innerHTML = html;
+        } else {
+            pDev.classList.add('hidden');
+        }
+    }
+</script>
+</body>
+</html>
+
