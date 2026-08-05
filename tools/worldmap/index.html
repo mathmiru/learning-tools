@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>世界地図クイズ</title>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <style>
+    body {
+      font-family: 'Hiragino Kaku Gothic ProN', 'Meiryo', sans-serif;
+      text-align: center;
+      background-color: #f0f8ff;
+      margin: 0;
+      padding: 10px 20px 40px 20px;
+    }
+    h1 {
+      color: #333;
+      margin-bottom: 5px;
+    }
+    ruby {
+      ruby-align: center;
+    }
+    rt {
+      font-size: 0.6em;
+      color: #666;
+    }
+    
+    /* 画面切り替え用のクラス */
+    .screen {
+      display: none;
+    }
+    .active-screen {
+      display: block;
+    }
+
+    /* タイトル画面のスタイル */
+    .description {
+      font-size: 14px;
+      color: #555;
+      background: #ffffff;
+      padding: 15px;
+      border-radius: 8px;
+      max-width: 600px;
+      margin: 0 auto 20px auto;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+      line-height: 1.6;
+    }
+    #title-screen h2 {
+      color: #555;
+      font-size: 18px;
+    }
+    .category-block {
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 15px 10px;
+      margin: 15px auto;
+      max-width: 600px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    }
+    .category-title {
+      font-size: 18px;
+      font-weight: bold;
+      color: #2c3e50;
+      margin-bottom: 12px;
+      border-bottom: 2px solid #e0f7fa;
+      display: inline-block;
+      padding-bottom: 3px;
+    }
+    .region-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .region-btn {
+      padding: 8px 5px;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+      background: #4ecdc4;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      box-shadow: 0 3px 5px rgba(0,0,0,0.1);
+      transition: all 0.2s;
+      flex: 1 1 100px;
+      max-width: 140px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    .region-btn.main-btn {
+      background: #ffb347;
+    }
+    .region-btn.all {
+      background: #ff5252;
+      flex: 1 1 100%;
+      max-width: 80%;
+      margin: 5px auto 0 auto;
+      font-size: 18px;
+      padding: 12px;
+    }
+    .region-btn:hover {
+      filter: brightness(1.1);
+      transform: translateY(-2px);
+    }
+    .score-mark {
+      font-size: 11px;
+      color: #fffde7;
+      height: 14px;
+      margin-top: 4px;
+      opacity: 0.9;
+    }
+    
+    /* クイズ画面のスタイル */
+    #quiz-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      max-width: 600px;
+      margin: 0 auto 15px auto;
+    }
+    #score-board {
+      font-size: 18px;
+      color: #555;
+      font-weight: bold;
+    }
+    .back-title-btn {
+      padding: 8px 16px;
+      font-size: 14px;
+      background: #cccccc;
+      color: #333;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .back-title-btn:hover {
+      background: #bbbbbb;
+    }
+
+    #map-container {
+      margin: 0 auto;
+      width: 100%;
+      max-width: 600px;
+      height: 450px;
+      background: #e0f7fa;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      position: relative;
+      overflow: hidden;
+      touch-action: none; 
+    }
+    #loading {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 20px;
+      font-weight: bold;
+      color: #666;
+    }
+    
+    /* ズームのヒント表示（地図の右下に小さく配置） */
+    .zoom-hint {
+      position: absolute;
+      bottom: 12px;
+      right: 12px;
+      background-color: rgba(255, 255, 255, 0.85);
+      color: #333;
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: bold;
+      pointer-events: none; /* マウス操作を透過させる */
+      box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+      z-index: 10;
+    }
+
+    #world-map {
+      cursor: grab;
+    }
+    #world-map:active {
+      cursor: grabbing;
+    }
+
+    .country-path {
+      fill: #cccccc;
+      stroke: #ffffff;
+      stroke-width: 0.5px;
+      transition: fill 0.3s;
+    }
+    
+    .target { fill: #ff5252 !important; }
+    .solved { fill: #8bc34a !important; }
+    
+    #message {
+      font-size: 20px;
+      font-weight: bold;
+      margin: 15px 0;
+      height: 30px;
+      color: #ff5252;
+    }
+    .choices {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    .choice-btn {
+      padding: 12px 10px;
+      font-size: 15px;
+      font-weight: bold;
+      cursor: pointer;
+      background: #4ecdc4;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      transition: all 0.2s;
+      width: calc(50% - 10px);
+      box-sizing: border-box;
+    }
+    .choice-btn:hover:not(:disabled) {
+      background: #45b7af;
+      transform: translateY(-2px);
+    }
+    .choice-btn:disabled {
+      cursor: not-allowed;
+    }
+
+    /* 結果画面のスタイル */
+    #clear-screen h2 {
+      font-size: 32px;
+      margin-top: 50px;
+      line-height: 1.5;
+    }
+    .back-btn {
+      margin-top: 30px;
+      padding: 15px 30px;
+      font-size: 18px;
+      background: #4ecdc4;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <h1><ruby>世<rt>せ</rt></ruby><ruby>界<rt>かい</rt></ruby><ruby>地<rt>ち</rt></ruby><ruby>図<rt>ず</rt></ruby>クイズ</h1>
+
+  <!-- タイトル画面 -->
+  <div id="title-screen" class="screen active-screen">
+    
+    <div class="description">
+      現在、世界の国の数は日本を含めて<strong>196カ国</strong>ありますが、<br>
+      本アプリではその中から<strong>代表的な175カ国</strong>を出題しています。
+    </div>
+
+    <h2><ruby>地<rt>ち</rt></ruby><ruby>域<rt>いき</rt></ruby>を<ruby>選<rt>えら</rt></ruby>んでね</h2>
+    
+    <!-- アジア -->
+    <div class="category-block">
+      <div class="category-title">アジア</div>
+      <div class="region-buttons">
+        <button class="region-btn main-btn" onclick="startGame('アジア', 'region')">
+          <span>アジアすべて</span><span class="score-mark" id="score-アジア">-</span>
+        </button>
+        <button class="region-btn" onclick="startGame('東アジア', 'subRegion')">
+          <span><ruby>東<rt>ひがし</rt></ruby>アジア</span><span class="score-mark" id="score-東アジア">-</span>
+        </button>
+        <button class="region-btn" onclick="startGame('東南アジア', 'subRegion')">
+          <span><ruby>東<rt>とう</rt></ruby><ruby>南<rt>なん</rt></ruby>アジア</span><span class="score-mark" id="score-東南アジア">-</span>
+        </button>
+        <button class="region-btn" onclick="startGame('南アジア', 'subRegion')">
+          <span><ruby>南<rt>みなみ</rt></ruby>アジア</span><span class="score-mark" id="score-南アジア">-</span>
+        </button>
+        <button class="region-btn" onclick="startGame('中東・西アジア', 'subRegion')">
+          <span><ruby>中<rt>ちゅう</rt></ruby><ruby>東<rt>とう</rt></ruby>・<ruby>西<rt>にし</rt></ruby>アジア</span><span class="score-mark" id="score-中東・西アジア">-</span>
+        </button>
+        <button class="region-btn" onclick="startGame('中央アジア', 'subRegion')">
+          <span><ruby>中<rt>ちゅう</rt></ruby><ruby>央<rt>おう</rt></ruby>アジア</span><span class="score-mark" id="score-中央アジア">-</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- ヨーロッパ -->
+    <div class="category-block">
+      <div class="category-title">ヨーロッパ</div>
+      <div class="region-buttons">
+        <button class="region-btn main-btn" onclick="startGame('ヨーロッパ', 'region')">
+          <span>ヨーロッパすべて</span><span class="score-mark" id="score-ヨーロッパ">-</span>
+        </button>
+        <button class="region-btn" onclick="startGame('西ヨーロッパ', 'subRegion')">
+          <span><ruby>西<rt>にし</rt></ruby>ヨーロッパ</span><span class="score-mark" id="score-西ヨーロッパ">-</span>
+        </button>
+        <button class="region-btn" onclick="startGame('東ヨーロッパ', 'subRegion')">
+          <span><ruby>東<rt>ひがし</rt></ruby>ヨーロッパ</span><span class="score-mark" id="score-東ヨーロッパ">-</span>
+        </button>
+        <button class="region-btn" onclick="startGame('南ヨーロッパ', 'subRegion')">
+          <span><ruby>南<rt>みなみ</rt></ruby>ヨーロッパ</span><span class="score-mark" id="score-南ヨーロッパ">-</span>
+        </button>
+        <button class="region-btn" onclick="startGame('北ヨーロッパ', 'subRegion')">
+          <span><ruby>北<rt>きた</rt></ruby>ヨーロッパ</span><span class="score-mark" id="score-北ヨーロッパ">-</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- アフリカ -->
+    <div class="category-block">
+      <div class="category-title">アフリカ</div>
+      <div class="region-buttons">
+        <button class="region-btn main-btn" onclick="startGame('アフリカ', 'region')">
+          <span>アフリカすべて</span><span class="score-mark" id="score-アフリカ">-</span>
+        </button>
+        <button class="region-btn" onclick="startGame('北アフリカ', 'subRegion')">
+          <span><ruby>北<rt>きた</rt></ruby>アフリカ</span><span class="score-mark" id="score-北アフリカ">-</span>
+        </button>
+        <button class="region-btn" onclick="startGame('西アフリカ', 'subRegion')">
+          <span><ruby>西<rt>にし</rt></ruby>アフリカ</span><span class="score-mark" id="score-西アフリカ">-</span>
+        </button>
+        <button class="region-btn" onclick="startGame('中部アフリカ', 'subRegion')">
+          <span><ruby>中<rt>ちゅう</rt></ruby><ruby>部<rt>ぶ</rt></ruby>アフリカ</span><span class="score-mark" id="score-中部アフリカ">-</span>
+        </button>
+        <button class="region-btn" onclick="startGame('東アフリカ', 'subRegion')">
+          <span><ruby>東<rt>ひがし</rt></ruby>アフリカ</span><span class="score-mark" id="score-東アフリカ">-</span>
+        </button>
+        <button class="region-btn" onclick="startGame('南部アフリカ', 'subRegion')">
+          <span><ruby>南<rt>なん</rt></ruby><ruby>部<rt>ぶ</rt></ruby>アフリカ</span><span class="score-mark" id="score-南部アフリカ">-</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- その他の地域 -->
+    <div class="category-block">
+      <div class="category-title">その<ruby>他<rt>ほか</rt></ruby>の<ruby>地<rt>ち</rt></ruby><ruby>域<rt>いき</rt></ruby></div>
+      <div class="region-buttons">
+        <button class="region-btn main-btn" onclick="startGame('北アメリカ', 'region')">
+          <span><ruby>北<rt>きた</rt></ruby>アメリカ</span><span class="score-mark" id="score-北アメリカ">-</span>
+        </button>
+        <button class="region-btn main-btn" onclick="startGame('南アメリカ', 'region')">
+          <span><ruby>南<rt>みなみ</rt></ruby>アメリカ</span><span class="score-mark" id="score-南アメリカ">-</span>
+        </button>
+        <button class="region-btn main-btn" onclick="startGame('オセアニア', 'region')">
+          <span>オセアニア</span><span class="score-mark" id="score-オセアニア">-</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- 全世界 -->
+    <div class="category-block" style="background: transparent; box-shadow: none; padding: 0;">
+      <button class="region-btn all" onclick="startGame('世界', 'world')">
+        <span><ruby>世<rt>せ</rt></ruby><ruby>界<rt>かい</rt></ruby>のすべての<ruby>国<rt>くに</rt></ruby></span><span class="score-mark" id="score-世界">-</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- クイズ画面 -->
+  <div id="quiz-screen" class="screen">
+    <div id="quiz-header">
+      <div id="score-board">
+        <ruby>正<rt>せい</rt></ruby><ruby>解<rt>かい</rt></ruby><ruby>数<rt>すう</rt></ruby>: <span id="current-score">0</span> / <span id="total">0</span> <ruby>問<rt>もん</rt></ruby>
+      </div>
+      <button class="back-title-btn" onclick="showTitle()">タイトルに<ruby>戻<rt>もど</rt></ruby>る</button>
+    </div>
+    
+    <div id="map-container">
+      <!-- ズーム操作のヒント -->
+      <div class="zoom-hint">🔍 ズームイン、ズームアウトできます</div>
+      <div id="loading"><ruby>地<rt>ち</rt></ruby><ruby>図<rt>ず</rt></ruby>データを<ruby>読<rt>よ</rt></ruby>み<ruby>込<rt>こ</rt></ruby>み<ruby>中<rt>ちゅう</rt></ruby>...</div>
+      <svg id="world-map" width="100%" height="100%"></svg>
+    </div>
+
+    <div id="message"><ruby>赤<rt>あか</rt></ruby>く<ruby>塗<rt>ぬ</rt></ruby>られているのはどこの<ruby>国<rt>くに</rt></ruby>？</div>
+    <div class="choices" id="choices-container"></div>
+  </div>
+
+  <!-- 結果画面 -->
+  <div id="clear-screen" class="screen">
+    <h2 id="result-title"></h2>
+    <button class="back-btn" onclick="showTitle()">タイトルへ<ruby>戻<rt>もど</rt></ruby>る</button>
+  </div>
+
+  <script>
+    const countries = [
+      // --- アジア ---
+      { id: "JPN", ruby: "<ruby>日<rt>に</rt></ruby><ruby>本<rt>ほん</rt></ruby>", region: "アジア", subRegion: "東アジア" },
+      { id: "CHN", ruby: "<ruby>中<rt>ちゅう</rt></ruby><ruby>国<rt>ごく</rt></ruby>", region: "アジア", subRegion: "東アジア" },
+      { id: "KOR", ruby: "<ruby>韓<rt>かん</rt></ruby><ruby>国<rt>こく</rt></ruby>", region: "アジア", subRegion: "東アジア" },
+      { id: "PRK", ruby: "<ruby>北<rt>きた</rt></ruby><ruby>朝<rt>ちょう</rt></ruby><ruby>鮮<rt>せん</rt></ruby>", region: "アジア", subRegion: "東アジア" },
+      { id: "TWN", ruby: "<ruby>台<rt>たい</rt></ruby><ruby>湾<rt>わん</rt></ruby>", region: "アジア", subRegion: "東アジア" },
+      { id: "MNG", ruby: "モンゴル", region: "アジア", subRegion: "東アジア" },
+      
+      { id: "PHL", ruby: "フィリピン", region: "アジア", subRegion: "東南アジア" },
+      { id: "VNM", ruby: "ベトナム", region: "アジア", subRegion: "東南アジア" },
+      { id: "THA", ruby: "タイ", region: "アジア", subRegion: "東南アジア" },
+      { id: "MYS", ruby: "マレーシア", region: "アジア", subRegion: "東南アジア" },
+      { id: "SGP", ruby: "シンガポール", region: "アジア", subRegion: "東南アジア" },
+      { id: "IDN", ruby: "インドネシア", region: "アジア", subRegion: "東南アジア" },
+      { id: "BRN", ruby: "ブルネイ", region: "アジア", subRegion: "東南アジア" },
+      { id: "KHM", ruby: "カンボジア", region: "アジア", subRegion: "東南アジア" },
+      { id: "LAO", ruby: "ラオス", region: "アジア", subRegion: "東南アジア" },
+      { id: "MMR", ruby: "ミャンマー", region: "アジア", subRegion: "東南アジア" },
+      { id: "TLS", ruby: "<ruby>東<rt>ひがし</rt></ruby>ティモール", region: "アジア", subRegion: "東南アジア" },
+      
+      { id: "BGD", ruby: "バングラデシュ", region: "アジア", subRegion: "南アジア" },
+      { id: "IND", ruby: "インド", region: "アジア", subRegion: "南アジア" },
+      { id: "NPL", ruby: "ネパール", region: "アジア", subRegion: "南アジア" },
+      { id: "BTN", ruby: "ブータン", region: "アジア", subRegion: "南アジア" },
+      { id: "LKA", ruby: "スリランカ", region: "アジア", subRegion: "南アジア" },
+      { id: "MDV", ruby: "モルディブ", region: "アジア", subRegion: "南アジア" },
+      { id: "PAK", ruby: "パキスタン", region: "アジア", subRegion: "南アジア" },
+      { id: "AFG", ruby: "アフガニスタン", region: "アジア", subRegion: "南アジア" },
+      
+      { id: "IRN", ruby: "イラン", region: "アジア", subRegion: "中東・西アジア" },
+      { id: "IRQ", ruby: "イラク", region: "アジア", subRegion: "中東・西アジア" },
+      { id: "SYR", ruby: "シリア", region: "アジア", subRegion: "中東・西アジア" },
+      { id: "LBN", ruby: "レバノン", region: "アジア", subRegion: "中東・西アジア" },
+      { id: "ISR", ruby: "イスラエル", region: "アジア", subRegion: "中東・西アジア" },
+      { id: "JOR", ruby: "ヨルダン", region: "アジア", subRegion: "中東・西アジア" },
+      { id: "SAU", ruby: "サウジアラビア", region: "アジア", subRegion: "中東・西アジア" },
+      { id: "KWT", ruby: "クウェート", region: "アジア", subRegion: "中東・西アジア" },
+      { id: "QAT", ruby: "カタール", region: "アジア", subRegion: "中東・西アジア" },
+      { id: "ARE", ruby: "アラブ<ruby>首<rt>しゅ</rt></ruby><ruby>長<rt>ちょう</rt></ruby><ruby>国<rt>こく</rt></ruby><ruby>連<rt>れん</rt></ruby><ruby>邦<rt>ぽう</rt></ruby>", region: "アジア", subRegion: "中東・西アジア" },
+      { id: "OMN", ruby: "オマーン", region: "アジア", subRegion: "中東・西アジア" },
+      { id: "YEM", ruby: "イエメン", region: "アジア", subRegion: "中東・西アジア" },
+      { id: "TUR", ruby: "トルコ", region: "アジア", subRegion: "中東・西アジア" },
+      { id: "CYP", ruby: "キプロス", region: "アジア", subRegion: "中東・西アジア" },
+      { id: "GEO", ruby: "ジョージア", region: "アジア", subRegion: "中東・西アジア" },
+      { id: "ARM", ruby: "アルメニア", region: "アジア", subRegion: "中東・西アジア" },
+      { id: "AZE", ruby: "アゼルバイジャン", region: "アジア", subRegion: "中東・西アジア" },
+      
+      { id: "KAZ", ruby: "カザフスタン", region: "アジア", subRegion: "中央アジア" },
+      { id: "UZB", ruby: "ウズベキスタン", region: "アジア", subRegion: "中央アジア" },
+      { id: "TKM", ruby: "トルクメニスタン", region: "アジア", subRegion: "中央アジア" },
+      { id: "KGZ", ruby: "キルギス", region: "アジア", subRegion: "中央アジア" },
+      { id: "TJK", ruby: "タジキスタン", region: "アジア", subRegion: "中央アジア" },
+
+      // --- ヨーロッパ ---
+      // 西ヨーロッパ
+      { id: "FRA", ruby: "フランス", region: "ヨーロッパ", subRegion: "西ヨーロッパ" },
+      { id: "DEU", ruby: "ドイツ", region: "ヨーロッパ", subRegion: "西ヨーロッパ" },
+      { id: "NLD", ruby: "オランダ", region: "ヨーロッパ", subRegion: "西ヨーロッパ" },
+      { id: "BEL", ruby: "ベルギー", region: "ヨーロッパ", subRegion: "西ヨーロッパ" },
+      { id: "LUX", ruby: "ルクセンブルク", region: "ヨーロッパ", subRegion: "西ヨーロッパ" },
+      { id: "CHE", ruby: "スイス", region: "ヨーロッパ", subRegion: "西ヨーロッパ" },
+      { id: "AUT", ruby: "オーストリア", region: "ヨーロッパ", subRegion: "西ヨーロッパ" },
+      // 北ヨーロッパ
+      { id: "GBR", ruby: "イギリス", region: "ヨーロッパ", subRegion: "北ヨーロッパ" },
+      { id: "IRL", ruby: "アイルランド", region: "ヨーロッパ", subRegion: "北ヨーロッパ" },
+      { id: "ISL", ruby: "アイスランド", region: "ヨーロッパ", subRegion: "北ヨーロッパ" },
+      { id: "NOR", ruby: "ノルウェー", region: "ヨーロッパ", subRegion: "北ヨーロッパ" },
+      { id: "SWE", ruby: "スウェーデン", region: "ヨーロッパ", subRegion: "北ヨーロッパ" },
+      { id: "FIN", ruby: "フィンランド", region: "ヨーロッパ", subRegion: "北ヨーロッパ" },
+      { id: "DNK", ruby: "デンマーク", region: "ヨーロッパ", subRegion: "北ヨーロッパ" },
+      { id: "EST", ruby: "エストニア", region: "ヨーロッパ", subRegion: "北ヨーロッパ" },
+      { id: "LVA", ruby: "ラトビア", region: "ヨーロッパ", subRegion: "北ヨーロッパ" },
+      { id: "LTU", ruby: "リトアニア", region: "ヨーロッパ", subRegion: "北ヨーロッパ" },
+      // 南ヨーロッパ
+      { id: "ITA", ruby: "イタリア", region: "ヨーロッパ", subRegion: "南ヨーロッパ" },
+      { id: "ESP", ruby: "スペイン", region: "ヨーロッパ", subRegion: "南ヨーロッパ" },
+      { id: "PRT", ruby: "ポルトガル", region: "ヨーロッパ", subRegion: "南ヨーロッパ" },
+      { id: "GRC", ruby: "ギリシャ", region: "ヨーロッパ", subRegion: "南ヨーロッパ" },
+      { id: "HRV", ruby: "クロアチア", region: "ヨーロッパ", subRegion: "南ヨーロッパ" },
+      { id: "SRB", ruby: "セルビア", region: "ヨーロッパ", subRegion: "南ヨーロッパ" },
+      { id: "SVN", ruby: "スロベニア", region: "ヨーロッパ", subRegion: "南ヨーロッパ" },
+      { id: "BIH", ruby: "ボスニア・ヘルツェゴビナ", region: "ヨーロッパ", subRegion: "南ヨーロッパ" },
+      { id: "MNE", ruby: "モンテネグロ", region: "ヨーロッパ", subRegion: "南ヨーロッパ" },
+      { id: "MKD", ruby: "北マケドニア", region: "ヨーロッパ", subRegion: "南ヨーロッパ" },
+      { id: "ALB", ruby: "アルバニア", region: "ヨーロッパ", subRegion: "南ヨーロッパ" },
+      // 東ヨーロッパ
+      { id: "POL", ruby: "ポーランド", region: "ヨーロッパ", subRegion: "東ヨーロッパ" },
+      { id: "CZE", ruby: "チェコ", region: "ヨーロッパ", subRegion: "東ヨーロッパ" },
+      { id: "SVK", ruby: "スロバキア", region: "ヨーロッパ", subRegion: "東ヨーロッパ" },
+      { id: "HUN", ruby: "ハンガリー", region: "ヨーロッパ", subRegion: "東ヨーロッパ" },
+      { id: "ROU", ruby: "ルーマニア", region: "ヨーロッパ", subRegion: "東ヨーロッパ" },
+      { id: "BGR", ruby: "ブルガリア", region: "ヨーロッパ", subRegion: "東ヨーロッパ" },
+      { id: "UKR", ruby: "ウクライナ", region: "ヨーロッパ", subRegion: "東ヨーロッパ" },
+      { id: "BLR", ruby: "ベラルーシ", region: "ヨーロッパ", subRegion: "東ヨーロッパ" },
+      { id: "MDA", ruby: "モルドバ", region: "ヨーロッパ", subRegion: "東ヨーロッパ" },
+      { id: "RUS", ruby: "ロシア", region: "ヨーロッパ", subRegion: "東ヨーロッパ" },
+
+      // --- アフリカ ---
+      { id: "EGY", ruby: "エジプト", region: "アフリカ", subRegion: "北アフリカ" },
+      { id: "MAR", ruby: "モロッコ", region: "アフリカ", subRegion: "北アフリカ" },
+      { id: "DZA", ruby: "アルジェリア", region: "アフリカ", subRegion: "北アフリカ" },
+      { id: "TUN", ruby: "チュニジア", region: "アフリカ", subRegion: "北アフリカ" },
+      { id: "LBY", ruby: "リビア", region: "アフリカ", subRegion: "北アフリカ" },
+      { id: "SDN", ruby: "スーダン", region: "アフリカ", subRegion: "北アフリカ" },
+      { id: "ESH", ruby: "<ruby>西<rt>にし</rt></ruby>サハラ", region: "アフリカ", subRegion: "北アフリカ" },
+
+      { id: "NGA", ruby: "ナイジェリア", region: "アフリカ", subRegion: "西アフリカ" },
+      { id: "MLI", ruby: "マリ", region: "アフリカ", subRegion: "西アフリカ" },
+      { id: "SEN", ruby: "セネガル", region: "アフリカ", subRegion: "西アフリカ" },
+      { id: "CIV", ruby: "コートジボワール", region: "アフリカ", subRegion: "西アフリカ" },
+      { id: "GHA", ruby: "ガーナ", region: "アフリカ", subRegion: "西アフリカ" },
+      { id: "BFA", ruby: "ブルキナファソ", region: "アフリカ", subRegion: "西アフリカ" },
+      { id: "GIN", ruby: "ギニア", region: "アフリカ", subRegion: "西アフリカ" },
+      { id: "SLE", ruby: "シエラレオネ", region: "アフリカ", subRegion: "西アフリカ" },
+      { id: "LBR", ruby: "リベリア", region: "アフリカ", subRegion: "西アフリカ" },
+      { id: "MRT", ruby: "モーリタニア", region: "アフリカ", subRegion: "西アフリカ" },
+      { id: "NER", ruby: "ニジェール", region: "アフリカ", subRegion: "西アフリカ" },
+
+      { id: "COD", ruby: "コンゴ<ruby>民<rt>みん</rt></ruby><ruby>主<rt>しゅ</rt></ruby><ruby>共<rt>きょう</rt></ruby><ruby>和<rt>わ</rt></ruby><ruby>国<rt>こく</rt></ruby>", region: "アフリカ", subRegion: "中部アフリカ" },
+      { id: "COG", ruby: "コンゴ<ruby>共<rt>きょう</rt></ruby><ruby>和<rt>わ</rt></ruby><ruby>国<rt>こく</rt></ruby>", region: "アフリカ", subRegion: "中部アフリカ" },
+      { id: "AGO", ruby: "アンゴラ", region: "アフリカ", subRegion: "中部アフリカ" },
+      { id: "CMR", ruby: "カメルーン", region: "アフリカ", subRegion: "中部アフリカ" },
+      { id: "CAF", ruby: "<ruby>中<rt>ちゅう</rt></ruby><ruby>央<rt>おう</rt></ruby>アフリカ", region: "アフリカ", subRegion: "中部アフリカ" },
+      { id: "TCD", ruby: "チャド", region: "アフリカ", subRegion: "中部アフリカ" },
+      { id: "GAB", ruby: "ガボン", region: "アフリカ", subRegion: "中部アフリカ" },
+      { id: "GNQ", ruby: "<ruby>赤<rt>せき</rt></ruby><ruby>道<rt>どう</rt></ruby>ギニア", region: "アフリカ", subRegion: "中部アフリカ" },
+
+      { id: "KEN", ruby: "ケニア", region: "アフリカ", subRegion: "東アフリカ" },
+      { id: "ETH", ruby: "エチオピア", region: "アフリカ", subRegion: "東アフリカ" },
+      { id: "SOM", ruby: "ソマリア", region: "アフリカ", subRegion: "東アフリカ" },
+      { id: "UGA", ruby: "ウガンダ", region: "アフリカ", subRegion: "東アフリカ" },
+      { id: "TZA", ruby: "タンザニア", region: "アフリカ", subRegion: "東アフリカ" },
+      { id: "RWA", ruby: "ルワンダ", region: "アフリカ", subRegion: "東アフリカ" },
+      { id: "BDI", ruby: "ブルンジ", region: "アフリカ", subRegion: "東アフリカ" },
+      { id: "SSD", ruby: "<ruby>南<rt>みなみ</rt></ruby>スーダン", region: "アフリカ", subRegion: "東アフリカ" },
+      { id: "ERI", ruby: "エリトリア", region: "アフリカ", subRegion: "東アフリカ" },
+      { id: "DJI", ruby: "ジブチ", region: "アフリカ", subRegion: "東アフリカ" },
+      { id: "MDG", ruby: "マダガスカル", region: "アフリカ", subRegion: "東アフリカ" },
+      { id: "MOZ", ruby: "モザンビーク", region: "アフリカ", subRegion: "東アフリカ" },
+      { id: "MWI", ruby: "マラウイ", region: "アフリカ", subRegion: "東アフリカ" },
+      { id: "ZMB", ruby: "ザンビア", region: "アフリカ", subRegion: "東アフリカ" },
+      { id: "ZWE", ruby: "ジンバブエ", region: "アフリカ", subRegion: "東アフリカ" },
+
+      { id: "ZAF", ruby: "<ruby>南<rt>みなみ</rt></ruby>アフリカ", region: "アフリカ", subRegion: "南部アフリカ" },
+      { id: "NAM", ruby: "ナミビア", region: "アフリカ", subRegion: "南部アフリカ" },
+      { id: "BWA", ruby: "ボツワナ", region: "アフリカ", subRegion: "南部アフリカ" },
+      { id: "LSO", ruby: "レソト", region: "アフリカ", subRegion: "南部アフリカ" },
+      { id: "SWZ", ruby: "エスワティニ", region: "アフリカ", subRegion: "南部アフリカ" },
+
+      // --- 北アメリカ ---
+      { id: "USA", ruby: "アメリカ", region: "北アメリカ", subRegion: "北アメリカ" },
+      { id: "CAN", ruby: "カナダ", region: "北アメリカ", subRegion: "北アメリカ" },
+      { id: "MEX", ruby: "メキシコ", region: "北アメリカ", subRegion: "北アメリカ" },
+      { id: "GTM", ruby: "グアテマラ", region: "北アメリカ", subRegion: "北アメリカ" },
+      { id: "BLZ", ruby: "ベリーズ", region: "北アメリカ", subRegion: "北アメリカ" },
+      { id: "HND", ruby: "ホンジュラス", region: "北アメリカ", subRegion: "北アメリカ" },
+      { id: "SLV", ruby: "エルサルバドル", region: "北アメリカ", subRegion: "北アメリカ" },
+      { id: "NIC", ruby: "ニカラグア", region: "北アメリカ", subRegion: "北アメリカ" },
+      { id: "CRI", ruby: "コスタリカ", region: "北アメリカ", subRegion: "北アメリカ" },
+      { id: "PAN", ruby: "パナマ", region: "北アメリカ", subRegion: "北アメリカ" },
+      { id: "CUB", ruby: "キューバ", region: "北アメリカ", subRegion: "北アメリカ" },
+      { id: "JAM", ruby: "ジャマイカ", region: "北アメリカ", subRegion: "北アメリカ" },
+      { id: "HTI", ruby: "ハイチ", region: "北アメリカ", subRegion: "北アメリカ" },
+      { id: "DOM", ruby: "ドミニカ<ruby>共<rt>きょう</rt></ruby><ruby>和<rt>わ</rt></ruby><ruby>国<rt>こく</rt></ruby>", region: "北アメリカ", subRegion: "北アメリカ" },
+      { id: "BHS", ruby: "バハマ", region: "北アメリカ", subRegion: "北アメリカ" },
+      { id: "GRL", ruby: "グリーンランド", region: "北アメリカ", subRegion: "北アメリカ" },
+      
+      // --- 南アメリカ ---
+      { id: "BRA", ruby: "ブラジル", region: "南アメリカ", subRegion: "南アメリカ" },
+      { id: "ARG", ruby: "アルゼンチン", region: "南アメリカ", subRegion: "南アメリカ" },
+      { id: "CHL", ruby: "チリ", region: "南アメリカ", subRegion: "南アメリカ" },
+      { id: "PER", ruby: "ペルー", region: "南アメリカ", subRegion: "南アメリカ" },
+      { id: "COL", ruby: "コロンビア", region: "南アメリカ", subRegion: "南アメリカ" },
+      { id: "VEN", ruby: "ベネズエラ", region: "南アメリカ", subRegion: "南アメリカ" },
+      { id: "ECU", ruby: "エクアドル", region: "南アメリカ", subRegion: "南アメリカ" },
+      { id: "BOL", ruby: "ボリビア", region: "南アメリカ", subRegion: "南アメリカ" },
+      { id: "PRY", ruby: "パラグアイ", region: "南アメリカ", subRegion: "南アメリカ" },
+      { id: "URY", ruby: "ウルグアイ", region: "南アメリカ", subRegion: "南アメリカ" },
+      { id: "GUY", ruby: "ガイアナ", region: "南アメリカ", subRegion: "南アメリカ" },
+      { id: "SUR", ruby: "スリナム", region: "南アメリカ", subRegion: "南アメリカ" },
+
+      // --- オセアニア ---
+      { id: "AUS", ruby: "オーストラリア", region: "オセアニア", subRegion: "オセアニア" },
+      { id: "NZL", ruby: "ニュージーランド", region: "オセアニア", subRegion: "オセアニア" },
+      { id: "PNG", ruby: "パプアニューギニア", region: "オセアニア", subRegion: "オセアニア" },
+      { id: "FJI", ruby: "フィジー", region: "オセアニア", subRegion: "オセアニア" },
+      { id: "SLB", ruby: "ソロモン<ruby>諸<rt>しょ</rt></ruby><ruby>島<rt>とう</rt></ruby>", region: "オセアニア", subRegion: "オセアニア" },
+      { id: "VUT", ruby: "バヌアツ", region: "オセアニア", subRegion: "オセアニア" },
+      { id: "NCL", ruby: "ニューカレドニア", region: "オセアニア", subRegion: "オセアニア" }
+    ];
+
+    let targetPool = []; 
+    let currentTarget = null;
+    let score = 0;
+    let totalScore = 0;
+    let isMapLoaded = false;
+    let svg, mapGroup, projection, path, zoom;
+    let timeoutId = null; 
+    let highScores = {}; 
+    let currentRegionName = "";
+
+    // --- 地図の初期化 ---
+    const width = 600;
+    const height = 450;
+    svg = d3.select("#world-map")
+            .attr("viewBox", `0 0 ${width} ${height}`);
+            
+    mapGroup = svg.append("g");
+
+    projection = d3.geoMercator()
+                   .scale(95)
+                   .translate([width / 2, height / 2 + 30]);
+    path = d3.geoPath().projection(projection);
+
+    zoom = d3.zoom()
+             .scaleExtent([1, 25])
+             .on("zoom", (event) => {
+               mapGroup.attr("transform", event.transform);
+               mapGroup.selectAll(".country-path")
+                       .style("stroke-width", 0.5 / event.transform.k + "px");
+             });
+             
+    svg.call(zoom);
+
+    const geoJsonUrl = "https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson";
+    
+    d3.json(geoJsonUrl).then(function(data) {
+      document.getElementById("loading").style.display = "none";
+      isMapLoaded = true;
+      
+      const features = data.features.filter(d => d.id !== "ATA");
+
+      mapGroup.selectAll(".country-path")
+         .data(features)
+         .enter()
+         .append("path")
+         .attr("class", "country-path")
+         .attr("d", path)
+         .attr("id", d => "country-" + d.id);
+    }).catch(function(error) {
+      document.getElementById("loading").innerHTML = "<ruby>地<rt>ち</rt></ruby><ruby>図<rt>ず</rt></ruby>データを<ruby>読<rt>よ</rt></ruby>み<ruby>込<rt>こ</rt></ruby>みに<ruby>失<rt>しっ</rt></ruby><ruby>敗<rt>ぱい</rt></ruby>しました。";
+    });
+
+    // --- 画面切り替え ---
+    function switchScreen(screenId) {
+      document.querySelectorAll('.screen').forEach(el => el.classList.remove('active-screen'));
+      document.getElementById(screenId).classList.add('active-screen');
+    }
+
+    function showTitle() {
+      if (timeoutId) clearTimeout(timeoutId);
+      updateTitleScores();
+      // アニメーションなしで瞬時にズームリセット
+      svg.call(zoom.transform, d3.zoomIdentity);
+      switchScreen('title-screen');
+    }
+
+    // --- タイトル画面のスコア表示更新 ---
+    function updateTitleScores() {
+      for (let region in highScores) {
+        const markEl = document.getElementById("score-" + region);
+        if (markEl) {
+          markEl.innerHTML = `スコア ${highScores[region].score}/${highScores[region].total}`;
+        }
+      }
+    }
+
+    // --- ゲーム開始 ---
+    function startGame(targetName, filterType) {
+      currentRegionName = targetName;
+      
+      if (filterType === 'world') {
+        targetPool = countries.slice();
+      } else if (filterType === 'region') {
+        targetPool = countries.filter(p => p.region === targetName);
+      } else if (filterType === 'subRegion') {
+        targetPool = countries.filter(p => p.subRegion === targetName);
+      }
+      
+      score = 0;
+      totalScore = targetPool.length;
+      document.getElementById("current-score").innerText = score;
+      document.getElementById("total").innerText = totalScore;
+      
+      d3.selectAll(".country-path").classed("target", false).classed("solved", false);
+      
+      // アニメーションなしで瞬時にズームリセット
+      svg.call(zoom.transform, d3.zoomIdentity);
+      
+      switchScreen('quiz-screen');
+      
+      if(isMapLoaded) {
+        nextQuestion();
+      } else {
+        const waitMap = setInterval(() => {
+          if(isMapLoaded) {
+            clearInterval(waitMap);
+            nextQuestion();
+          }
+        }, 500);
+      }
+    }
+
+    // --- 次の問題を出題 ---
+    function nextQuestion() {
+      if (targetPool.length === 0) {
+        if (!(currentRegionName in highScores) || score > highScores[currentRegionName].score) {
+          highScores[currentRegionName] = { score: score, total: totalScore };
+        }
+
+        const resultTitle = document.getElementById("result-title");
+        
+        if (score === totalScore && totalScore > 0) {
+          resultTitle.innerHTML = `<ruby>全<rt>ぜん</rt></ruby><ruby>問<rt>もん</rt></ruby><ruby>正<rt>せい</rt></ruby><ruby>解<rt>かい</rt></ruby>！`;
+          resultTitle.style.color = "#ff5252";
+        } else {
+          resultTitle.innerHTML = `<ruby>結<rt>けっ</rt></ruby><ruby>果<rt>か</rt></ruby>: ${score} / ${totalScore} <ruby>問<rt>もん</rt></ruby><ruby>正<rt>せい</rt></ruby><ruby>解<rt>かい</rt></ruby>`;
+          resultTitle.style.color = "#555";
+        }
+        
+        // リザルト画面でズームリセット（アニメーションなし）
+        svg.call(zoom.transform, d3.zoomIdentity);
+        switchScreen('clear-screen');
+        return;
+      }
+
+      d3.selectAll(".country-path").classed("target", false);
+
+      const randomIndex = Math.floor(Math.random() * targetPool.length);
+      currentTarget = targetPool[randomIndex];
+
+      const targetElement = d3.select("#country-" + currentTarget.id);
+      
+      if (targetElement.empty()) {
+        targetPool = targetPool.filter(p => p.id !== currentTarget.id);
+        totalScore--;
+        document.getElementById("total").innerText = totalScore;
+        nextQuestion();
+        return;
+      }
+
+      const messageEl = document.getElementById("message");
+      messageEl.innerHTML = "<ruby>赤<rt>あか</rt></ruby>く<ruby>塗<rt>ぬ</rt></ruby>られているのはどこの<ruby>国<rt>くに</rt></ruby>？";
+      messageEl.style.color = "#ff5252";
+      
+      targetElement.classed("target", true);
+      
+      // --- 【修正】アニメーションをなくし、瞬時にズームするように変更 ---
+      const d = targetElement.datum();
+      if (d) {
+        const bounds = path.bounds(d);
+        const dx = bounds[1][0] - bounds[0][0];
+        const dy = bounds[1][1] - bounds[0][1];
+        const x = (bounds[0][0] + bounds[1][0]) / 2;
+        const y = (bounds[0][1] + bounds[1][1]) / 2;
+        
+        const scale = Math.max(1, Math.min(8, 0.5 / Math.max(dx / width, dy / height)));
+        const translate = [width / 2 - scale * x, height / 2 - scale * y];
+
+        // transition() を外し、パッと切り替える
+        svg.call(
+             zoom.transform, 
+             d3.zoomIdentity.translate(translate[0], translate[1]).scale(scale)
+           );
+      }
+      
+      generateChoices();
+    }
+
+    // --- 選択肢の生成 ---
+    function generateChoices() {
+      const choicesContainer = document.getElementById("choices-container");
+      choicesContainer.innerHTML = ""; 
+
+      let choices = [currentTarget];
+      
+      let sameRegionPool = countries.filter(p => p.subRegion === currentTarget.subRegion && p.id !== currentTarget.id);
+      sameRegionPool.sort(() => Math.random() - 0.5);
+
+      let diffRegionPool = countries.filter(p => p.subRegion !== currentTarget.subRegion);
+      diffRegionPool.sort(() => Math.random() - 0.5);
+
+      let sameCount = Math.min(2, sameRegionPool.length);
+      for (let i = 0; i < sameCount; i++) {
+        choices.push(sameRegionPool[i]);
+      }
+
+      let diffCount = 4 - choices.length;
+      for (let i = 0; i < diffCount; i++) {
+        choices.push(diffRegionPool[i]);
+      }
+
+      choices.sort(() => Math.random() - 0.5);
+
+      choices.forEach(pref => {
+        const btn = document.createElement("button");
+        btn.className = "choice-btn";
+        btn.innerHTML = pref.ruby; 
+        btn.onclick = () => checkAnswer(pref, btn);
+        choicesContainer.appendChild(btn);
+      });
+    }
+
+    // --- 答え合わせ ---
+    function checkAnswer(selectedPref, clickedBtn) {
+      const buttons = document.querySelectorAll(".choice-btn");
+      buttons.forEach(btn => btn.disabled = true); 
+
+      const messageEl = document.getElementById("message");
+
+      if (selectedPref.id === currentTarget.id) {
+        score++;
+        document.getElementById("current-score").innerText = score;
+        messageEl.innerHTML = "⭕ <ruby>正<rt>せい</rt></ruby><ruby>解<rt>かい</rt></ruby>";
+        messageEl.style.color = "#8bc34a";
+        clickedBtn.style.background = "#ffb347";
+        
+        d3.select("#country-" + currentTarget.id).classed("solved", true);
+      } else {
+        messageEl.innerHTML = `❌ <ruby>残<rt>ざん</rt></ruby><ruby>念<rt>ねん</rt></ruby>！<ruby>正<rt>せい</rt></ruby><ruby>解<rt>かい</rt></ruby>は「${currentTarget.ruby}」でした`;
+        messageEl.style.color = "#555";
+        clickedBtn.style.background = "#ff5252";
+      }
+
+      targetPool = targetPool.filter(p => p.id !== currentTarget.id);
+      timeoutId = setTimeout(nextQuestion, 2000); 
+    }
+  </script>
+</body>
+</html>
+
