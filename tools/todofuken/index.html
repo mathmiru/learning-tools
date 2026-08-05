@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>都道府県クイズ</title>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <style>
+    body {
+      font-family: 'Hiragino Kaku Gothic ProN', 'Meiryo', sans-serif;
+      text-align: center;
+      background-color: #f0f8ff;
+      margin: 0;
+      padding: 20px;
+    }
+    h1 {
+      color: #333;
+      margin-bottom: 5px;
+    }
+    ruby {
+      ruby-align: center;
+    }
+    rt {
+      font-size: 0.6em;
+      color: #666;
+    }
+    
+    /* 画面切り替え用のクラス */
+    .screen {
+      display: none;
+    }
+    .active-screen {
+      display: block;
+    }
+
+    /* タイトル画面のスタイル */
+    .region-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      flex-wrap: wrap;
+      max-width: 500px;
+      margin: 30px auto;
+    }
+    .region-btn {
+      padding: 10px 15px;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+      background: #ffb347;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      transition: all 0.2s;
+      width: calc(33% - 15px);
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    .region-btn.all {
+      background: #ff5252;
+      width: 80%;
+      margin-top: 10px;
+    }
+    .region-btn:hover {
+      background: #ffa01a;
+      transform: translateY(-2px);
+    }
+    .score-mark {
+      font-size: 12px;
+      color: #ffe873;
+      height: 16px;
+      margin-top: 4px;
+    }
+    
+    /* クイズ画面のスタイル */
+    #quiz-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      max-width: 600px;
+      margin: 0 auto 15px auto;
+    }
+    #score-board {
+      font-size: 18px;
+      color: #555;
+      font-weight: bold;
+    }
+    .back-title-btn {
+      padding: 8px 16px;
+      font-size: 14px;
+      background: #cccccc;
+      color: #333;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .back-title-btn:hover {
+      background: #bbbbbb;
+    }
+
+    #map-container {
+      margin: 0 auto;
+      width: 100%;
+      max-width: 600px;
+      height: 500px;
+      background: #e0f7fa;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      position: relative;
+      overflow: hidden;
+      touch-action: none; 
+    }
+    #loading {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 20px;
+      font-weight: bold;
+      color: #666;
+    }
+
+    /* ズームのヒント表示（右下に配置） */
+    .zoom-hint {
+      position: absolute;
+      bottom: 12px;
+      right: 12px;
+      background-color: rgba(255, 255, 255, 0.85);
+      color: #333;
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: bold;
+      pointer-events: none;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+      z-index: 10;
+    }
+    
+    #japan-map {
+      cursor: grab;
+    }
+    #japan-map:active {
+      cursor: grabbing;
+    }
+
+    .prefecture {
+      fill: #cccccc;
+      stroke: #ffffff;
+      stroke-width: 0.8px;
+      transition: fill 0.3s;
+    }
+    
+    .target { fill: #ff5252 !important; }
+    .solved { fill: #8bc34a !important; }
+    
+    #message {
+      font-size: 24px;
+      font-weight: bold;
+      margin: 20px 0;
+      height: 30px;
+      color: #ff5252;
+    }
+    .choices {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      flex-wrap: wrap;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    .choice-btn {
+      padding: 15px 25px;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+      background: #4ecdc4;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      transition: all 0.2s;
+      width: calc(50% - 15px);
+      box-sizing: border-box;
+    }
+    .choice-btn:hover:not(:disabled) {
+      background: #45b7af;
+      transform: translateY(-2px);
+    }
+    .choice-btn:disabled {
+      cursor: not-allowed;
+    }
+
+    /* 結果画面のスタイル */
+    #clear-screen h2 {
+      font-size: 32px;
+      margin-top: 50px;
+      line-height: 1.5;
+    }
+    .back-btn {
+      margin-top: 30px;
+      padding: 15px 30px;
+      font-size: 18px;
+      background: #4ecdc4;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <h1><ruby>都<rt>と</rt></ruby><ruby>道<rt>どう</rt></ruby><ruby>府<rt>ふ</rt></ruby><ruby>県<rt>けん</rt></ruby>クイズ</h1>
+
+  <!-- タイトル画面 -->
+  <div id="title-screen" class="screen active-screen">
+    <h2><ruby>地<rt>ち</rt></ruby><ruby>域<rt>いき</rt></ruby>を<ruby>選<rt>えら</rt></ruby>んでね</h2>
+    <div class="region-buttons">
+      <button class="region-btn" data-region="北海道" onclick="startGame('北海道')">
+        <span><ruby>北<rt>ほっ</rt></ruby><ruby>海<rt>かい</rt></ruby><ruby>道<rt>どう</rt></ruby></span><span class="score-mark" id="score-北海道">-</span>
+      </button>
+      <button class="region-btn" data-region="東北" onclick="startGame('東北')">
+        <span><ruby>東<rt>とう</rt></ruby><ruby>北<rt>ほく</rt></ruby></span><span class="score-mark" id="score-東北">-</span>
+      </button>
+      <button class="region-btn" data-region="関東" onclick="startGame('関東')">
+        <span><ruby>関<rt>かん</rt></ruby><ruby>東<rt>とう</rt></ruby></span><span class="score-mark" id="score-関東">-</span>
+      </button>
+      <button class="region-btn" data-region="中部" onclick="startGame('中部')">
+        <span><ruby>中<rt>ちゅう</rt></ruby><ruby>部<rt>ぶ</rt></ruby></span><span class="score-mark" id="score-中部">-</span>
+      </button>
+      <button class="region-btn" data-region="近畿" onclick="startGame('近畿')">
+        <span><ruby>近<rt>きん</rt></ruby><ruby>畿<rt>き</rt></ruby></span><span class="score-mark" id="score-近畿">-</span>
+      </button>
+      <button class="region-btn" data-region="中国" onclick="startGame('中国')">
+        <span><ruby>中<rt>ちゅう</rt></ruby><ruby>国<rt>ごく</rt></ruby></span><span class="score-mark" id="score-中国">-</span>
+      </button>
+      <button class="region-btn" data-region="四国" onclick="startGame('四国')">
+        <span><ruby>四<rt>し</rt></ruby><ruby>国<rt>こく</rt></ruby></span><span class="score-mark" id="score-四国">-</span>
+      </button>
+      <button class="region-btn" data-region="九州" onclick="startGame('九州')">
+        <span><ruby>九<rt>きゅう</rt></ruby><ruby>州<rt>しゅう</rt></ruby></span><span class="score-mark" id="score-九州">-</span>
+      </button>
+      <button class="region-btn all" data-region="全国" onclick="startGame('全国')">
+        <span><ruby>全<rt>ぜん</rt></ruby><ruby>国<rt>こく</rt></ruby></span><span class="score-mark" id="score-全国">-</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- クイズ画面 -->
+  <div id="quiz-screen" class="screen">
+    <div id="quiz-header">
+      <div id="score-board">
+        <ruby>正<rt>せい</rt></ruby><ruby>解<rt>かい</rt></ruby><ruby>数<rt>すう</rt></ruby>: <span id="current-score">0</span> / <span id="total">0</span> <ruby>問<rt>もん</rt></ruby>
+      </div>
+      <button class="back-title-btn" onclick="showTitle()">タイトルに<ruby>戻<rt>もど</rt></ruby>る</button>
+    </div>
+    
+    <div id="map-container">
+      <div id="loading"><ruby>地<rt>ち</rt></ruby><ruby>図<rt>ず</rt></ruby>データを<ruby>読<rt>よ</rt></ruby>み<ruby>込<rt>こ</rt></ruby>み<ruby>中<rt>ちゅう</rt></ruby>...</div>
+      <!-- ズーム操作の案内（修正箇所） -->
+      <div class="zoom-hint">🔍 ズームイン、ズームアウトできます</div>
+      <svg id="japan-map" width="100%" height="100%"></svg>
+    </div>
+
+    <div id="message"><ruby>赤<rt>あか</rt></ruby>く<ruby>塗<rt>ぬ</rt></ruby>られているのは<ruby>何<rt>なに</rt></ruby><ruby>県<rt>けん</rt></ruby>？</div>
+    <div class="choices" id="choices-container"></div>
+  </div>
+
+  <!-- 結果画面 -->
+  <div id="clear-screen" class="screen">
+    <h2 id="result-title"></h2>
+    <button class="back-btn" onclick="showTitle()">タイトルへ<ruby>戻<rt>もど</rt></ruby>る</button>
+  </div>
+
+  <!-- 出典クレジット -->
+  <div style="font-size: 12px; color: #888; text-align: right; margin-top: 30px; max-width: 600px; margin-left: auto; margin-right: auto; line-height: 1.6;">
+    <a href="https://www.gsi.go.jp/kankyochiri/gm_jpn.html" target="_blank" style="color: #888; text-decoration: none;">
+      「<ruby>地<rt>ち</rt></ruby><ruby>球<rt>きゅう</rt></ruby><ruby>地<rt>ち</rt></ruby><ruby>図<rt>ず</rt></ruby><ruby>日<rt>に</rt></ruby><ruby>本<rt>ほん</rt></ruby>」（<ruby>国<rt>こく</rt></ruby><ruby>土<rt>ど</rt></ruby><ruby>地<rt>ち</rt></ruby><ruby>理<rt>り</rt></ruby><ruby>院<rt>いん</rt></ruby>）を<ruby>加<rt>か</rt></ruby><ruby>工<rt>こう</rt></ruby>して<ruby>作<rt>さく</rt></ruby><ruby>成<rt>せい</rt></ruby>
+    </a>
+  </div>
+
+  <script>
+    const prefectures = [
+      { id: "北海道", ruby: "<ruby>北<rt>ほっ</rt></ruby><ruby>海<rt>かい</rt></ruby><ruby>道<rt>どう</rt></ruby>", region: "北海道" },
+      { id: "青森県", ruby: "<ruby>青<rt>あお</rt></ruby><ruby>森<rt>もり</rt></ruby><ruby>県<rt>けん</rt></ruby>", region: "東北" },
+      { id: "岩手県", ruby: "<ruby>岩<rt>いわ</rt></ruby><ruby>手<rt>て</rt></ruby><ruby>県<rt>けん</rt></ruby>", region: "東北" },
+      { id: "宮城県", ruby: "<ruby>宮<rt>みや</rt></ruby><ruby>城<rt>ぎ</rt></ruby><ruby>県<rt>けん</rt></ruby>", region: "東北" },
+      { id: "秋田県", ruby: "<ruby>秋<rt>あき</rt></ruby><ruby>田<rt>た</rt></ruby><ruby>県<rt>けん</rt></ruby>", region: "東北" },
+      { id: "山形県", ruby: "<ruby>山<rt>やま</rt></ruby><ruby>形<rt>がた</rt></ruby><ruby>県<rt>けん</rt></ruby>", region: "東北" },
+      { id: "福島県", ruby: "<ruby>福<rt>ふく</rt></ruby><ruby>島<rt>しま</rt></ruby><ruby>県<rt>けん</rt></ruby>", region: "東北" },
+      { id: "茨城県", ruby: "<ruby>茨<rt>いばら</rt></ruby><ruby>城<rt>き</rt></ruby><ruby>県<rt>けん</rt></ruby>", region: "関東" },
+      { id: "栃木県", ruby: "<ruby>栃<rt>とち</rt></ruby><ruby>木<rt>ぎ</rt></ruby><ruby>県<rt>けん</rt></ruby>", region: "関東" },
+      { id: "群馬県", ruby: "<ruby>群<rt>ぐん</rt></ruby><ruby>馬<rt>ま</rt></ruby><ruby>県<rt>けん</rt></ruby>", region: "関東" },
+      { id: "埼玉県", ruby: "<ruby>埼<rt>さい</rt></ruby><ruby>玉<rt>たま</rt></ruby><ruby>県<rt>けん</rt></ruby>", region: "関東" },
+      { id: "千葉県", ruby: "<ruby>千<rt>ち</rt></ruby><ruby>葉<rt>ば</rt></ruby><ruby>県<rt>けん</rt></ruby>", region: "関東" },
+      { id: "東京都", ruby: "<ruby>東<rt>とう</rt></ruby><ruby>京<rt>きょう</rt></ruby><ruby>都<rt>と</rt></ruby>", region: "関東" },
+      { id: "神奈川県", ruby: "<ruby>神<rt>かな</rt></ruby><ruby>奈<rt>な</rt></ruby><ruby>川<rt>がわ</rt></ruby><ruby>県<rt>けん</rt></ruby>", region: "関東" },
+      { id: "新潟県", ruby: "<ruby>新<rt>にい</rt></ruby><ruby>潟<rt>がた</rt></ruby><ruby>県<rt>けん</rt></ruby>", region: "中部" },
+      { id: "富山県", ruby: "<ruby>富<rt>と</rt></ruby><ruby>山<rt>やま</rt></ruby><ruby>県<rt>けん</rt></ruby>", region: "中部" },
+      { id: "石川県", ruby: "<ruby>石<rt>いし</rt></ruby><ruby>川<rt>かわ</rt></ruby><ruby>県<rt>けん</rt></ruby>", region: "中部" },
+      { id: "福井県", ruby: "<ruby>福<rt>ふく</rt></ruby><ruby>井<rt>い</rt></ruby><ruby>県<rt>けん</rt></ruby>", region: "中部" },
+      { id: "山梨県", ruby: "<ruby>山<rt>やま</rt></ruby><ruby>梨<rt>なし</rt></ruby><ruby>県<rt>けん</rt></ruby>", region: "中部" },
+      { id: "長野県", ruby: "<ruby>長<rt>なが</rt></ruby><ruby>野<rt>の</rt></ruby><ruby>県<rt>けん</rt></ruby>", region: "中部" },
+      { id: "岐阜県", ruby: "<ruby>岐<rt>ぎ</rt></ruby><ruby>阜<rt>ふ</rt></ruby><ruby>県<rt>けん</rt></ruby>", region: "中部" },
+      { id: "静岡県", ruby: "<ruby>静<rt>しず</rt></ruby><ruby>岡<rt>おか</rt></ruby><ruby>県<rt>けん</rt></ruby>", region: "中部" },
+      { id: "愛知県", ruby: "<ruby>愛<rt>あい</rt></ruby><ruby>知<rt>ち</rt></ruby><ruby>県<rt>けん</rt></ruby>", region: "中部" },
+      { id: "三重県", ruby: "<ruby>三<rt>み</rt></ruby><ruby>重<rt>え</rt></ruby><ruby>県<rt>けん</rt></ruby>", region: "近畿" },
+      { id: "滋賀県", ruby: "<ruby>滋<rt>し</rt></ruby><ruby>賀<rt>が</rt></ruby><ruby>県<rt>けん</rt></ruby>", region: "近畿" },
+      { id: "京都府", ruby: "<ruby>京<rt>きょう</rt></ruby><ruby>都<rt>と</rt></ruby><ruby>府<rt>ふ</rt></ruby>", region: "近畿" },
+      { id: "大阪府", ruby: "<ruby>大<rt>おお</rt></ruby><ruby>阪<rt>さか</rt></ruby><ruby>府<rt>ふ</rt></ruby>", region: "近畿" },
+      { id: "兵庫県", ruby: "<ruby>兵<rt>ひょう</rt></ruby><ruby>庫<rt>こ</rt></ruby><ruby>県<rt>けん</rt></ruby>", region: "近畿" },
+      { id: "奈良県", ruby: "<ruby>奈<rt>な</rt></ruby><ruby>良<rt>ら</rt></ruby><ruby>県<rt>けん</rt></ruby>", region: "近畿" },
+      { id: "和歌山県", ruby: "<ruby>和<rt>わ</rt></ruby><ruby>歌<rt>か</rt></ruby><ruby>山<rt>やま</rt></ruby><ruby>県<rt>けん</rt></ruby>", region: "近畿" },
+      { id: "鳥取県", ruby: "<ruby>鳥<rt>とっ</rt></ruby><ruby>取<rt>とり</rt></ruby><ruby>県<rt>けん</rt></ruby>", region: "中国" },
+      { id: "島根県", ruby: "<ruby>島<rt>しま</rt></ruby><ruby>根<rt>ね</rt></ruby><ruby>県<rt>けん</rt></ruby>", region: "中国" },
+      { id: "岡山県", ruby: "<ruby>岡<rt>おか</rt></ruby><ruby>山<rt>やま</rt></ruby><ruby>県<rt>けん</rt></ruby>", region: "中国" },
+      { id: "広島県", ruby: "<ruby>広<rt>ひろ</rt></ruby><ruby>島<rt>しま</rt></ruby><ruby>県<rt>けん</rt></ruby>", region: "中国" },
+      { id: "山口県", ruby: "<ruby>山<rt>やま</rt></ruby><ruby>口<rt>ぐち</rt></ruby><ruby>県<rt>けん</rt></ruby>", region: "中国" },
+      { id: "徳島県", ruby: "<ruby>徳<rt>とく</rt></ruby><ruby>島<rt>しま</rt></ruby><ruby>県<rt>けん</rt></ruby>", region: "四国" },
+      { id: "香川県", ruby: "<ruby>香<rt>か</rt></ruby><ruby>川<rt>がわ</rt></ruby><ruby>県<rt>けん</rt></ruby>", region: "四国" },
+      { id: "愛媛県", ruby: "<ruby>愛<rt>え</rt></ruby><ruby>媛<rt>ひめ</rt></ruby><ruby>県<rt>けん</rt></ruby>", region: "四国" },
+      { id: "高知県", ruby: "<ruby>高<rt>こう</rt></ruby><ruby>知<rt>ち</rt></ruby><ruby>県<rt>けん</rt></ruby>", region: "四国" },
+      { id: "福岡県", ruby: "<ruby>福<rt>ふく</rt></ruby><ruby>岡<rt>おか</rt></ruby><ruby>県<rt>けん</rt></ruby>", region: "九州" },
+      { id: "佐賀県", ruby: "<ruby>佐<rt>さ</rt></ruby><ruby>賀<rt>が</rt></ruby><ruby>県<rt>けん</rt></ruby>", region: "九州" },
+      { id: "長崎県", ruby: "<ruby>長<rt>なが</rt></ruby><ruby>崎<rt>さき</rt></ruby><ruby>県<rt>けん</rt></ruby>", region: "九州" },
+      { id: "熊本県", ruby: "<ruby>熊<rt>くま</rt></ruby><ruby>本<rt>もと</rt></ruby><ruby>県<rt>けん</rt></ruby>", region: "九州" },
+      { id: "大分県", ruby: "<ruby>大<rt>おお</rt></ruby><ruby>分<rt>いた</rt></ruby><ruby>県<rt>けん</rt></ruby>", region: "九州" },
+      { id: "宮崎県", ruby: "<ruby>宮<rt>みや</rt></ruby><ruby>崎<rt>ざき</rt></ruby><ruby>県<rt>けん</rt></ruby>", region: "九州" },
+      { id: "鹿児島県", ruby: "<ruby>鹿<rt>か</rt></ruby><ruby>児<rt>ご</rt></ruby><ruby>島<rt>しま</rt></ruby><ruby>県<rt>けん</rt></ruby>", region: "九州" },
+      { id: "沖縄県", ruby: "<ruby>沖<rt>おき</rt></ruby><ruby>縄<rt>なわ</rt></ruby><ruby>県<rt>けん</rt></ruby>", region: "九州" }
+    ];
+
+    let targetPool = []; 
+    let currentTarget = null;
+    let score = 0;
+    let totalScore = 0;
+    let isMapLoaded = false;
+    let svg, mapGroup, projection, path, zoom;
+    let timeoutId = null; 
+    let highScores = {}; 
+    let currentRegionName = "";
+
+    // --- 地図の初期化 ---
+    const width = 600;
+    const height = 500;
+    svg = d3.select("#japan-map")
+            .attr("viewBox", `0 0 ${width} ${height}`);
+            
+    mapGroup = svg.append("g");
+
+    projection = d3.geoMercator()
+                   .center([137.0, 38.2]) 
+                   .translate([width / 2, height / 2])
+                   .scale(1200);
+    path = d3.geoPath().projection(projection);
+
+    zoom = d3.zoom()
+             .scaleExtent([1, 12])
+             .on("zoom", (event) => {
+               mapGroup.attr("transform", event.transform);
+               mapGroup.selectAll(".prefecture")
+                       .style("stroke-width", 0.8 / event.transform.k + "px");
+             });
+             
+    svg.call(zoom);
+
+    const geoJsonUrl = "https://raw.githubusercontent.com/dataofjapan/land/master/japan.geojson";
+    d3.json(geoJsonUrl).then(function(data) {
+      document.getElementById("loading").style.display = "none";
+      isMapLoaded = true;
+      mapGroup.selectAll(".prefecture")
+         .data(data.features)
+         .enter()
+         .append("path")
+         .attr("class", "prefecture")
+         .attr("d", path)
+         .attr("id", d => "pref-" + d.properties.nam_ja);
+    }).catch(function(error) {
+      document.getElementById("loading").innerHTML = "<ruby>地<rt>ち</rt></ruby><ruby>図<rt>ず</rt></ruby>データを<ruby>読<rt>よ</rt></ruby>み<ruby>込<rt>こ</rt></ruby>みに<ruby>失<rt>しっ</rt></ruby><ruby>敗<rt>ぱい</rt></ruby>しました。";
+    });
+
+    // --- 画面切り替え ---
+    function switchScreen(screenId) {
+      document.querySelectorAll('.screen').forEach(el => el.classList.remove('active-screen'));
+      document.getElementById(screenId).classList.add('active-screen');
+    }
+
+    function showTitle() {
+      if (timeoutId) clearTimeout(timeoutId);
+      updateTitleScores();
+      svg.call(zoom.transform, d3.zoomIdentity);
+      switchScreen('title-screen');
+    }
+
+    // --- タイトル画面のスコア表示更新 ---
+    function updateTitleScores() {
+      for (let region in highScores) {
+        const markEl = document.getElementById("score-" + region);
+        if (markEl) {
+          markEl.innerHTML = `スコア ${highScores[region].score}/${highScores[region].total}`;
+        }
+      }
+    }
+
+    // --- ゲーム開始 ---
+    function startGame(region) {
+      currentRegionName = region;
+      targetPool = prefectures.filter(p => region === "全国" || p.region === region);
+      
+      score = 0;
+      totalScore = targetPool.length;
+      document.getElementById("current-score").innerText = score;
+      document.getElementById("total").innerText = totalScore;
+      
+      d3.selectAll(".prefecture").classed("target", false).classed("solved", false);
+      
+      svg.call(zoom.transform, d3.zoomIdentity);
+      
+      switchScreen('quiz-screen');
+      
+      if(isMapLoaded) {
+        nextQuestion();
+      } else {
+        const waitMap = setInterval(() => {
+          if(isMapLoaded) {
+            clearInterval(waitMap);
+            nextQuestion();
+          }
+        }, 500);
+      }
+    }
+
+    // --- 次の問題を出題 ---
+    function nextQuestion() {
+      if (targetPool.length === 0) {
+        if (!(currentRegionName in highScores) || score > highScores[currentRegionName].score) {
+          highScores[currentRegionName] = { score: score, total: totalScore };
+        }
+
+        const resultTitle = document.getElementById("result-title");
+        
+        if (score === totalScore && totalScore > 0) {
+          resultTitle.innerHTML = `<ruby>全<rt>ぜん</rt></ruby><ruby>問<rt>もん</rt></ruby><ruby>正<rt>せい</rt></ruby><ruby>解<rt>かい</rt></ruby>！`;
+          resultTitle.style.color = "#ff5252";
+        } else {
+          resultTitle.innerHTML = `<ruby>結<rt>けっ</rt></ruby><ruby>果<rt>か</rt></ruby>: ${score} / ${totalScore} <ruby>問<rt>もん</rt></ruby><ruby>正<rt>せい</rt></ruby><ruby>解<rt>かい</rt></ruby>`;
+          resultTitle.style.color = "#555";
+        }
+        
+        svg.call(zoom.transform, d3.zoomIdentity);
+        switchScreen('clear-screen');
+        return;
+      }
+
+      d3.selectAll(".prefecture").classed("target", false);
+
+      const randomIndex = Math.floor(Math.random() * targetPool.length);
+      currentTarget = targetPool[randomIndex];
+
+      const targetElement = d3.select("#pref-" + currentTarget.id);
+
+      const messageEl = document.getElementById("message");
+      messageEl.innerHTML = "<ruby>赤<rt>あか</rt></ruby>く<ruby>塗<rt>ぬ</rt></ruby>られているのは<ruby>何<rt>なに</rt></ruby><ruby>県<rt>けん</rt></ruby>？";
+      messageEl.style.color = "#ff5252";
+      
+      targetElement.classed("target", true);
+
+      // 該当都道府県へパッと瞬時にフォーカス（自動ズーム）
+      const d = targetElement.datum();
+      if (d) {
+        const bounds = path.bounds(d);
+        const dx = bounds[1][0] - bounds[0][0];
+        const dy = bounds[1][1] - bounds[0][1];
+        const x = (bounds[0][0] + bounds[1][0]) / 2;
+        const y = (bounds[0][1] + bounds[1][1]) / 2;
+        
+        const scale = Math.max(1, Math.min(6, 0.5 / Math.max(dx / width, dy / height)));
+        const translate = [width / 2 - scale * x, height / 2 - scale * y];
+
+        svg.call(
+          zoom.transform, 
+          d3.zoomIdentity.translate(translate[0], translate[1]).scale(scale)
+        );
+      }
+
+      generateChoices();
+    }
+
+    // --- 選択肢の生成 ---
+    function generateChoices() {
+      const choicesContainer = document.getElementById("choices-container");
+      choicesContainer.innerHTML = ""; 
+
+      let choices = [currentTarget];
+      
+      let sameRegionPool = prefectures.filter(p => p.region === currentTarget.region && p.id !== currentTarget.id);
+      sameRegionPool.sort(() => Math.random() - 0.5);
+
+      let diffRegionPool = prefectures.filter(p => p.region !== currentTarget.region);
+      diffRegionPool.sort(() => Math.random() - 0.5);
+
+      let sameCount = Math.min(2, sameRegionPool.length);
+      for (let i = 0; i < sameCount; i++) {
+        choices.push(sameRegionPool[i]);
+      }
+
+      let diffCount = 4 - choices.length;
+      for (let i = 0; i < diffCount; i++) {
+        choices.push(diffRegionPool[i]);
+      }
+
+      choices.sort(() => Math.random() - 0.5);
+
+      choices.forEach(pref => {
+        const btn = document.createElement("button");
+        btn.className = "choice-btn";
+        btn.innerHTML = pref.ruby; 
+        btn.onclick = () => checkAnswer(pref, btn);
+        choicesContainer.appendChild(btn);
+      });
+    }
+
+    // --- 答え合わせ ---
+    function checkAnswer(selectedPref, clickedBtn) {
+      const buttons = document.querySelectorAll(".choice-btn");
+      buttons.forEach(btn => btn.disabled = true); 
+
+      const messageEl = document.getElementById("message");
+
+      if (selectedPref.id === currentTarget.id) {
+        score++;
+        document.getElementById("current-score").innerText = score;
+        messageEl.innerHTML = "⭕ <ruby>正<rt>せい</rt></ruby><ruby>解<rt>かい</rt></ruby>";
+        messageEl.style.color = "#8bc34a";
+        clickedBtn.style.background = "#ffb347";
+        
+        d3.select("#pref-" + currentTarget.id).classed("solved", true);
+
+      } else {
+        messageEl.innerHTML = `❌ <ruby>残<rt>ざん</rt></ruby><ruby>念<rt>ねん</rt></ruby>！<ruby>正<rt>せい</rt></ruby><ruby>解<rt>かい</rt></ruby>は「${currentTarget.ruby}」でした`;
+        messageEl.style.color = "#555";
+        clickedBtn.style.background = "#ff5252";
+      }
+
+      targetPool = targetPool.filter(p => p.id !== currentTarget.id);
+
+      timeoutId = setTimeout(nextQuestion, 1500);
+    }
+  </script>
+</body>
+</html>
+
