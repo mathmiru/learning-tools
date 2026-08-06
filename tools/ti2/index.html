@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>地球の公転と自転シミュレーション</title>
+    <style>
+        body { margin: 0; overflow: hidden; background-color: #050505; color: #fff; font-family: sans-serif; }
+        
+        /* タイトル画面（モーダル）のスタイル */
+        #title-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.9); z-index: 100;
+            display: flex; justify-content: center; align-items: center;
+            padding: 20px; box-sizing: border-box; /* スマホ画面の端にピタッとくっつかないように余白を追加 */
+        }
+        #title-content {
+            background: #1a1a1a; padding: 30px; border-radius: 10px;
+            max-width: 800px; width: 100%; border: 1px solid #444; color: #ddd;
+            line-height: 1.6; font-size: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            max-height: 90vh; /* 画面の高さの90%を最大とする */
+            overflow-y: auto; /* はみ出した場合は縦スクロール可能にする */
+            box-sizing: border-box;
+        }
+        #title-content h1 { color: #fff; text-align: center; margin-top: 0; font-size: 24px; border-bottom: 2px solid #333; padding-bottom: 15px; }
+        #title-content p { margin-bottom: 15px; }
+        #title-content ol { margin-bottom: 20px; padding-left: 20px; }
+        #title-content li { margin-bottom: 12px; }
+        #title-content .note {
+            background: #2a2a2a; padding: 15px; border-radius: 5px; margin-bottom: 20px;
+            border-left: 4px solid #2196f3;
+        }
+        #closeTitleBtn {
+            display: block; width: 100%; padding: 12px; font-size: 18px;
+            background: #4caf50; color: white; border: none; border-radius: 5px;
+            cursor: pointer; font-weight: bold; transition: 0.2s;
+        }
+        #closeTitleBtn:hover { background: #45a049; }
+
+        /* メインUIのスタイル */
+        #info { position: absolute; top: 15px; width: 100%; text-align: center; pointer-events: none; font-size: 20px; font-weight: bold; text-shadow: 1px 1px 2px black; z-index: 10; }
+        #season { position: absolute; top: 45px; width: 100%; text-align: center; pointer-events: none; font-size: 16px; color: #ddd; text-shadow: 1px 1px 2px black; z-index: 10; }
+        #date-display { position: absolute; top: 75px; width: 100%; text-align: center; pointer-events: none; font-size: 24px; color: #ffeb3b; font-weight: bold; text-shadow: 2px 2px 4px black; z-index: 10; }
+        
+        /* 操作パネルのコンテナ */
+        #controls-wrapper {
+            position: absolute; bottom: 20px; left: 20px; z-index: 10;
+            display: flex; flex-direction: column; align-items: flex-start; gap: 5px;
+        }
+        #toggleControlsBtn {
+            background: rgba(0,0,0,0.7); color: #fff; border: 1px solid #555; border-radius: 4px;
+            padding: 6px 12px; cursor: pointer; font-size: 14px; transition: 0.2s;
+        }
+        #toggleControlsBtn:hover { background: rgba(50,50,50,0.9); }
+        
+        #controls-body {
+            background: rgba(0,0,0,0.85); padding: 15px; border-radius: 8px; border: 1px solid #555;
+            display: flex; flex-direction: column; gap: 12px;
+        }
+        
+        .control-row { display: flex; align-items: center; gap: 8px; font-size: 14px; }
+        .city-group { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 5px; }
+        label { min-width: 70px; display: inline-block; cursor: pointer; }
+        .city-label { min-width: auto; background: rgba(255,255,255,0.1); padding: 4px 8px; border-radius: 4px; display: flex; align-items: center; gap: 4px; }
+        .city-label:hover { background: rgba(255,255,255,0.2); }
+        
+        input[type=range] { width: 120px; cursor: pointer; }
+        input[type=number] { width: 50px; padding: 4px; background: #222; color: #fff; border: 1px solid #666; border-radius: 4px; text-align: center; }
+        input[type=checkbox] { width: 16px; height: 16px; cursor: pointer; margin: 0; }
+        button.ui-btn { padding: 6px 12px; background: #4caf50; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        button.ui-btn:hover { background: #45a049; }
+        button.stop-btn { background: #f44336; }
+        button.stop-btn:hover { background: #da190b; }
+        button.reset-btn { background: #2196f3; }
+        button.reset-btn:hover { background: #0b7dda; }
+        button.zoom-btn { background: #ff9800; }
+        button.zoom-btn:hover { background: #e68a00; }
+        button.unzoom-btn { background: #9c27b0; }
+        button.unzoom-btn:hover { background: #7b1fa2; }
+    </style>
+    <!-- Three.jsの読み込み -->
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+          "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+        }
+      }
+    </script>
+</head>
+<body>
+
+    <!-- タイトル・免責事項画面 -->
+    <div id="title-screen">
+        <div id="title-content">
+            <h1>地球の公転・自転シミュレーション</h1>
+            <p>本シミュレーションは画面上での視覚的な理解を優先しているため、現実の天文学的データに対して以下のデフォルメ・簡略化を行っています。あらかじめご了承ください。</p>
+            <ol>
+                <li><strong>距離とサイズのデフォルメ：</strong><br>現実の比率（太陽の直径は地球の約109倍、距離は地球の直径の約1万倍強）をそのまま再現すると、地球が目に見えないチリのようなサイズになってしまうため、天体の大きさと距離を極端に圧縮しています。</li>
+                <li><strong>軌道の形（真円 vs 楕円）：</strong><br>現実の地球の軌道はわずかに楕円（離心率約0.0167）であり、太陽に近い1月は公転速度が速く、7月は遅くなりますが、本プログラムでは「完全な真円」かつ「一定の速度」で計算しています。</li>
+                <li><strong>月の軌道の歳差運動：</strong><br>月の軌道傾斜角は現実通り5.14度に設定していますが、現実の「約18.6年周期でコマのように回転する運動（交点退行）」は固定しており再現していません。そのため日食・月食の正確な予測等には使用できません。</li>
+            </ol>
+            <div class="note">
+                <strong>【なぜグレゴリオ暦を採用しているのか】</strong><br>
+                本シミュレーションでは地球の公転周期（1年）を「365.2425日」として計算しています。これは現代の暦であるグレゴリオ暦の平均日数（4年に1回うるう年を入れ、400年に3回省く）と全く同じ数値です。この数値を採用することで、何百年シミュレーションを回しても、UI上のカレンダーと現実の季節（夏至や冬至の位置）がズレないように設計されています。
+            </div>
+            <button id="closeTitleBtn">スタート</button>
+        </div>
+    </div>
+
+    <div id="info">地球の公転・自転と季節の変化</div>
+    <div id="season">現在の位置: -</div>
+    <div id="date-display">--月--日 --時（日本時間）</div>
+    
+    <!-- 操作パネルラッパー -->
+    <div id="controls-wrapper">
+        <button id="toggleControlsBtn">▼ 閉じる</button>
+        <div id="controls-body">
+            <!-- 追加: 直接入力可能のアナウンス -->
+            <div style="font-size: 12px; color: #bbb; margin-bottom: 2px;">※各項目は直接数値を入力することも可能です</div>
+            
+            <div class="control-row">
+                <label>進行速度:</label>
+                <input type="range" id="timeSpeedSlider" min="0" max="10" step="0.1" value="0.1">
+                <input type="number" id="timeSpeedInput" min="0" max="10" step="0.1" value="0.1">
+                <span>日/秒</span>
+            </div>
+            
+            <div class="control-row">
+                <label>日時指定:</label>
+                <input type="number" id="inputMonth" min="1" max="12" value="6"> 月
+                <input type="number" id="inputDay" min="1" max="31" value="21"> 日
+                <input type="number" id="inputHour" min="0" max="23" value="12"> 時
+                <button class="ui-btn" id="setDateTimeBtn">設定</button>
+            </div>
+
+            <div class="control-row" style="margin-top: 5px;">
+                <label style="width: auto;">
+                    <input type="checkbox" id="showMoonToggle"> 月を表示する
+                </label>
+            </div>
+
+            <div style="margin-top: 5px; font-size: 14px;">
+                <div>表示する都市 (ピン):</div>
+                <div class="city-group">
+                    <label class="city-label"><span style="color:#ff3333; font-size: 16px;">●</span><input type="checkbox" class="city-toggle" value="tokyo">東京</label>
+                    <label class="city-label"><span style="color:#33ff33; font-size: 16px;">●</span><input type="checkbox" class="city-toggle" value="london">ロンドン</label>
+                    <label class="city-label"><span style="color:#ffff33; font-size: 16px;">●</span><input type="checkbox" class="city-toggle" value="sydney">シドニー</label>
+                    <label class="city-label"><span style="color:#3399ff; font-size: 16px;">●</span><input type="checkbox" class="city-toggle" value="newyork">NY</label>
+                    <label class="city-label"><span style="color:#ff33ff; font-size: 16px;">●</span><input type="checkbox" class="city-toggle" value="rio">リオ</label>
+                </div>
+            </div>
+
+            <div class="control-row" style="margin-top: 5px;">
+                <button id="startStopBtn" class="ui-btn">スタート</button>
+                <button id="resetBtn" class="ui-btn reset-btn">リセット (夏至に戻す)</button>
+                <button id="focusEarthBtn" class="ui-btn zoom-btn">地球にズーム</button>
+            </div>
+        </div>
+    </div>
+    
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+        let isPlaying = false; 
+
+        // 操作パネルの開閉処理
+        const toggleControlsBtn = document.getElementById('toggleControlsBtn');
+        const controlsBody = document.getElementById('controls-body');
+        let isControlsOpen = true;
+
+        toggleControlsBtn.addEventListener('click', () => {
+            isControlsOpen = !isControlsOpen;
+            if (isControlsOpen) {
+                controlsBody.style.display = 'flex';
+                toggleControlsBtn.innerText = '▼ 閉じる';
+            } else {
+                controlsBody.style.display = 'none';
+                toggleControlsBtn.innerText = '▲ 操作パネルを開く';
+            }
+        });
+
+        // タイトル画面の処理
+        document.getElementById('closeTitleBtn').addEventListener('click', () => {
+            document.getElementById('title-screen').style.display = 'none';
+            isPlaying = true;
+            document.getElementById('startStopBtn').innerText = "ストップ";
+            document.getElementById('startStopBtn').className = "ui-btn stop-btn";
+        });
+
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(0, 15, 30); 
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        const fixedPolarAngle = Math.PI / 2.5; 
+        controls.minPolarAngle = fixedPolarAngle;
+        controls.maxPolarAngle = fixedPolarAngle;
+        controls.minDistance = 2; 
+        controls.maxDistance = 50;
+
+        const starsGeometry = new THREE.BufferGeometry();
+        const starsCount = 2000;
+        const posArray = new Float32Array(starsCount * 3);
+        for(let i = 0; i < starsCount * 3; i++) {
+            posArray[i] = (Math.random() - 0.5) * 300;
+        }
+        starsGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+        const starsMaterial = new THREE.PointsMaterial({ size: 0.1, color: 0xffffff, transparent: true, opacity: 0.8 });
+        scene.add(new THREE.Points(starsGeometry, starsMaterial));
+
+        const sunGeometry = new THREE.SphereGeometry(3.5, 32, 32);
+        const sunMaterial = new THREE.MeshBasicMaterial({ color: 0xfff5cc });
+        scene.add(new THREE.Mesh(sunGeometry, sunMaterial));
+
+        const sunLight = new THREE.PointLight(0xffffff, 3000, 300);
+        sunLight.decay = 2; 
+        scene.add(sunLight);
+        scene.add(new THREE.AmbientLight(0x333333));
+
+        const orbitRadius = 18;
+        const orbitGeometry = new THREE.BufferGeometry();
+        const orbitPoints = [];
+        for (let i = 0; i <= 128; i++) {
+            const theta = (i / 128) * Math.PI * 2;
+            orbitPoints.push(new THREE.Vector3(Math.cos(theta) * orbitRadius, 0, Math.sin(theta) * orbitRadius));
+        }
+        orbitGeometry.setFromPoints(orbitPoints);
+        scene.add(new THREE.Line(orbitGeometry, new THREE.LineBasicMaterial({ color: 0x444444 })));
+
+        const earthOrbitGroup = new THREE.Group();
+        scene.add(earthOrbitGroup);
+
+        const earthTiltGroup = new THREE.Group();
+        earthTiltGroup.rotation.z = 23.4 * (Math.PI / 180); 
+        earthOrbitGroup.add(earthTiltGroup);
+
+        const earthRadius = 1.5;
+        const earthGeometry = new THREE.SphereGeometry(earthRadius, 64, 64);
+        const earthMaterial = new THREE.MeshStandardMaterial({ color: 0x1e90ff, roughness: 0.8, metalness: 0.1 });
+        const earthMesh = new THREE.Mesh(earthGeometry, earthMaterial);
+        
+        const axis = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.015, 0.015, earthRadius * 3, 8),
+            new THREE.MeshBasicMaterial({ color: 0xff3333 })
+        );
+        earthTiltGroup.add(earthMesh);
+        earthTiltGroup.add(axis);
+
+        const textureLoader = new THREE.TextureLoader();
+        textureLoader.setCrossOrigin('anonymous');
+        textureLoader.load(
+            'https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg',
+            function (texture) {
+                earthMaterial.color.setHex(0xffffff); 
+                earthMaterial.map = texture;
+                earthMaterial.needsUpdate = true;
+            }
+        );
+
+        const cities = {
+            tokyo:   { lat: 35.68,  lon: 139.69, color: 0xff3333 }, 
+            london:  { lat: 51.50,  lon: -0.12,  color: 0x33ff33 }, 
+            sydney:  { lat: -33.86, lon: 151.20, color: 0xffff33 }, 
+            newyork: { lat: 40.71,  lon: -74.00, color: 0x3399ff }, 
+            rio:     { lat: -22.90, lon: -43.17, color: 0xff33ff }  
+        };
+
+        const cityMarkers = {};
+        const markerGeometry = new THREE.SphereGeometry(0.1, 16, 16);
+
+        function getPositionFromLatLon(lat, lon, radius) {
+            const phi = (90 - lat) * (Math.PI / 180);
+            const theta = (lon + 180) * (Math.PI / 180);
+            
+            const x = -(radius * Math.sin(phi) * Math.cos(theta));
+            const y = radius * Math.cos(phi);
+            const z = radius * Math.sin(phi) * Math.sin(theta);
+            return new THREE.Vector3(x, y, z);
+        }
+
+        Object.keys(cities).forEach(key => {
+            const city = cities[key];
+            const material = new THREE.MeshBasicMaterial({ color: city.color }); 
+            const marker = new THREE.Mesh(markerGeometry, material);
+            marker.position.copy(getPositionFromLatLon(city.lat, city.lon, earthRadius * 1.02));
+            marker.visible = false; 
+            earthMesh.add(marker);  
+            cityMarkers[key] = marker;
+        });
+
+        document.querySelectorAll('.city-toggle').forEach(checkbox => {
+            checkbox.addEventListener('change', (e) => {
+                if (cityMarkers[e.target.value]) {
+                    cityMarkers[e.target.value].visible = e.target.checked;
+                }
+            });
+        });
+
+        const moonOrbitGroup = new THREE.Group();
+        moonOrbitGroup.rotation.z = 5.14 * (Math.PI / 180);
+        earthOrbitGroup.add(moonOrbitGroup);
+
+        const moonDistance = 4.5;
+        const moonMesh = new THREE.Mesh(
+            new THREE.SphereGeometry(0.4, 32, 32),
+            new THREE.MeshStandardMaterial({ color: 0xcccccc, roughness: 1.0 })
+        );
+        moonMesh.visible = false;
+        moonOrbitGroup.add(moonMesh);
+
+        const timeSpeedSlider = document.getElementById('timeSpeedSlider');
+        const timeSpeedInput = document.getElementById('timeSpeedInput');
+        const showMoonToggle = document.getElementById('showMoonToggle');
+        const inputMonth = document.getElementById('inputMonth');
+        const inputDay = document.getElementById('inputDay');
+        const inputHour = document.getElementById('inputHour');
+        const setDateTimeBtn = document.getElementById('setDateTimeBtn');
+        const startStopBtn = document.getElementById('startStopBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const focusEarthBtn = document.getElementById('focusEarthBtn');
+        const seasonLabel = document.getElementById('season');
+        const dateDisplay = document.getElementById('date-display');
+
+        showMoonToggle.addEventListener('change', (e) => {
+            moonMesh.visible = e.target.checked;
+        });
+
+        let isEarthFocused = false;
+        focusEarthBtn.addEventListener('click', () => {
+            isEarthFocused = !isEarthFocused;
+            if (isEarthFocused) {
+                focusEarthBtn.innerText = "全体視点に戻す";
+                focusEarthBtn.className = "ui-btn unzoom-btn";
+                
+                // 太陽がある方向（中心）に向かってカメラを配置する
+                const currentEarthPos = earthOrbitGroup.position.clone();
+                // 太陽(0,0,0)から地球を見た逆方向（＝地球から太陽を見るベクトル）
+                const toSunDir = new THREE.Vector3(0, 0, 0).sub(currentEarthPos).normalize();
+                
+                // 地球から太陽の方向に距離8、少し見下ろすためにY軸に4プラス
+                const cameraOffset = toSunDir.multiplyScalar(8).add(new THREE.Vector3(0, 4, 0));
+                
+                camera.position.copy(currentEarthPos).add(cameraOffset);
+                controls.target.copy(currentEarthPos);
+            } else {
+                focusEarthBtn.innerText = "地球にズーム";
+                focusEarthBtn.className = "ui-btn zoom-btn";
+                camera.position.set(0, 15, 30);
+                controls.target.set(0, 0, 0); 
+            }
+        });
+
+        const BASE_DATE = new Date(2024, 5, 21, 12, 0, 0); 
+        let virtualTime = BASE_DATE.getTime(); 
+        
+        let timeSpeed = parseFloat(timeSpeedSlider.value); 
+
+        function updateSpeed(val) {
+            let speed = parseFloat(val);
+            if (isNaN(speed)) speed = 0;
+            timeSpeed = speed;
+            timeSpeedSlider.value = timeSpeed;
+            timeSpeedInput.value = timeSpeed;
+        }
+        timeSpeedSlider.addEventListener('input', (e) => updateSpeed(e.target.value));
+        timeSpeedInput.addEventListener('change', (e) => updateSpeed(e.target.value));
+
+        startStopBtn.addEventListener('click', () => {
+            isPlaying = !isPlaying;
+            if (isPlaying) {
+                startStopBtn.innerText = "ストップ";
+                startStopBtn.className = "ui-btn stop-btn";
+            } else {
+                startStopBtn.innerText = "スタート";
+                startStopBtn.className = "ui-btn";
+            }
+        });
+
+        setDateTimeBtn.addEventListener('click', () => {
+            const m = parseInt(inputMonth.value) - 1;
+            const d = parseInt(inputDay.value);
+            const h = parseInt(inputHour.value);
+            const newDate = new Date(2024, m, d, h, 0, 0);
+            if (!isNaN(newDate.getTime())) {
+                virtualTime = newDate.getTime();
+                inputMonth.value = newDate.getMonth() + 1;
+                inputDay.value = newDate.getDate();
+            }
+        });
+
+        resetBtn.addEventListener('click', () => {
+            virtualTime = BASE_DATE.getTime();
+            inputMonth.value = 6;
+            inputDay.value = 21;
+            inputHour.value = 12;
+            document.querySelectorAll('.city-toggle').forEach(cb => {
+                cb.checked = false;
+                cityMarkers[cb.value].visible = false;
+            });
+        });
+
+        const clock = new THREE.Clock();
+
+        function animate() {
+            requestAnimationFrame(animate);
+            const delta = clock.getDelta();
+
+            if (isPlaying) {
+                virtualTime += delta * timeSpeed * (24 * 60 * 60 * 1000);
+            }
+
+            const currentDate = new Date(virtualTime);
+            const month = currentDate.getMonth() + 1;
+            const date = currentDate.getDate();
+            const hours = currentDate.getHours();
+            
+            dateDisplay.innerText = `${month}月${date}日 ${hours}時（日本時間）`;
+
+            const diffDays = (virtualTime - BASE_DATE.getTime()) / (1000 * 60 * 60 * 24);
+            const orbitAngle = (diffDays / 365.2425) * Math.PI * 2; 
+            
+            const newEarthPos = new THREE.Vector3(
+                Math.cos(orbitAngle) * orbitRadius,
+                0,
+                -Math.sin(orbitAngle) * orbitRadius
+            );
+
+            if (isEarthFocused) {
+                // ズーム中はカメラと地球の相対位置を保ちながら追従する
+                const posDiff = newEarthPos.clone().sub(earthOrbitGroup.position);
+                camera.position.add(posDiff);
+                controls.target.copy(newEarthPos);
+            } else {
+                controls.target.set(0, 0, 0);
+            }
+
+            earthOrbitGroup.position.copy(newEarthPos);
+
+            if (moonMesh.visible) {
+                const moonAngle = (diffDays / 27.32) * Math.PI * 2;
+                moonMesh.position.x = Math.cos(moonAngle) * moonDistance;
+                moonMesh.position.z = -Math.sin(moonAngle) * moonDistance;
+            }
+
+            let normalizedAngle = orbitAngle % (Math.PI * 2);
+            if (normalizedAngle < 0) normalizedAngle += Math.PI * 2;
+            
+            let seasonText = "";
+            if (normalizedAngle < Math.PI/4 || normalizedAngle > Math.PI*1.75) seasonText = "夏至付近 (北半球の日照時間が長い)";
+            else if (normalizedAngle >= Math.PI/4 && normalizedAngle < Math.PI*0.75) seasonText = "秋分付近";
+            else if (normalizedAngle >= Math.PI*0.75 && normalizedAngle < Math.PI*1.25) seasonText = "冬至付近 (北半球の日照時間が短い)";
+            else if (normalizedAngle >= Math.PI*1.25 && normalizedAngle < Math.PI*1.75) seasonText = "春分付近";
+            seasonLabel.innerText = "現在の位置: " + seasonText;
+
+            const continuousRotation = (virtualTime / 86400000) * Math.PI * 2;
+            earthMesh.rotation.y = continuousRotation + orbitAngle;
+
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        animate();
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+</html>
+
