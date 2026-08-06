@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>生態系(せいたいけい)シミュレーター v14</title>
+    <style>
+        body {
+            font-family: 'Hiragino Kaku Gothic ProN', 'Meiryo', sans-serif;
+            background: #1e1e1e;
+            color: #ecf0f1;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+        /* タイトル画面 */
+        #titleScreen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .rule-box {
+            background: #2c3e50;
+            border: 2px solid #34495e;
+            border-radius: 8px;
+            padding: 25px;
+            max-width: 750px;
+            width: 100%;
+            text-align: left;
+            line-height: 1.8;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            box-sizing: border-box;
+        }
+        .rule-box h3 {
+            margin-top: 0;
+            border-bottom: 2px solid #34495e;
+            padding-bottom: 10px;
+            font-size: 1.2rem;
+        }
+        .char-desc {
+            background: #34495e;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            font-size: 1rem;
+        }
+        .char-title {
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #4a6278;
+            padding-bottom: 5px;
+        }
+        .desc-row {
+            display: flex;
+            margin-bottom: 6px;
+        }
+        .label {
+            white-space: nowrap;
+            font-weight: bold;
+            margin-right: 5px;
+        }
+        .text {
+            flex: 1;
+        }
+        .start-btn {
+            background: #e67e22;
+            color: white;
+            font-size: 18px;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            width: 90%;
+            max-width: 300px;
+            font-weight: bold;
+        }
+        .start-btn:hover { background: #d35400; transform: translateY(-2px); }
+
+        /* ゲーム画面 */
+        #gameScreen {
+            display: none; 
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            padding: 10px;
+            box-sizing: border-box;
+            width: 100%;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 900px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 10px;
+        }
+
+        #fieldCanvas {
+            background: #2c3e50;
+            border: 2px solid #34495e;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+            cursor: crosshair;
+            width: 100%;
+            max-width: 900px;
+            height: auto;
+            aspect-ratio: 2 / 1;
+        }
+
+        /* ダッシュボード周りのレイアウト */
+        .dashboard {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            align-items: stretch;
+            width: 100%;
+            margin-top: 10px;
+        }
+        .graph-box {
+            background: #2c3e50;
+            border: 2px solid #34495e;
+            border-radius: 8px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-sizing: border-box;
+        }
+        
+        /* PC用デフォルトレイアウト */
+        .line-box { flex: 2; min-width: 300px; }
+        .pie-box { flex: 1; min-width: 150px; }
+        .death-box { flex: 1.5; min-width: 250px; }
+
+        .graph-title {
+            margin-bottom: 8px;
+            font-size: 13px;
+            color: #bdc3c7;
+        }
+        canvas.graph {
+            max-width: 100%;
+            height: auto;
+        }
+
+        /* スマホ向けレイアウト調整 */
+        @media (max-width: 700px) {
+            .line-box { flex: 1 1 100%; min-width: 100%; }
+            .pie-box { flex: 1 1 35%; min-width: 120px; }
+            .death-box { flex: 1 1 55%; min-width: 180px; }
+        }
+
+        .controls {
+            background: #34495e;
+            padding: 15px;
+            border-radius: 8px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            box-sizing: border-box;
+            margin-top: 10px;
+        }
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .control-group span { width: 30px; text-align: center; font-size: 1.2rem; }
+        button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button:hover { background: #2980b9; }
+        button.minus-btn { background: #e74c3c; }
+        button.minus-btn:hover { background: #c0392b; }
+        button.reset-btn { background: #7f8c8d; padding: 8px 15px; margin-left: 10px;}
+        button.reset-btn:hover { background: #95a5a6; }
+    </style>
+</head>
+<body>
+
+    <!-- タイトル＆ルール画面 -->
+    <div id="titleScreen">
+        <h1><ruby>生態系<rt>せいたいけい</rt></ruby>シミュレーター</h1>
+        <div class="rule-box">
+            <h3><ruby>生態系<rt>せいたいけい</rt></ruby>のバランスについて</h3>
+            <p><ruby>特定<rt>とくてい</rt></ruby>の<ruby>生<rt>い</rt></ruby>き<ruby>物<rt>もの</rt></ruby>が<ruby>増<rt>ふ</rt></ruby>えすぎたり、<ruby>減<rt>へ</rt></ruby>りすぎたりすると、<ruby>環境<rt>かんきょう</rt></ruby><ruby>全体<rt>ぜんたい</rt></ruby>に<ruby>大<rt>おお</rt></ruby>きな<ruby>影響<rt>えいきょう</rt></ruby>を<ruby>及<rt>およ</rt></ruby>ぼします。</p>
+            
+            <h3><ruby>生<rt>い</rt></ruby>き<ruby>物<rt>もの</rt></ruby>たちの<ruby>役割<rt>やくわり</rt></ruby>と<ruby>条件<rt>じょうけん</rt></ruby></h3>
+            
+            <div class="char-desc">
+                <div class="char-title">🌱 <ruby>草<rt>くさ</rt></ruby>（<ruby>生産者<rt>せいさんしゃ</rt></ruby>）</div>
+                <div class="desc-row">
+                    <span class="label">【<ruby>役割<rt>やくわり</rt></ruby>】</span>
+                    <span class="text"><ruby>時間<rt>じかん</rt></ruby>とともに<ruby>自然<rt>しぜん</rt></ruby>に<ruby>生<rt>は</rt></ruby>えてくるすべての<ruby>命<rt>いのち</rt></ruby>の<ruby>土台<rt>どだい</rt></ruby>です。</span>
+                </div>
+                <div class="desc-row">
+                    <span class="label">【<ruby>減<rt>へ</rt></ruby>りすぎると】</span>
+                    <span class="text">エサを<ruby>失<rt>うしな</rt></ruby>ったウサギが<ruby>飢<rt>う</rt></ruby>え、<ruby>連鎖的<rt>れんさてき</rt></ruby>にオオカミも<ruby>生<rt>い</rt></ruby>きていけなくなります。</span>
+                </div>
+                <div class="desc-row">
+                    <span class="label">【<ruby>消滅<rt>しょうめつ</rt></ruby><ruby>条件<rt>じょうけん</rt></ruby>】</span>
+                    <span class="text">ウサギに<ruby>食<rt>た</rt></ruby>られる。</span>
+                </div>
+            </div>
+
+            <div class="char-desc">
+                <div class="char-title">🐇 ウサギ（<ruby>一次<rt>いちじ</rt></ruby><ruby>消費者<rt>しょうひしゃ</rt></ruby>）</div>
+                <div class="desc-row">
+                    <span class="label">【<ruby>役割<rt>やくわり</rt></ruby>】</span>
+                    <span class="text"><ruby>草<rt>くさ</rt></ruby>を<ruby>食<rt>た</rt></ruby>べて<ruby>数<rt>かず</rt></ruby>を<ruby>増<rt>ふ</rt></ruby>やします。</span>
+                </div>
+                <div class="desc-row">
+                    <span class="label">【<ruby>増<rt>ふ</rt></ruby>えすぎると】</span>
+                    <span class="text"><ruby>地表<rt>ちひょう</rt></ruby>の<ruby>草<rt>くさ</rt></ruby>をすべて<ruby>食<rt>く</rt></ruby>い<ruby>尽<rt>つ</rt></ruby>くし、<ruby>環境<rt>かんきょう</rt></ruby>が<ruby>破壊<rt>はかい</rt></ruby>され<ruby>自<rt>みずか</rt></ruby>らも<ruby>大量<rt>たいりょう</rt></ruby>に<ruby>餓死<rt>がし</rt></ruby>します。</span>
+                </div>
+                <div class="desc-row">
+                    <span class="label">【<ruby>減<rt>へ</rt></ruby>りすぎると】</span>
+                    <span class="text">エサを<ruby>失<rt>うしな</rt></ruby>ったオオカミが<ruby>生<rt>い</rt></ruby>きていけなくなります。</span>
+                </div>
+                <div class="desc-row">
+                    <span class="label">【<ruby>死<rt>し</rt></ruby>ぬ<ruby>条件<rt>じょうけん</rt></ruby>】</span>
+                    <span class="text">①<ruby>草<rt>くさ</rt></ruby>を<ruby>食<rt>た</rt></ruby>べられず<ruby>餓死<rt>がし</rt></ruby>する ②オオカミに<ruby>食<rt>た</rt></ruby>べられる ③<ruby>寿命<rt>じゅみょう</rt></ruby>（<ruby>老衰<rt>ろうすい</rt></ruby>）</span>
+                </div>
+            </div>
+
+            <div class="char-desc">
+                <div class="char-title">🐺 オオカミ（<ruby>二次<rt>にじ</rt></ruby><ruby>消費者<rt>しょうひしゃ</rt></ruby>）</div>
+                <div class="desc-row">
+                    <span class="label">【<ruby>役割<rt>やくわり</rt></ruby>】</span>
+                    <span class="text">ウサギを<ruby>食<rt>た</rt></ruby>べて<ruby>数<rt>かず</rt></ruby>を<ruby>増<rt>ふ</rt></ruby>やし、<ruby>増<rt>ふ</rt></ruby>えすぎるウサギの<ruby>数<rt>かず</rt></ruby>を<ruby>適正<rt>てきせい</rt></ruby>に<ruby>保<rt>たも</rt></ruby>ちます。</span>
+                </div>
+                <div class="desc-row">
+                    <span class="label">【<ruby>増<rt>ふ</rt></ruby>えすぎると】</span>
+                    <span class="text">エサとなるウサギを<ruby>狩<rt>か</rt></ruby>り<ruby>尽<rt>つ</rt></ruby>くしてしまい、やがて<ruby>自<rt>みずか</rt></ruby>らも<ruby>絶滅<rt>ぜつめつ</rt></ruby>します。</span>
+                </div>
+                <div class="desc-row">
+                    <span class="label">【<ruby>減<rt>へ</rt></ruby>りすぎると】</span>
+                    <span class="text"><ruby>天敵<rt>てんてき</rt></ruby>のいなくなったウサギが<ruby>爆発的<rt>ばくはつてき</rt></ruby>に<ruby>増<rt>ふ</rt></ruby>え、<ruby>草<rt>くさ</rt></ruby>を<ruby>食<rt>く</rt></ruby>い<ruby>尽<rt>つ</rt></ruby>くして<ruby>環境<rt>かんきょう</rt></ruby>が<ruby>崩壊<rt>ほうかい</rt></ruby>します。</span>
+                </div>
+                <div class="desc-row">
+                    <span class="label">【<ruby>死<rt>し</rt></ruby>ぬ<ruby>条件<rt>じょうけん</rt></ruby>】</span>
+                    <span class="text">①ウサギを<ruby>狩<rt>か</rt></ruby>れず<ruby>餓死<rt>がし</rt></ruby>する ②<ruby>寿命<rt>じゅみょう</rt></ruby>（<ruby>老衰<rt>ろうすい</rt></ruby>）</span>
+                </div>
+            </div>
+
+        </div>
+        <button class="start-btn" onclick="startGame()">シミュレーションを<ruby>開始<rt>かいし</rt></ruby></button>
+    </div>
+
+    <!-- ゲーム画面 -->
+    <div id="gameScreen">
+        <div class="container">
+            <canvas id="fieldCanvas" width="900" height="450"></canvas>
+            
+            <div class="dashboard">
+                <div class="graph-box line-box">
+                    <div class="graph-title"><ruby>個体数<rt>こたいすう</rt></ruby>の<ruby>変化<rt>へんか</rt></ruby>（<ruby>時間<rt>じかん</rt></ruby>の<ruby>波<rt>なみ</rt></ruby>）</div>
+                    <canvas id="lineGraphCanvas" class="graph" width="450" height="150"></canvas>
+                </div>
+                <div class="graph-box pie-box">
+                    <div class="graph-title"><ruby>現在<rt>げんざい</rt></ruby>の<ruby>割合<rt>わりあい</rt></ruby></div>
+                    <canvas id="pieChartCanvas" class="graph" width="150" height="150"></canvas>
+                </div>
+                <div class="graph-box death-box">
+                    <div class="graph-title"><ruby>死因<rt>しいん</rt></ruby>の<ruby>割合<rt>わりあい</rt></ruby>（<ruby>直近<rt>ちょっきん</rt></ruby>15<ruby>秒<rt>びょう</rt></ruby>）</div>
+                    <canvas id="deathGraphCanvas" class="graph" width="250" height="150"></canvas>
+                </div>
+            </div>
+            
+            <div class="controls">
+                <div class="control-group">
+                    <span>🌱</span>
+                    <button onclick="addEntities('plant', 20)">+20</button>
+                    <button class="minus-btn" onclick="removeEntities('plant', 20)">-20</button>
+                </div>
+                <div class="control-group">
+                    <span>🐇</span>
+                    <button onclick="addEntities('rabbit', 5)">+5</button>
+                    <button class="minus-btn" onclick="removeEntities('rabbit', 5)">-5</button>
+                </div>
+                <div class="control-group">
+                    <span>🐺</span>
+                    <button onclick="addEntities('wolf', 2)">+2</button>
+                    <button class="minus-btn" onclick="removeEntities('wolf', 2)">-2</button>
+                </div>
+                <button class="reset-btn" onclick="resetSimulation()"><ruby>初期化<rt>しょきか</rt></ruby></button>
+            </div>
+            <p style="margin-top:5px; text-align:center; font-size: 12px; color: #999;">※<ruby>画面<rt>がめん</rt></ruby>をタップ/クリックすると<ruby>生<rt>い</rt></ruby>き<ruby>物<rt>もの</rt></ruby>を<ruby>追加<rt>ついか</rt></ruby>できます。</p>
+        </div>
+    </div>
+
+    <script>
+        let isRunning = false;
+        function startGame() {
+            document.getElementById('titleScreen').style.display = 'none';
+            document.getElementById('gameScreen').style.display = 'flex';
+            if (!isRunning) {
+                resetSimulation();
+                loop();
+                isRunning = true;
+            }
+        }
+
+        const fieldCanvas = document.getElementById('fieldCanvas');
+        const fCtx = fieldCanvas.getContext('2d');
+        const lineCanvas = document.getElementById('lineGraphCanvas');
+        const lCtx = lineCanvas.getContext('2d');
+        const pieCanvas = document.getElementById('pieChartCanvas');
+        const pCtx = pieCanvas.getContext('2d');
+        const deathCanvas = document.getElementById('deathGraphCanvas');
+        const dCtx = deathCanvas.getContext('2d');
+
+        const W = 900;
+        const H = 450;
+        const FPS = 60; 
+
+        const EMOJI = { plant: '🌱', rabbit: '🐇', wolf: '🐺' };
+        const SIZE = { plant: 16, rabbit: 24, wolf: 36 };
+
+        let plants = [];
+        let rabbits = [];
+        let wolves = [];
+        let historyData = [];
+        let frameCount = 0;
+        let deathEvents = [];
+
+        class Entity {
+            constructor(x, y, emoji, size, speed) {
+                this.x = x !== null ? x : Math.random() * W;
+                this.y = y !== null ? y : Math.random() * H;
+                this.emoji = emoji;
+                this.size = size;
+                this.r = size / 2 * 0.8; 
+                this.speed = speed;
+                this.angle = Math.random() * Math.PI * 2;
+                this.energy = 100;
+                this.age = 0;
+            }
+            move() {
+                if (this.speed === 0) return;
+                if (Math.random() < 0.05) this.angle += (Math.random() - 0.5) * 1.0;
+                this.x += Math.cos(this.angle) * this.speed;
+                this.y += Math.sin(this.angle) * this.speed;
+                if (this.x < 0 || this.x > W) { this.angle = Math.PI - this.angle; this.x = Math.max(0, Math.min(W, this.x)); }
+                if (this.y < 0 || this.y > H) { this.angle = -this.angle; this.y = Math.max(0, Math.min(H, this.y)); }
+            }
+            draw(ctx) {
+                ctx.font = `${this.size}px serif`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(this.emoji, this.x, this.y);
+            }
+        }
+
+        function recordDeath(type, cause) {
+            deathEvents.push({ type: type, cause: cause, frame: frameCount });
+        }
+
+        function loop() {
+            update();
+            drawField();
+            
+            frameCount++;
+            if (frameCount % 5 === 0) {
+                updateGraphData();
+                drawLineGraph();
+                drawPieChart();
+                drawDeathGraph();
+            }
+            requestAnimationFrame(loop);
+        }
+
+        function update() {
+            if (plants.length < 500 && Math.random() < 0.8) {
+                plants.push(new Entity(null, null, EMOJI.plant, SIZE.plant, 0));
+            }
+
+            // ウサギの処理
+            for (let i = rabbits.length - 1; i >= 0; i--) {
+                let r = rabbits[i];
+                r.move();
+                r.energy -= 0.15;
+                r.age++;
+                
+                for (let j = plants.length - 1; j >= 0; j--) {
+                    let p = plants[j];
+                    if (Math.hypot(r.x - p.x, r.y - p.y) < r.r + p.r) {
+                        r.energy += 30; 
+                        plants.splice(j, 1);
+                        break; 
+                    }
+                }
+                
+                if (r.energy > 160) {
+                    r.energy -= 80;
+                    rabbits.push(new Entity(r.x, r.y, EMOJI.rabbit, SIZE.rabbit, 0.6));
+                }
+                
+                if (r.energy <= 0) {
+                    recordDeath('rabbit', 'starve');
+                    rabbits.splice(i, 1);
+                } else if (r.age > 2000) {
+                    recordDeath('rabbit', 'age');
+                    rabbits.splice(i, 1);
+                }
+            }
+
+            // オオカミの処理
+            for (let i = wolves.length - 1; i >= 0; i--) {
+                let w = wolves[i];
+                w.move();
+                w.energy -= 0.35;
+                w.age++;
+                
+                for (let j = rabbits.length - 1; j >= 0; j--) {
+                    let r = rabbits[j];
+                    if (Math.hypot(w.x - r.x, w.y - r.y) < w.r + r.r) {
+                        w.energy += 120; 
+                        recordDeath('rabbit', 'eaten');
+                        rabbits.splice(j, 1);
+                        break;
+                    }
+                }
+                
+                if (w.energy > 690) { 
+                    w.energy -= 345;
+                    wolves.push(new Entity(w.x, w.y, EMOJI.wolf, SIZE.wolf, 0.65)); 
+                }
+                
+                if (w.energy <= 0) {
+                    recordDeath('wolf', 'starve');
+                    wolves.splice(i, 1);
+                } else if (w.age > 1500) {
+                    recordDeath('wolf', 'age');
+                    wolves.splice(i, 1);
+                }
+            }
+        }
+
+        function drawField() {
+            fCtx.clearRect(0, 0, W, H);
+            plants.forEach(p => p.draw(fCtx));
+            rabbits.forEach(r => r.draw(fCtx));
+            wolves.forEach(w => w.draw(fCtx));
+        }
+
+        function updateGraphData() {
+            historyData.push({
+                plant: plants.length, 
+                rabbit: rabbits.length,
+                wolf: wolves.length
+            });
+            if (historyData.length > lineCanvas.width) historyData.shift();
+        }
+
+        function drawLineGraph() {
+            lCtx.clearRect(0, 0, lineCanvas.width, lineCanvas.height);
+            lCtx.strokeStyle = "#34495e";
+            lCtx.lineWidth = 1;
+            lCtx.beginPath(); lCtx.moveTo(0, lineCanvas.height/2); lCtx.lineTo(lineCanvas.width, lineCanvas.height/2); lCtx.stroke();
+
+            // グラフの最大値を動的に計算
+            let maxVal = 100;
+            for (let i = 0; i < historyData.length; i++) {
+                maxVal = Math.max(maxVal, historyData[i].plant, historyData[i].rabbit, historyData[i].wolf);
+            }
+            maxVal = maxVal * 1.2; 
+
+            const drawLine = (key, color) => {
+                lCtx.beginPath();
+                lCtx.strokeStyle = color;
+                lCtx.lineWidth = 2;
+                for (let i = 0; i < historyData.length; i++) {
+                    let x = i;
+                    let y = lineCanvas.height - (historyData[i][key] * (lineCanvas.height / maxVal));
+                    if (i === 0) lCtx.moveTo(x, y);
+                    else lCtx.lineTo(x, y);
+                }
+                lCtx.stroke();
+            };
+
+            drawLine('plant', '#2ecc71');
+            drawLine('rabbit', '#ffffff');
+            drawLine('wolf', '#e74c3c');
+        }
+
+        function drawPieChart() {
+            pCtx.clearRect(0, 0, pieCanvas.width, pieCanvas.height);
+            const total = plants.length + rabbits.length + wolves.length;
+            if (total === 0) return;
+
+            const cx = pieCanvas.width / 2;
+            const cy = pieCanvas.height / 2;
+            const radius = Math.min(cx, cy) - 5;
+            let startAngle = -Math.PI / 2; 
+
+            const drawSlice = (count, color) => {
+                if (count === 0) return;
+                const sliceAngle = (count / total) * 2 * Math.PI;
+                pCtx.beginPath();
+                pCtx.moveTo(cx, cy);
+                pCtx.arc(cx, cy, radius, startAngle, startAngle + sliceAngle);
+                pCtx.closePath();
+                pCtx.fillStyle = color;
+                pCtx.fill();
+                startAngle += sliceAngle;
+            };
+
+            drawSlice(plants.length, '#2ecc71');
+            drawSlice(rabbits.length, '#ffffff');
+            drawSlice(wolves.length, '#e74c3c');
+            
+            pCtx.beginPath();
+            pCtx.arc(cx, cy, radius * 0.5, 0, Math.PI * 2);
+            pCtx.fillStyle = '#2c3e50';
+            pCtx.fill();
+        }
+
+        function drawDeathGraph() {
+            dCtx.clearRect(0, 0, deathCanvas.width, deathCanvas.height);
+            const cw = deathCanvas.width;
+            
+            const RECENT_FRAMES = 15 * FPS;
+            deathEvents = deathEvents.filter(e => frameCount - e.frame <= RECENT_FRAMES);
+
+            let rStats = { starve: 0, eaten: 0, age: 0 };
+            let wStats = { starve: 0, age: 0 };
+            deathEvents.forEach(e => {
+                if (e.type === 'rabbit') rStats[e.cause]++;
+                if (e.type === 'wolf') wStats[e.cause]++;
+            });
+            
+            const drawStackedBar = (y, stats, colors) => {
+                const total = Object.values(stats).reduce((a, b) => a + b, 0);
+                if (total === 0) {
+                    dCtx.fillStyle = '#34495e'; 
+                    dCtx.fillRect(40, y, cw - 50, 20);
+                    return;
+                }
+
+                let currentX = 0;
+                const barWidth = cw - 50; 
+                let i = 0;
+                
+                for (let key in stats) {
+                    const val = stats[key];
+                    if (val > 0) {
+                        const w = (val / total) * barWidth;
+                        dCtx.fillStyle = colors[i];
+                        dCtx.fillRect(40 + currentX, y, w, 20);
+                        
+                        if (w > 25) {
+                            dCtx.fillStyle = '#000';
+                            dCtx.font = '10px sans-serif'; 
+                            dCtx.textAlign = 'center';
+                            dCtx.textBaseline = 'middle';
+                            dCtx.fillText(Math.round(val / total * 100) + '%', 40 + currentX + w / 2, y + 10);
+                        }
+                        currentX += w;
+                    }
+                    i++;
+                }
+            };
+
+            // ウサギのアイコン描画
+            dCtx.fillStyle = '#ecf0f1';
+            dCtx.font = '20px serif';
+            dCtx.textAlign = 'left';
+            dCtx.textBaseline = 'middle';
+            dCtx.fillText('🐇', 10, 40);
+            drawStackedBar(30, rStats, ['#f1c40f', '#e74c3c', '#95a5a6']);
+
+            // オオカミのアイコン描画
+            dCtx.fillStyle = '#ecf0f1';
+            dCtx.font = '20px serif';
+            dCtx.textAlign = 'left';
+            dCtx.fillText('🐺', 10, 90);
+            drawStackedBar(80, wStats, ['#f1c40f', '#95a5a6']);
+            
+            dCtx.font = '11px sans-serif';
+            dCtx.fillStyle = '#bdc3c7';
+            dCtx.textAlign = 'center';
+            dCtx.fillText('🟨がし 🟥たべられた ⬜じゅみょう', cw / 2, 135);
+        }
+
+        function addEntities(type, count, x = null, y = null) {
+            for (let i = 0; i < count; i++) {
+                if (type === 'plant') plants.push(new Entity(x, y, EMOJI.plant, SIZE.plant, 0));
+                if (type === 'rabbit') rabbits.push(new Entity(x, y, EMOJI.rabbit, SIZE.rabbit, 0.6));
+                if (type === 'wolf') wolves.push(new Entity(x, y, EMOJI.wolf, SIZE.wolf, 0.65));
+            }
+        }
+
+        function removeEntities(type, count) {
+            if (type === 'plant') plants.splice(0, count);
+            if (type === 'rabbit') rabbits.splice(0, count);
+            if (type === 'wolf') wolves.splice(0, count);
+        }
+
+        function resetSimulation() {
+            plants = []; rabbits = []; wolves = []; historyData = [];
+            deathEvents = [];
+            frameCount = 0;
+            addEntities('plant', 300);
+            addEntities('rabbit', 30);
+            addEntities('wolf', 3);
+        }
+
+        fieldCanvas.addEventListener('click', (e) => {
+            const rect = fieldCanvas.getBoundingClientRect();
+            const scaleX = fieldCanvas.width / rect.width;
+            const scaleY = fieldCanvas.height / rect.height;
+            
+            const x = (e.clientX - rect.left) * scaleX;
+            const y = (e.clientY - rect.top) * scaleY;
+            
+            const type = Math.random() < 0.5 ? 'rabbit' : 'wolf';
+            addEntities(type, 1, x, y);
+        });
+
+    </script>
+</body>
+</html>
+
