@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>トレードシミュレーター</title>
 <style>
   body {
@@ -93,6 +93,8 @@
 
   /* ================= スマホ専用レイアウト ================= */
   @media (max-width: 768px) {
+  html, body { touch-action: manipulation; -webkit-text-size-adjust: 100%; }
+  button, input, select, textarea { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
     body { padding: 5px; }
     h1 { font-size: 1.2em; margin: 5px 0; }
     
@@ -119,12 +121,12 @@
       font-size: 0.7em;
       width: 100%;
       margin-bottom: 2px;
-      line-height: 1.7; height: 3.4em; min-height: 3.4em; white-space: normal;
-      overflow: hidden;
-      display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; word-break: break-word;
+      line-height: 1.65; height: 4.6em; min-height: 4.6em; white-space: normal;
+      overflow: visible;
+      display: block; word-break: break-word;
     }
-    .company-sector { font-size: 0.55em; line-height: 1.8; height: 3.6em; min-height: 3.6em; margin-bottom: 5px; overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; word-break: break-word; }
-    .chart-canvas { width: 100%; height: auto; margin-top: 4px; margin-bottom: 4px; display: block; flex-shrink: 0; }
+    .company-sector { font-size: 0.55em; line-height: 1.75; height: 5.2em; min-height: 5.2em; margin-bottom: 8px; overflow: visible; display: block; word-break: break-word; }
+    .chart-canvas { width: 100%; height: auto; margin-top: 8px; margin-bottom: 4px; display: block; flex-shrink: 0; clear: both; }
     .price-info { font-size: 0.7em; }
     .yen-converted { font-size: 0.55em; margin-bottom: 2px; }
     .financial-info { font-size: 0.5em; padding: 2px; margin-bottom: 4px; line-height: 1.2; }
