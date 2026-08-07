@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>トレーダー シミュレーション</title>
+<style>
+  body {
+    font-family: 'Hiragino Maru Gothic ProN', 'Rounded Mplus 1c', sans-serif;
+    background-color: #1a202c;
+    color: #e2e8f0;
+    text-align: center;
+    padding: 10px;
+    margin: 0;
+  }
+  h1 { color: #fbd38d; font-size: 1.6em; margin: 10px 0; }
+  
+  /* --- タイトル画面 --- */
+  #title-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: #1a202c; z-index: 200; overflow-y: auto; padding: 30px 10px; box-sizing: border-box; }
+  .title-box { max-width: 800px; margin: 0 auto; background: #2d3748; padding: 30px; border-radius: 15px; border: 2px solid #4a5568; text-align: left; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+  .title-box h1 { text-align: center; font-size: 2.2em; color: #fbd38d; margin-bottom: 30px; }
+  .title-section { margin-bottom: 30px; }
+  .title-section h2 { color: #63b3ed; border-bottom: 2px solid #4a5568; padding-bottom: 5px; font-size: 1.4em; }
+  .term-list dt { font-weight: bold; color: #f6ad55; font-size: 1.1em; margin-top: 15px; }
+  .term-list dd { margin: 5px 0 0 15px; color: #e2e8f0; line-height: 1.6; }
+  .warning-box { background: #4a1c1c; border: 2px solid #fc8181; padding: 20px; border-radius: 10px; color: #fed7d7; margin-top: 40px; }
+  .warning-box h3 { color: #fc8181; margin-top: 0; font-size: 1.5em; text-align: center; }
+  .start-btn { display: block; width: 100%; max-width: 400px; margin: 40px auto 20px; background: #dd6b20; color: white; font-size: 1.5em; padding: 20px; border: none; border-radius: 40px; cursor: pointer; font-weight: bold; box-shadow: 0 6px 12px rgba(0,0,0,0.4); transition: 0.2s; }
+  .start-btn:hover { background: #c05621; transform: translateY(-3px); }
+
+  /* --- メインゲーム画面 --- */
+  #game-ui { display: none; }
+  
+  .dashboard { display: flex; justify-content: space-around; background: #2d3748; color: white; padding: 15px; border-radius: 10px; font-size: 1.1em; font-weight: bold; margin-bottom: 15px; border: 1px solid #4a5568; flex-wrap: wrap; gap: 10px; align-items: center; }
+  .stat-box { padding: 5px 15px; }
+  .exchange-rate { color: #4fd1c5; font-size: 1.3em; }
+  .system-msg { font-size: 0.85em; color: #cbd5e0; margin-top: 4px; font-weight: normal; }
+  
+  .btn-portfolio-open { background: #805ad5; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-size: 1em; font-weight: bold; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: 0.2s; }
+  .btn-portfolio-open:hover { background: #6b46c1; transform: translateY(-2px); }
+
+  .news-box { background: #2c2211; border: 2px solid #dd6b20; padding: 15px; border-radius: 10px; margin-bottom: 20px; text-align: left; }
+  .news-title { color: #f6ad55; font-size: 1.1em; font-weight: bold; margin-bottom: 8px; border-bottom: 1px solid #7b341e; padding-bottom: 4px; }
+  .news-list { margin: 0; padding-left: 20px; color: #feebc8; font-size: 0.95em; line-height: 1.5; }
+  
+  .market { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; }
+  .company-card { background: #2d3748; border-radius: 10px; padding: 12px; width: 310px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); text-align: left; border: 1px solid #4a5568; position: relative; box-sizing: border-box; }
+  .company-card.usd::before { content: "🇺🇸"; position: absolute; top: 10px; right: 15px; font-size: 1.5em; }
+  .company-card.jpy::before { content: "🇯🇵"; position: absolute; top: 10px; right: 15px; font-size: 1.5em; }
+  .company-name { font-size: 1.1em; font-weight: bold; color: #fff; margin-bottom: 4px; width: 85%; }
+  .company-sector { font-size: 0.8em; color: #a0aec0; margin-bottom: 8px; }
+  .chart-canvas { background: #1a202c; border: 1px solid #4a5568; border-radius: 5px; margin-bottom: 8px; }
+  .price-info { font-size: 1.3em; margin-bottom: 2px; }
+  .yen-converted { font-size: 0.8em; color: #4fd1c5; margin-bottom: 6px; }
+  .price-up { color: #fc8181; font-weight: bold; }
+  .price-down { color: #63b3ed; font-weight: bold; }
+  .financial-info { font-size: 0.85em; background: #1a202c; padding: 6px; border-radius: 5px; margin-bottom: 8px; }
+  .portfolio { font-size: 0.9em; color: #e2e8f0; margin-bottom: 10px; font-weight: bold;}
+  
+  .controls { display: flex; gap: 8px; }
+  button.action-btn { flex: 1; padding: 10px; border: none; border-radius: 5px; font-size: 0.9em; font-weight: bold; cursor: pointer; transition: 0.2s; }
+  .btn-buy { background: #e53e3e; color: white; }
+  .btn-buy:hover { background: #c53030; }
+  .btn-buy:disabled { background: #4a5568; cursor: not-allowed; color: #a0aec0; }
+  .btn-sell { background: #3182ce; color: white; }
+  .btn-sell:hover { background: #2b6cb0; }
+  .btn-sell:disabled { background: #4a5568; cursor: not-allowed; color: #a0aec0; }
+
+  .next-turn-btn { background: #dd6b20; color: white; font-size: 1.2em; padding: 15px 40px; border: none; border-radius: 30px; margin: 20px 0; cursor: pointer; font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.4); }
+  .next-turn-btn:hover { background: #c05621; transform: translateY(-2px); }
+
+  /* --- ポートフォリオ画面 --- */
+  #portfolio-screen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 300; padding-top: 50px; overflow-y: auto; }
+  .portfolio-box { background: #2d3748; max-width: 800px; margin: 0 auto; padding: 30px; border-radius: 15px; border: 2px solid #805ad5; text-align: left; margin-bottom: 50px; }
+  .portfolio-box h2 { color: #d6bcfa; margin-top: 0; text-align: center; font-size: 1.8em; border-bottom: 2px solid #553c9a; padding-bottom: 10px; }
+  
+  .allocation-bar { display: flex; height: 30px; width: 100%; border-radius: 15px; overflow: hidden; margin: 20px 0; background: #1a202c; border: 1px solid #4a5568; }
+  .allocation-segment { height: 100%; display: flex; align-items: center; justify-content: center; font-size: 0.75em; font-weight: bold; color: #fff; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); }
+  
+  .portfolio-table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 0.95em; }
+  .portfolio-table th, .portfolio-table td { border-bottom: 1px solid #4a5568; padding: 12px 8px; text-align: right; }
+  .portfolio-table th { background: #1a202c; color: #a0aec0; font-weight: normal; text-align: center; }
+  .portfolio-table td.col-name { text-align: left; font-weight: bold; }
+  
+  .btn-close { display: block; width: 200px; margin: 30px auto 0; background: #4a5568; color: white; padding: 12px; border: none; border-radius: 20px; cursor: pointer; font-size: 1.1em; font-weight: bold; }
+  .btn-close:hover { background: #718096; }
+  .portfolio-note { font-size: 0.85em; color: #a0aec0; margin-top: 10px; line-height: 1.5; }
+
+  /* --- ゲームオーバー画面 --- */
+  #game-over-screen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 400; padding-top: 100px; }
+  .game-over-box { background: #2d3748; max-width: 500px; margin: 0 auto; padding: 30px; border-radius: 15px; border: 2px solid #e53e3e; }
+
+
+  /* ================= スマホ専用レイアウト ================= */
+  @media (max-width: 768px) {
+    body { padding: 5px; }
+    h1 { font-size: 1.2em; margin: 5px 0; }
+    
+    .dashboard { font-size: 0.9em; padding: 10px; gap: 5px; margin-bottom: 10px; }
+    .stat-box { padding: 2px 10px; }
+    .news-box { padding: 10px; margin-bottom: 10px; }
+    
+    .market {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 5px;
+      max-height: 50vh; 
+      overflow-y: auto;
+      padding: 5px;
+      background: #1a202c; 
+      border-radius: 10px;
+      -webkit-overflow-scrolling: touch; 
+    }
+    
+    .company-card { width: 100%; padding: 6px; border-radius: 6px; }
+    .company-card.usd::before, .company-card.jpy::before { font-size: 1em; top: 3px; right: 3px; }
+    
+    .company-name { 
+      font-size: 0.7em; 
+      width: 100%; 
+      margin-bottom: 2px;
+      white-space: nowrap; 
+      overflow: hidden; 
+      text-overflow: ellipsis; 
+    }
+    .company-sector { font-size: 0.55em; margin-bottom: 2px; }
+    .chart-canvas { width: 100%; height: auto; margin-bottom: 4px; }
+    .price-info { font-size: 0.7em; }
+    .yen-converted { font-size: 0.55em; margin-bottom: 2px; }
+    .financial-info { font-size: 0.5em; padding: 2px; margin-bottom: 4px; line-height: 1.2; }
+    .portfolio { font-size: 0.6em; margin-bottom: 4px; }
+    
+    .controls { flex-direction: column; gap: 4px; }
+    button.action-btn { font-size: 0.65em; padding: 6px 2px; }
+    .next-turn-btn { font-size: 1.1em; padding: 12px 20px; margin: 15px 0; width: 90%; }
+  }
+</style>
+</head>
+<body>
+
+  <!-- ================= タイトル＆説明画面 ================= -->
+  <div id="title-screen">
+    <div class="title-box">
+      <h1>トレードシミュレーター</h1>
+      <div class="title-section">
+        <h2>📜 ルール説<ruby>明<rt>めい</rt></ruby></h2>
+        <p>あなたは<ruby>今日<rt>きょう</rt></ruby>から<ruby>投資家<rt>とうしか</rt></ruby>です。<ruby>初期<rt>しょき</rt></ruby><ruby>資金<rt>しきん</rt></ruby>の<strong>100,000<ruby>円<rt>えん</rt></ruby></strong>を使って、<ruby>日本<rt>にほん</rt></ruby>とアメリカの<ruby>会社<rt>かいしゃ</rt></ruby>の<ruby>株<rt>かぶ</rt></ruby>を<ruby>売<rt>う</rt></ruby>り<ruby>買<rt>か</rt></ruby>いし、<ruby>資産<rt>しさん</rt></ruby>を<ruby>増<rt>ふ</rt></ruby>やしていくのが<ruby>目的<rt>もくてき</rt></ruby>です。</p>
+        <ul style="line-height: 1.6;">
+          <li>このゲームに<strong><ruby>終<rt>お</rt></ruby>わりはありません。</strong></li>
+          <li>「<ruby>次<rt>つぎ</rt></ruby>の<ruby>半月<rt>はんつき</rt></ruby>へすすむ」を<ruby>押<rt>お</rt></ruby>すと<ruby>時間<rt>じかん</rt></ruby>が<ruby>進<rt>すす</rt></ruby>み、ニュースによって<ruby>株価<rt>かぶか</rt></ruby>や<ruby>為替<rt>かわせ</rt></ruby>が<ruby>大<rt>おお</rt></ruby>きく<ruby>動<rt>うご</rt></ruby>きます。</li>
+          <li><ruby>現金<rt>げんきん</rt></ruby>がマイナスになるか、<ruby>全財産<rt>ぜんざいさん</rt></ruby>が0になったら<strong>「<ruby>破産<rt>はさん</rt></ruby>（ゲームオーバー）」</strong>です。</li>
+        </ul>
+      </div>
+      <div class="title-section">
+        <h2>📖 ゲームに<ruby>登場<rt>とうじょう</rt></ruby>する<ruby>用語<rt>ようご</rt></ruby>かいせつ</h2>
+        <dl class="term-list">
+          <dt>🏦 <ruby>総資産<rt>そうしさん</rt></ruby>（そうしさん）</dt>
+          <dd>あなたの<ruby>持<rt>も</rt></ruby>っている「<ruby>現金<rt>げんきん</rt></ruby>」とすべての<ruby>株<rt>かぶ</rt></ruby>の<ruby>今<rt>いま</rt></ruby>の<ruby>価値<rt>かち</rt></ruby>を<ruby>足<rt>た</rt></ruby>した、<ruby>現在<rt>げんざい</rt></ruby>のあなたの<ruby>全財産<rt>ぜんざいさん</rt></ruby>です。</dd>
+
+          <dt>🏢 <ruby>株<rt>かぶ</rt></ruby>（かぶ）・<ruby>株式<rt>かぶしき</rt></ruby>（かぶしき）</dt>
+          <dd><ruby>会社<rt>かいしゃ</rt></ruby>が<ruby>新<rt>あたら</rt></ruby>しい<ruby>挑戦<rt>ちょうせん</rt></ruby>をするためのお金を<ruby>集<rt>あつ</rt></ruby>めるために<ruby>発行<rt>はっこう</rt></ruby>する「<ruby>引換券<rt>ひきかえけん</rt></ruby>」のようなもの。</dd>
+          
+          <dt>📈 <ruby>株価<rt>かぶか</rt></ruby>（かぶか）</dt>
+          <dd><ruby>株<rt>かぶ</rt></ruby>1<ruby>枚<rt>まい</rt></ruby>の<ruby>値段<rt>ねだん</rt></ruby>のこと。<ruby>買<rt>か</rt></ruby>いたい<ruby>人<rt>ひと</rt></ruby>が<ruby>多<rt>おお</rt></ruby>いと<ruby>上<rt>あ</rt></ruby>がり、<ruby>売<rt>う</rt></ruby>りたい<ruby>人<rt>ひと</rt></ruby>が<ruby>多<rt>おお</rt></ruby>いと<ruby>下<rt>さ</rt></ruby>がります。</dd>
+
+          <dt>💱 <ruby>為替<rt>かわせ</rt></ruby>（かわせ）・<ruby>円高<rt>えんだか</rt></ruby> / <ruby>円安<rt>えんやす</rt></ruby></dt>
+          <dd>お<ruby>金<rt>かね</rt></ruby>の<ruby>交換<rt>こうかん</rt></ruby>レートのこと。「1ドル＝150<ruby>円<rt>えん</rt></ruby>」の<ruby>場合<rt>ばあい</rt></ruby>、<ruby>米国<rt>べいこく</rt></ruby>の<ruby>株<rt>かぶ</rt></ruby>を<ruby>買<rt>か</rt></ruby>うには1ドルあたり150<ruby>円<rt>えん</rt></ruby>が<ruby>必要<rt>ひつよう</rt></ruby>です。1ドルが140<ruby>円<rt>えん</rt></ruby>になるなど、<ruby>円<rt>えん</rt></ruby>の<ruby>価値<rt>かち</rt></ruby>が<ruby>上<rt>あ</rt></ruby>がることを「<ruby>円高<rt>えんだか</rt></ruby>」、160<ruby>円<rt>えん</rt></ruby>になるなど<ruby>円<rt>えん</rt></ruby>の<ruby>価値<rt>かち</rt></ruby>が<ruby>下<rt>さ</rt></ruby>がることを「<ruby>円安<rt>えんやす</rt></ruby>」と<ruby>言<rt>い</rt></ruby>います。</dd>
+
+          <dt>💰 <ruby>配当金<rt>はいとうきん</rt></ruby>（はいとうきん）・<ruby>予想<rt>よそう</rt></ruby><ruby>利回<rt>りまわ</rt></ruby>り</dt>
+          <dd><ruby>会社<rt>かいしゃ</rt></ruby>が<ruby>稼<rt>かせ</rt></ruby>いだ<ruby>利益<rt>りえき</rt></ruby>の<ruby>一部<rt>いちぶ</rt></ruby>を、<ruby>株主<rt>かぶぬし</rt></ruby>にプレゼントしてくれるお<ruby>金<rt>かね</rt></ruby>のこと。「<ruby>予想<rt>よそう</rt></ruby><ruby>利回<rt>りまわ</rt></ruby>り」は、いま<ruby>株<rt>かぶ</rt></ruby>を<ruby>買<rt>か</rt></ruby>うと1<ruby>年間<rt>ねんかん</rt></ruby>で<ruby>株価<rt>かぶか</rt></ruby>の<ruby>何<rt>なん</rt></ruby>％の<ruby>配当金<rt>はいとうきん</rt></ruby>がもらえそうかを<ruby>表<rt>あらわ</rt></ruby>します（3<ruby>月<rt>がつ</rt></ruby>と9<ruby>月<rt>がつ</rt></ruby>に<ruby>受<rt>う</rt></ruby>け<ruby>取<rt>と</rt></ruby>れます）。</dd>
+
+          <dt>📊 <ruby>決算<rt>けっさん</rt></ruby>（けっさん）・<ruby>業績<rt>ぎょうせき</rt></ruby><ruby>発表<rt>はっぴょう</rt></ruby></dt>
+          <dd><ruby>会社<rt>かいしゃ</rt></ruby>が「どれくらい<ruby>儲<rt>もう</rt></ruby>かったか」を<ruby>発表<rt>はっぴょう</rt></ruby>するイベント。<ruby>結果<rt>けっか</rt></ruby>によって<ruby>株価<rt>かぶか</rt></ruby>は<ruby>大<rt>おお</rt></ruby>きく5パターンに<ruby>分<rt>わ</rt></ruby>かれます。</dd>
+
+          <dt>💼 ポートフォリオ（<ruby>資産<rt>しさん</rt></ruby><ruby>内訳<rt>うちわけ</rt></ruby>）</dt>
+          <dd>あなたが<ruby>持<rt>も</rt></ruby>っている<ruby>現金<rt>げんきん</rt></ruby>や<ruby>株<rt>かぶ</rt></ruby>の「<ruby>内訳<rt>うちわけ</rt></ruby>」のこと。<ruby>一<rt>ひと</rt></ruby>つの<ruby>会社<rt>かいしゃ</rt></ruby>に<ruby>全額<rt>ぜんがく</rt></ruby><ruby>賭<rt>か</rt></ruby>けるのではなく、<ruby>色々<rt>いろいろ</rt></ruby>な<ruby>会社<rt>かいしゃ</rt></ruby>に<ruby>分<rt>わ</rt></ruby>けて<ruby>投資<rt>とうし</rt></ruby>する（<ruby>分散投資<rt>ぶんさんとうし</rt></ruby>）のが<ruby>基本<rt>きほん</rt></ruby>です。</dd>
+
+          <dt>⚖️ <ruby>評価損益<rt>ひょうかそんえき</rt></ruby>（<ruby>含<rt>ふく</rt></ruby>み<ruby>益<rt>えき</rt></ruby> / <ruby>含<rt>ふく</rt></ruby>み<ruby>損<rt>そん</rt></ruby>）</dt>
+          <dd><ruby>買<rt>か</rt></ruby>った<ruby>時<rt>とき</rt></ruby>の<ruby>値段<rt>ねだん</rt></ruby>より、<ruby>今<rt>いま</rt></ruby>の<ruby>価値<rt>かち</rt></ruby>が<ruby>上<rt>あ</rt></ruby>がっていれば「<ruby>含<rt>ふく</rt></ruby>み<ruby>益<rt>えき</rt></ruby>（プラス）」、<ruby>下<rt>さ</rt></ruby>がっていれば「<ruby>含<rt>ふく</rt></ruby>み<ruby>損<rt>そん</rt></ruby>（マイナス）」となります。<ruby>売<rt>う</rt></ruby>って<ruby>現金<rt>げんきん</rt></ruby>にするまでは<ruby>確定<rt>かくてい</rt></ruby>しません。</dd>
+          
+          <dt>📉 <ruby>平均取得単価<rt>へいきんしゅとくたんか</rt></ruby>（へいきんしゅとくたんか）</dt>
+          <dd>あなたがその<ruby>株<rt>かぶ</rt></ruby>を「<ruby>平均<rt>へいきん</rt></ruby>して1<ruby>株<rt>かぶ</rt></ruby>いくらで<ruby>買<rt>か</rt></ruby>ったか」を<ruby>表<rt>あらわ</rt></ruby>す<ruby>金額<rt>きんがく</rt></ruby>です。<ruby>追加<rt>ついか</rt></ruby>で<ruby>買<rt>か</rt></ruby>ったりすると、この<ruby>金額<rt>きんがく</rt></ruby>も<ruby>変化<rt>へんか</rt></ruby>します。</dd>
+        </dl>
+      </div>
+      <div class="warning-box">
+        <h3>⚠️ じゅうようなちゅうい（<ruby>注意<rt>ちゅうい</rt></ruby>がき）</h3>
+        <p style="font-size: 1.1em; line-height: 1.8; text-align: center;">これはシミュレーションゲームですが、<br><strong><ruby>現実<rt>げんじつ</rt></ruby>の<ruby>株式投資<rt>かぶしきとうし</rt></ruby>はこんなに<ruby>甘<rt>あま</rt></ruby>くありません。</strong></p>
+        <p style="line-height: 1.6;"><ruby>現実<rt>げんじつ</rt></ruby>の<ruby>世界<rt>せかい</rt></ruby>では、<ruby>突然<rt>とつぜん</rt></ruby>の<ruby>戦争<rt>せんそう</rt></ruby>や<ruby>大暴落<rt>だいぼうらく</rt></ruby>によって、<strong><ruby>一生懸命<rt>いっしょうけんめい</rt></ruby><ruby>貯<rt>た</rt></ruby>めたお<ruby>金<rt>かね</rt></ruby>が<ruby>一瞬<rt>いっしゅん</rt></ruby>でなくなってしまう</strong>リスクが<ruby>常<rt>つね</rt></ruby>にあります。<br>「<ruby>簡単<rt>かんたん</rt></ruby>にお<ruby>金<rt>かね</rt></ruby>が<ruby>増<rt>ふ</rt></ruby>える<ruby>魔法<rt>まほう</rt></ruby>」はこの<ruby>世<rt>よ</rt></ruby>に<ruby>存在<rt>そんざい</rt></ruby>しません。<ruby>投資<rt>とうし</rt></ruby>は<ruby>必<rt>かなら</rt></ruby>ず「なくなっても<ruby>生活<rt>せいかつ</rt></ruby>に<ruby>困<rt>こま</rt></ruby>らないお<ruby>金<rt>かね</rt></ruby>（<ruby>余剰資金<rt>よじょうしきん</rt></ruby>）」で<ruby>行<rt>おこな</rt></ruby>うのが<ruby>大人<rt>おとな</rt></ruby><ruby>社会<rt>しゃかい</rt></ruby>の<ruby>絶対<rt>ぜったい</rt></ruby>のルールです。</p>
+      </div>
+      <button class="start-btn" onclick="startGame()"><ruby>理解<rt>りかい</rt></ruby>した（ゲームをはじめる）</button>
+    </div>
+  </div>
+
+  <!-- ================= メインゲーム画面 ================= -->
+  <div id="game-ui">
+    <h1>🌍 こどもトレーダー GLOBAL (<ruby>手数料<rt>てすうりょう</rt></ruby><ruby>無料<rt>むりょう</rt></ruby>)</h1>
+
+    <div class="dashboard">
+      <div class="stat-box">📅 <span id="date-display">4<ruby>月<rt>がつ</rt></ruby> <ruby>前期<rt>ぜんき</rt></ruby></span></div>
+      <div class="stat-box">
+        💱 <ruby>為替<rt>かわせ</rt></ruby>: <span class="exchange-rate">1ドル = <span id="fx-rate">150.0</span><ruby>円<rt>えん</rt></ruby></span><br>
+        <div class="system-msg" id="fx-diff"></div>
+      </div>
+      <div class="stat-box">💰 <ruby>現金<rt>げんきん</rt></ruby>: <span id="cash">100,000</span><ruby>円<rt>えん</rt></ruby></div>
+      <div class="stat-box">📊 <ruby>総資産<rt>そうしさん</rt></ruby>: <span id="total-assets">100,000</span><ruby>円<rt>えん</rt></ruby></div>
+      <button class="btn-portfolio-open" onclick="openPortfolio()">💼 ポートフォリオ</button>
+    </div>
+
+    <div class="news-box">
+      <div class="news-title">📰 <ruby>今期<rt>こんき</rt></ruby>の<ruby>市場<rt>しじょう</rt></ruby>ニュース・<ruby>出来事<rt>できごと</rt></ruby></div>
+      <ul class="news-list" id="news-list">
+        <li><ruby>取引<rt>とりひき</rt></ruby>スタート。<ruby>日本<rt>にほん</rt></ruby>の<ruby>企業<rt>きぎょう</rt></ruby>とアメリカの<ruby>企業<rt>きぎょう</rt></ruby>、<ruby>為替<rt>かわせ</rt></ruby>の<ruby>動<rt>うご</rt></ruby>きに<ruby>注目<rt>ちゅうもく</rt></ruby>しよう。</li>
+      </ul>
+    </div>
+
+    <div class="market" id="market-container"></div>
+    
+    <button class="next-turn-btn" id="next-btn" onclick="nextTurn()"><ruby>次<rt>つぎ</rt></ruby>の<ruby>半月<rt>はんつき</rt></ruby>へすすむ ➡</button>
+  </div>
+
+  <!-- ================= ポートフォリオ詳細画面 ================= -->
+  <div id="portfolio-screen">
+    <div class="portfolio-box">
+      <h2>💼 あなたのポートフォリオ（<ruby>資産<rt>しさん</rt></ruby><ruby>内訳<rt>うちわけ</rt></ruby>）</h2>
+      
+      <p style="text-align: center; margin-bottom: 5px;">【<ruby>資産構成<rt>しさんこうせい</rt></ruby>グラフ（アセットアロケーション）】</p>
+      <div class="allocation-bar" id="allocation-bar"></div>
+
+      <div style="overflow-x: auto;">
+        <table class="portfolio-table">
+          <thead>
+            <tr>
+              <th><ruby>資産名<rt>しさんめい</rt></ruby>（<ruby>銘柄<rt>めいがら</rt></ruby>）</th>
+              <th><ruby>保有数<rt>ほゆうすう</rt></ruby></th>
+              <th><ruby>現在<rt>げんざい</rt></ruby>の<ruby>価値<rt>かち</rt></ruby>(<ruby>円<rt>えん</rt></ruby>)</th>
+              <th><ruby>平均取得単価<rt>へいきんしゅとくたんか</rt></ruby></th>
+              <th><ruby>評価損益<rt>ひょうかそんえき</rt></ruby></th>
+            </tr>
+          </thead>
+          <tbody id="portfolio-tbody">
+          </tbody>
+        </table>
+      </div>
+      
+      <div class="portfolio-note">
+        ※ <strong><ruby>平均取得単価<rt>へいきんしゅとくたんか</rt></ruby></strong>: その<ruby>株<rt>かぶ</rt></ruby>を<ruby>買<rt>か</rt></ruby>った<ruby>時<rt>とき</rt></ruby>の1<ruby>株<rt>かぶ</rt></ruby>あたりの<ruby>平均額<rt>へいきんがく</rt></ruby>（<ruby>円<rt>えん</rt></ruby>）です。<br>
+        ※ <strong><ruby>評価損益<rt>ひょうかそんえき</rt></ruby></strong>: <ruby>今<rt>いま</rt></ruby>すぐ<ruby>売<rt>う</rt></ruby>った<ruby>場合<rt>ばあい</rt></ruby>に、<ruby>買<rt>か</rt></ruby>った<ruby>時<rt>とき</rt></ruby>と<ruby>比<rt>くら</rt></ruby>べてどれくらい<ruby>得<rt>とく</rt></ruby>（または<ruby>損<rt>そん</rt></ruby>）をするかを<ruby>表<rt>あらわ</rt></ruby>します。<ruby>米国株<rt>べいこくかぶ</rt></ruby>は<ruby>為替<rt>かわせ</rt></ruby>の<ruby>影響<rt>えいきょう</rt></ruby>も<ruby>計算<rt>けいさん</rt></ruby>に<ruby>含<rt>ふく</rt></ruby>まれています。
+      </div>
+
+      <button class="btn-close" onclick="closePortfolio()"><ruby>閉<rt>と</rt></ruby>じる</button>
+    </div>
+  </div>
+
+  <!-- ================= ゲームオーバー画面 ================= -->
+  <div id="game-over-screen">
+    <div class="game-over-box">
+      <h1 style="color: #fc8181; font-size: 2.5em;">💀 <ruby>破<rt>は</rt></ruby> <ruby>産<rt>さん</rt></ruby> 💀</h1>
+      <p style="font-size: 1.2em; line-height: 1.6;"><ruby>資金<rt>しきん</rt></ruby>が<ruby>尽<rt>つ</rt></ruby>きて<ruby>取引<rt>とりひき</rt></ruby>ができなくなりました。<br><ruby>為替<rt>かわせ</rt></ruby>の<ruby>変動<rt>へんどう</rt></ruby>や<ruby>株価<rt>かぶか</rt></ruby>の<ruby>暴落<rt>ぼうらく</rt></ruby>を<ruby>甘<rt>あま</rt></ruby>く<ruby>見<rt>み</rt></ruby>てはいけません。</p>
+      <p><ruby>生<rt>い</rt></ruby>き<ruby>残<rt>のこ</rt></ruby>れた<ruby>期間<rt>きかん</rt></ruby>: <strong><span id="survived-period"></span></strong></p>
+      <button class="next-turn-btn" onclick="location.reload()">もう<ruby>一度<rt>いちど</rt></ruby><ruby>挑戦<rt>ちょうせん</rt></ruby>する</button>
+    </div>
+  </div>
+
+  <script>
+    function startGame() {
+      document.getElementById('title-screen').style.display = 'none';
+      document.getElementById('game-ui').style.display = 'block';
+      updateUI();
+    }
+
+    let year = 1, month = 4, isLatePeriod = false; 
+    let cash = 100000;
+    let fxRate = 145.0; // 少し現実的な初期値
+    let fxHistory = [145.0];
+
+    // volatility: 変動の激しさ（高いほど急騰・急落しやすい）
+    // drift: 長期的な成長率（プラスだと右肩上がりになりやすい）
+    const companies = {
+      bank: { name: "🏦 みらいメガバンク", sector: "<ruby>日本<rt>にほん</rt></ruby>: <ruby>銀行<rt>ぎんこう</rt></ruby>・<ruby>金融<rt>きんゆう</rt></ruby>", price: 1000, history: [1000], owned: 0, avgCostYen: 0, divBase: 45, currency: "JPY", color: "#2b6cb0", volatility: 0.04, drift: 0.003 },
+      energy: { name: "⚡ ネオエナジー", sector: "<ruby>日本<rt>にほん</rt></ruby>: <ruby>電力<rt>でんりょく</rt></ruby>・インフラ", price: 1800, history: [1800], owned: 0, avgCostYen: 0, divBase: 60, currency: "JPY", color: "#ecc94b", volatility: 0.05, drift: 0.002 },
+      food: { name: "🍔 スマイルフーズ", sector: "<ruby>日本<rt>にほん</rt></ruby>: <ruby>外食<rt>がいしょく</rt></ruby>・<ruby>輸入<rt>ゆにゅう</rt></ruby>", price: 1200, history: [1200], owned: 0, avgCostYen: 0, divBase: 30, currency: "JPY", color: "#dd6b20", volatility: 0.06, drift: 0.002 },
+      auto: { name: "🚗 ドラゴンモーターズ", sector: "<ruby>日本<rt>にほん</rt></ruby>: <ruby>自動車<rt>じどうしゃ</rt></ruby>・<ruby>輸出<rt>ゆしゅつ</rt></ruby>", price: 3500, history: [3500], owned: 0, avgCostYen: 0, divBase: 120, currency: "JPY", color: "#e53e3e", volatility: 0.08, drift: 0.003 },
+      pharma: { name: "💊 フェニックス製薬", sector: "<ruby>日本<rt>にほん</rt></ruby>: <ruby>医薬品<rt>いやくひん</rt></ruby>・バイオ", price: 4000, history: [4000], owned: 0, avgCostYen: 0, divBase: 100, currency: "JPY", color: "#4299e1", volatility: 0.10, drift: 0.004 },
+      game: { name: "🎮 ピカピカゲームズ", sector: "<ruby>日本<rt>にほん</rt></ruby>: IT・エンタメ", price: 2000, history: [2000], owned: 0, avgCostYen: 0, divBase: 60, currency: "JPY", color: "#9f7aea", volatility: 0.12, drift: 0.005 },
+      us_shop: { name: "📦 メガマート", sector: "<ruby>米国<rt>べいこく</rt></ruby>: ネット<ruby>通販<rt>つうはん</rt></ruby>", price: 120, history: [120], owned: 0, avgCostYen: 0, divBase: 2.0, currency: "USD", color: "#ed8936", volatility: 0.07, drift: 0.004 },
+      us_it: { name: "🍎 グローバル・アップル", sector: "<ruby>米国<rt>べいこく</rt></ruby>: IT・スマホ", price: 150, history: [150], owned: 0, avgCostYen: 0, divBase: 1.5, currency: "USD", color: "#a0aec0", volatility: 0.10, drift: 0.006 },
+      us_ev: { name: "🏎️ ボルテックスEV", sector: "<ruby>米国<rt>べいこく</rt></ruby>: <ruby>電気自動車<rt>でんきじどうしゃ</rt></ruby>", price: 200, history: [200], owned: 0, avgCostYen: 0, divBase: 0, currency: "USD", color: "#f56565", volatility: 0.15, drift: 0.008 }
+    };
+
+    const newsPool = [
+      { text: "【<ruby>為替<rt>かわせ</rt></ruby>】<ruby>日米<rt>にちべい</rt></ruby>の<ruby>金利差<rt>きんりさ</rt></ruby>が<ruby>拡大<rt>かくだい</rt></ruby>！<ruby>急速<rt>きゅうそく</rt></ruby>な「<ruby>円安<rt>えんやす</rt></ruby>・ドル<ruby>高<rt>たか</rt></ruby>」が<ruby>進行<rt>しんこう</rt></ruby><ruby>中<rt>ちゅう</rt></ruby>。", effects: { food: 0.85, auto: 1.15, energy: 0.9, bank: 1.05 }, fxEffect: 1.05 },
+      { text: "【<ruby>為替<rt>かわせ</rt></ruby>】アメリカの<ruby>景気不安<rt>けいきふあん</rt></ruby>からドルが<ruby>売<rt>う</rt></ruby>られ、<ruby>急激<rt>きゅうげき</rt></ruby>な「<ruby>円高<rt>えんだか</rt></ruby>」に！", effects: { auto: 0.85, bank: 0.95 }, fxEffect: 0.95 },
+      { text: "【<ruby>米経済<rt>べいけいざい</rt></ruby>】アメリカで<ruby>記録적<rt>きろくてき</rt></ruby>なインフレ。メガマートの<ruby>売上<rt>うりあげ</rt></ruby>が<ruby>伸<rt>の</rt></ruby>び<ruby>悩<rt>なや</rt></ruby>む。", effects: { us_shop: 0.85, us_it: 0.95 }, fxEffect: 1.02 },
+      { text: "【<ruby>技術<rt>ぎじゅつ</rt></ruby>】ボルテックスEVが<ruby>完全<rt>かんぜん</rt></ruby><ruby>自動運転<rt>じどううんてん</rt></ruby>を<ruby>発表<rt>はっぴょう</rt></ruby>！<ruby>株価<rt>かぶか</rt></ruby>が<ruby>急騰<rt>きゅうとう</rt></ruby>！", effects: { us_ev: 1.4, auto: 0.9 }, fxEffect: 1.0 },
+      { text: "【<ruby>技術革新<rt>ぎじゅつかくしん</rt></ruby>】グローバル・アップルが<ruby>新型<rt>しんがた</rt></ruby>スマホを<ruby>発売<rt>はつばい</rt></ruby>し、<ruby>世界中<rt>せかいじゅう</rt></ruby>で<ruby>大行列<rt>だいぎょうれつ</rt></ruby>！", effects: { us_it: 1.3, game: 1.1 }, fxEffect: 1.0 },
+      { text: "【<ruby>金利<rt>きんり</rt></ruby>】<ruby>日本銀行<rt>にっぽんぎんこう</rt></ruby>が<ruby>金利<rt>きんり</rt></ruby>引き上げを<ruby>発表<rt>はっぴょう</rt></ruby>。<ruby>銀行<rt>ぎんこう</rt></ruby>の<ruby>利益<rt>りえき</rt></ruby>アップに<ruby>期待<rt>きたい</rt></ruby>！", effects: { bank: 1.15 }, fxEffect: 0.98 },
+      { text: "【<ruby>社会問題<rt>しゃかいもんだい</rt></ruby>】<ruby>世界的<rt>せかいてき</rt></ruby>な<ruby>原油高<rt>げんゆだか</rt></ruby>で<ruby>火力発電<rt>かりょくはつでん</rt></ruby>のコストが<ruby>急上昇<rt>きゅうじょうしょう</rt></ruby>！", effects: { energy: 0.75, food: 0.85 }, fxEffect: 1.01 },
+      { text: "【<ruby>新薬<rt>しんやく</rt></ruby>】フェニックス<ruby>製薬<rt>せいやく</rt></ruby>の<ruby>画期적<rt>かっきてき</rt></ruby>な<ruby>新薬<rt>しんやく</rt></ruby>がアメリカで<ruby>承認<rt>しょうにん</rt></ruby>された！", effects: { pharma: 1.35 }, fxEffect: 1.0 },
+      { text: "【<ruby>景気<rt>けいき</rt></ruby>】<ruby>世界的<rt>せかいてき</rt></ruby>な<ruby>好景気<rt>こうけいき</rt></ruby>！<ruby>企業業績<rt>きぎょうぎょうせき</rt></ruby>への<ruby>期待<rt>きたい</rt></ruby>から<ruby>買<rt>か</rt></ruby>い<ruby>注文<rt>ちゅうもん</rt></ruby>が<ruby>殺到中<rt>さっとうちゅう</rt></ruby>！", effects: { game: 1.1, auto: 1.1, bank: 1.1, us_it: 1.1, us_ev: 1.1, us_shop: 1.1 }, fxEffect: 1.02 },
+      { text: "【<ruby>景気<rt>けいき</rt></ruby>】<ruby>市場<rt>しじょう</rt></ruby>が<ruby>不安定<rt>ふあんてい</rt></ruby>になり、<ruby>投資家<rt>とうしか</rt></ruby>が<ruby>一時的<rt>いちじてき</rt></ruby>に<ruby>株<rt>かぶ</rt></ruby>を<ruby>売<rt>う</rt></ruby>り<ruby>払<rt>はら</rt></ruby>っている。", effects: { game: 0.9, auto: 0.9, energy: 0.95, pharma: 0.9, food: 0.9, us_it: 0.9, us_ev: 0.85, us_shop: 0.9, bank: 0.95 }, fxEffect: 0.99 },
+      { text: "【<ruby>貿易<rt>ぼうえき</rt></ruby>】<ruby>日米間<rt>にちべいかん</rt></ruby>の<ruby>貿易協定<rt>ぼうえききょうてい</rt></ruby>が見<ruby>直<rt>なお</rt></ruby>され、<ruby>輸出企業<rt>ゆしゅつきぎょう</rt></ruby>の<ruby>業績<rt>ぎょうせき</rt></ruby>に<ruby>影響<rt>えいきょう</rt></ruby>か。", effects: { auto: 1.2, us_ev: 0.9 }, fxEffect: 1.03 }
+    ];
+
+    function drawChart(canvasId, history, color) {
+      const canvas = document.getElementById(canvasId);
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      if (history.length < 2) return;
+      const maxVal = Math.max(...history) * 1.05;
+      const minVal = Math.min(...history) * 0.95;
+      const range = maxVal - minVal || 1;
+      const stepX = canvas.width / Math.max(history.length - 1, 10);
+      
+      ctx.beginPath();
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 2;
+      history.forEach((val, index) => {
+        const x = index * stepX;
+        const y = canvas.height - ((val - minVal) / range) * canvas.height;
+        if (index === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      });
+      ctx.stroke();
+    }
+
+    function updateUI() {
+      const periodStr = `${year}<ruby>年目<rt>ねんめ</rt></ruby> ${month}<ruby>月<rt>がつ</rt></ruby> ${isLatePeriod ? '<ruby>後期<rt>こうき</rt></ruby>' : '<ruby>前期<rt>ぜんき</rt></ruby>'}`;
+      document.getElementById('date-display').innerHTML = periodStr;
+      
+      document.getElementById('fx-rate').textContent = fxRate.toFixed(1);
+      const fxDiff = fxHistory.length > 1 ? (fxRate - fxHistory[fxHistory.length - 2]).toFixed(1) : "0.0";
+      const fxDiffEl = document.getElementById('fx-diff');
+      if (fxDiff > 0) fxDiffEl.innerHTML = `<span style="color:#fc8181"><ruby>円安<rt>えんやす</rt></ruby> (<ruby>前月比<rt>ぜんげつひ</rt></ruby> +${fxDiff}<ruby>円<rt>えん</rt></ruby>)</span>`;
+      else if (fxDiff < 0) fxDiffEl.innerHTML = `<span style="color:#63b3ed"><ruby>円高<rt>えんだか</rt></ruby> (<ruby>前月比<rt>ぜんげつひ</rt></ruby> ${fxDiff}<ruby>円<rt>えん</rt></ruby>)</span>`;
+      else fxDiffEl.innerHTML = `<ruby>変動<rt>へんどう</rt></ruby>なし`;
+
+      document.getElementById('cash').textContent = Math.floor(cash).toLocaleString();
+      
+      let stockValue = 0;
+      for (let key in companies) {
+        const c = companies[key];
+        const currentPriceYen = c.currency === "USD" ? c.price * fxRate : c.price;
+        stockValue += currentPriceYen * c.owned;
+      }
+      const totalAssets = Math.floor(cash + stockValue);
+      document.getElementById('total-assets').textContent = totalAssets.toLocaleString();
+
+      if (cash < 0 || totalAssets <= 0) {
+        triggerGameOver(periodStr); return;
+      }
+
+      const marketContainer = document.getElementById('market-container');
+      marketContainer.innerHTML = '';
+
+      for (let key in companies) {
+        const c = companies[key];
+        const lastPrice = c.history.length > 1 ? c.history[c.history.length - 2] : c.price;
+        const diff = c.price - lastPrice;
+        
+        let priceClass = "", arrow = "➖";
+        let diffStr = c.currency === "USD" ? diff.toFixed(1) : diff;
+        if (diff > 0) { priceClass = "price-up"; arrow = `📈 +${diffStr}`; }
+        else if (diff < 0) { priceClass = "price-down"; arrow = `📉 ${diffStr}`; }
+
+        const yieldPercent = ((c.divBase / c.price) * 100).toFixed(2);
+        const requiredYen = c.currency === "USD" ? Math.ceil(c.price * fxRate) : c.price;
+        const unit = c.currency === "USD" ? "$" : "<ruby>円<rt>えん</rt></ruby>";
+        const priceStr = c.currency === "USD" ? c.price.toFixed(1) : c.price.toLocaleString();
+        
+        const canBuy = cash >= requiredYen;
+        const canSell = c.owned > 0;
+        const flagClass = c.currency === "USD" ? "usd" : "jpy";
+        const convertedHtml = c.currency === "USD" ? `<div class="yen-converted"><ruby>約<rt>やく</rt></ruby> ${requiredYen.toLocaleString()}<ruby>円<rt>えん</rt></ruby></div>` : `<div class="yen-converted">&nbsp;</div>`;
+
+        marketContainer.innerHTML += `
+          <div class="company-card ${flagClass}">
+            <div class="company-name">${c.name}</div>
+            <div class="company-sector">${c.sector}</div>
+            <canvas id="chart-${key}" class="chart-canvas" width="280" height="60"></canvas>
+            <div class="price-info"><strong>${unit}${priceStr}</strong> <span class="${priceClass}" style="font-size:0.8em;">${arrow}</span></div>
+            ${convertedHtml}
+            <div class="financial-info"><ruby>利回<rt>りまわ</rt></ruby>り: <strong>${yieldPercent}%</strong><br>(${unit}${c.divBase})</div>
+            <div class="portfolio"><ruby>保有<rt>ほゆう</rt></ruby>: <span>${c.owned}</span> <ruby>株<rt>かぶ</rt></ruby></div>
+            <div class="controls">
+              <button class="action-btn btn-buy" onclick="buy('${key}', ${requiredYen})" ${!canBuy ? 'disabled' : ''}><ruby>買<rt>か</rt></ruby> (${requiredYen.toLocaleString()}<ruby>円<rt>えん</rt></ruby>)</button>
+              <button class="action-btn btn-sell" onclick="sell('${key}', ${requiredYen})" ${!canSell ? 'disabled' : ''}><ruby>売<rt>う</rt></ruby> (${requiredYen.toLocaleString()}<ruby>円<rt>えん</rt></ruby>)</button>
+            </div>
+          </div>
+        `;
+      }
+      setTimeout(() => { for (let key in companies) drawChart(`chart-${key}`, companies[key].history, companies[key].color); }, 0);
+    }
+
+    function buy(companyKey, requiredYen) {
+      if (cash >= requiredYen) {
+        const c = companies[companyKey];
+        const currentTotalCost = c.avgCostYen * c.owned;
+        const newTotalCost = currentTotalCost + requiredYen;
+        
+        cash -= requiredYen;
+        c.owned += 1;
+        c.avgCostYen = Math.round(newTotalCost / c.owned);
+        
+        updateUI();
+      }
+    }
+
+    function sell(companyKey, returnYen) {
+      const c = companies[companyKey];
+      if (c.owned > 0) {
+        cash += returnYen;
+        c.owned -= 1;
+        if (c.owned === 0) c.avgCostYen = 0; 
+        updateUI();
+      }
+    }
+
+    function openPortfolio() {
+      const tbody = document.getElementById('portfolio-tbody');
+      const bar = document.getElementById('allocation-bar');
+      tbody.innerHTML = '';
+      bar.innerHTML = '';
+
+      let totalAssets = Math.floor(cash);
+      let assetData = [{ name: "💵 <ruby>現金<rt>げんきん</rt></ruby>", value: cash, color: "#48bb78" }];
+
+      for (let key in companies) {
+        const c = companies[key];
+        if (c.owned > 0) {
+          const currentPriceYen = c.currency === "USD" ? c.price * fxRate : c.price;
+          const totalValueYen = currentPriceYen * c.owned;
+          totalAssets += totalValueYen;
+          
+          assetData.push({ name: c.name, value: totalValueYen, color: c.color });
+
+          const profitLoss = (currentPriceYen - c.avgCostYen) * c.owned;
+          let profitClass = "color: #a0aec0;";
+          let profitStr = "±0";
+          if (profitLoss > 0) { profitClass = "color: #fc8181; font-weight: bold;"; profitStr = `+${Math.floor(profitLoss).toLocaleString()}`; }
+          else if (profitLoss < 0) { profitClass = "color: #63b3ed; font-weight: bold;"; profitStr = `${Math.floor(profitLoss).toLocaleString()}`; }
+
+          tbody.innerHTML += `
+            <tr>
+              <td class="col-name">${c.name}</td>
+              <td>${c.owned}</td>
+              <td>${Math.floor(totalValueYen).toLocaleString()}</td>
+              <td>${c.avgCostYen.toLocaleString()}</td>
+              <td style="${profitClass}">${profitStr}</td>
+            </tr>
+          `;
+        }
+      }
+
+      tbody.insertAdjacentHTML('afterbegin', `
+        <tr style="background: rgba(72, 187, 120, 0.1);">
+          <td class="col-name">💵 <ruby>現金<rt>げんきん</rt></ruby></td>
+          <td>-</td>
+          <td>${Math.floor(cash).toLocaleString()}</td>
+          <td>-</td>
+          <td>-</td>
+        </tr>
+      `);
+
+      assetData.forEach(asset => {
+        const percent = (asset.value / totalAssets) * 100;
+        if (percent > 0) {
+          const label = percent >= 5 ? `${Math.round(percent)}%` : "";
+          bar.innerHTML += `<div class="allocation-segment" style="width: ${percent}%; background-color: ${asset.color};" title="${asset.name}: ${Math.round(percent)}%">${label}</div>`;
+        }
+      });
+
+      document.getElementById('portfolio-screen').style.display = 'block';
+    }
+
+    function closePortfolio() {
+      document.getElementById('portfolio-screen').style.display = 'none';
+    }
+
+    function nextTurn() {
+      if (isLatePeriod) { isLatePeriod = false; month++; if (month > 12) { month = 1; year++; } } 
+      else { isLatePeriod = true; }
+
+      let currentNewsList = [];
+      const newsCount = Math.floor(Math.random() * 3) + 1;
+      let tempPool = [...newsPool];
+      let combinedEffects = {};
+      let totalFxEffect = 1.0;
+
+      for (let i = 0; i < newsCount; i++) {
+        if (tempPool.length === 0) break;
+        const idx = Math.floor(Math.random() * tempPool.length);
+        const selected = tempPool.splice(idx, 1)[0];
+        currentNewsList.push(selected.text);
+        for (let k in selected.effects) combinedEffects[k] = (combinedEffects[k] || 1.0) * selected.effects[k];
+        totalFxEffect *= (selected.fxEffect || 1.0);
+      }
+
+      // --- 決算発表の処理 ---
+      if ((month === 9 || month === 3) && isLatePeriod) {
+        currentNewsList.push(`📢 【<ruby>決算発表<rt>けっさんはっぴょう</rt></ruby>】${month}<ruby>期末<rt>きまつ</rt></ruby>の<ruby>決算発表<rt>けっさんはっぴょう</rt></ruby>が<ruby>行<rt>おこな</rt></ruby>われました！`);
+        let dividendTotalYen = 0;
+        
+        for (let key in companies) {
+          const c = companies[key];
+          // サプライズ度を少しプラスに偏らせる（-0.20 〜 +0.25） + 成長率
+          const surprise = (Math.random() * 0.45) - 0.20 + c.drift;
+          combinedEffects[key] = (combinedEffects[key] || 1.0) * (1.0 + surprise);
+          
+          if (surprise > 0.15) {
+            currentNewsList.push(`  ・${c.name}: 🚀 <ruby>大幅<rt>おおはば</rt></ruby>な<ruby>上方修正<rt>じょうほうしゅうせい</rt></ruby>！<ruby>業績絶好調<rt>ぎょうせきぜっこうちょう</rt></ruby>！`);
+          } else if (surprise > 0.05) {
+            currentNewsList.push(`  ・${c.name}: 📈 <ruby>好決算<rt>こうけっさん</rt></ruby>！<ruby>予想<rt>よそう</rt></ruby>を<ruby>上回<rt>うわまわ</rt></ruby>る<ruby>利益<rt>りえき</rt></ruby>。`);
+          } else if (surprise > -0.05) {
+            currentNewsList.push(`  ・${c.name}: 📊 <ruby>業績<rt>ぎょうせき</rt></ruby>は<ruby>予想通り<rt>よそうどおり</rt></ruby>。<ruby>順調<rt>じゅんちょう</rt></ruby>に<ruby>推移<rt>すいい</rt></ruby>。`);
+          } else if (surprise > -0.15) {
+            currentNewsList.push(`  ・${c.name}: 📉 <ruby>減益<rt>げんえき</rt></ruby>…。<ruby>予想<rt>よそう</rt></ruby>を<ruby>下回<rt>したまわ</rt></ruby>る<ruby>結果<rt>けっか</rt></ruby>に。`);
+          } else {
+            currentNewsList.push(`  ・${c.name}: ⚠️ <ruby>下方修正<rt>かほうしゅうせい</rt></ruby>！<ruby>深刻<rt>しんこく</rt></ruby>な<ruby>業績悪化<rt>ぎょうせきあっか</rt></ruby>…。`);
+          }
+
+          if (c.owned > 0 && c.divBase > 0) {
+            let divAmount = (c.divBase / 2) * c.owned;
+            if (c.currency === "USD") divAmount = divAmount * fxRate;
+            dividendTotalYen += divAmount;
+          }
+        }
+        
+        if (dividendTotalYen > 0) {
+          dividendTotalYen = Math.floor(dividendTotalYen);
+          cash += dividendTotalYen;
+          currentNewsList.push(`💰 【<ruby>配当金<rt>はいとうきん</rt></ruby>】<ruby>保有株<rt>ほゆうかぶ</rt></ruby>の<ruby>配当金<rt>はいとうきん</rt></ruby>として<ruby>合計<rt>ごうけい</rt></ruby> ${dividendTotalYen.toLocaleString()}<ruby>円<rt>えん</rt></ruby> を<ruby>受領<rt>じゅりょう</rt></ruby>しました。`);
+        }
+      }
+
+      document.getElementById('news-list').innerHTML = currentNewsList.map(n => `<li>${n}</li>`).join('');
+
+      // 為替の計算（145円あたりに戻ろうとする力を少し加える）
+      let fxNoise = (Math.random() * 0.04) - 0.02;
+      let fxReversion = (145 - fxRate) * 0.001; 
+      fxRate = fxRate * totalFxEffect * (1.0 + fxNoise + fxReversion);
+      if (fxRate < 100) fxRate = 100 + (Math.random() * 5);
+      if (fxRate > 180) fxRate = 180 - (Math.random() * 5);
+      fxHistory.push(fxRate);
+
+      // 株価の計算
+      for (let key in companies) {
+        const c = companies[key];
+        let effect = combinedEffects[key] || 1.0;
+        
+        // 銘柄ごとのボラティリティと成長率(ドリフト)を適用
+        let noise = (Math.random() * c.volatility * 2) - c.volatility + c.drift;
+        
+        // ★割安時の反発力（初期価格の60%以下になったら、少しプラスの力が働きやすくなる）
+        let dropRatio = c.price / c.history[0]; 
+        if (dropRatio < 0.6) {
+           noise += 0.03; 
+        }
+
+        let newPrice = c.price * (effect + noise);
+        
+        if (c.currency === "USD") {
+          if (newPrice < 10) newPrice = 10;
+          newPrice = Math.round(newPrice * 10) / 10;
+        } else {
+          if (newPrice < 100) newPrice = 100;
+          newPrice = Math.round(newPrice / 10) * 10;
+        }
+        c.price = newPrice;
+        c.history.push(newPrice);
+      }
+      updateUI();
+    }
+
+    function triggerGameOver(period) {
+      document.getElementById('survived-period').textContent = period;
+      document.getElementById('game-over-screen').style.display = 'block';
+    }
+  </script>
+</body>
+</html>
