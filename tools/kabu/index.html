@@ -121,12 +121,12 @@
       font-size: 0.7em;
       width: 100%;
       margin-bottom: 0;
-      line-height: 1.35; height: 3.6em; min-height: 3.6em; white-space: normal;
+      line-height: 1.25; height: auto; min-height: 0; white-space: normal;
       overflow: visible;
       display: block; word-break: break-word;
     }
-    .company-sector { font-size: 0.55em; line-height: 1.45; height: 4.2em; min-height: 4.2em; margin-bottom: 2px; overflow: visible; display: block; word-break: break-word; }
-    .chart-canvas { width: 100%; height: auto; margin-top: 2px; margin-bottom: 4px; display: block; flex-shrink: 0; clear: both; }
+    .company-sector { font-size: 0.55em; line-height: 1.3; height: auto; min-height: 0; margin-bottom: 0; overflow: visible; display: block; word-break: break-word; }
+    .chart-canvas { width: 100%; height: auto; margin-top: 0; margin-bottom: 4px; display: block; flex-shrink: 0; clear: both; }
     .price-info { font-size: 0.7em; }
     .yen-converted { font-size: 0.55em; margin-bottom: 2px; }
     .financial-info { font-size: 0.5em; padding: 2px; margin-bottom: 4px; line-height: 1.2; }
@@ -421,6 +421,27 @@ const newsPool = [
       ctx.stroke();
     }
 
+    function alignMobileCardRows() {
+      if (window.innerWidth > 768) return;
+      const cards = Array.from(document.querySelectorAll("#market-container .company-card"));
+      cards.forEach(card => {
+        const name = card.querySelector(".company-name");
+        const sector = card.querySelector(".company-sector");
+        if (name) name.style.height = "auto";
+        if (sector) sector.style.height = "auto";
+      });
+
+      for (let i = 0; i < cards.length; i += 3) {
+        const row = cards.slice(i, i + 3);
+        const names = row.map(card => card.querySelector(".company-name")).filter(Boolean);
+        const sectors = row.map(card => card.querySelector(".company-sector")).filter(Boolean);
+        const nameHeight = Math.ceil(Math.max(...names.map(el => el.scrollHeight))) + 1;
+        const sectorHeight = Math.ceil(Math.max(...sectors.map(el => el.scrollHeight))) + 1;
+        names.forEach(el => el.style.height = nameHeight + "px");
+        sectors.forEach(el => el.style.height = sectorHeight + "px");
+      }
+    }
+
     function updateUI() {
       const periodStr = `${year}<ruby>年目<rt>ねんめ</rt></ruby> ${month}<ruby>月<rt>がつ</rt></ruby> ${isLatePeriod ? '<ruby>後期<rt>こうき</rt></ruby>' : '<ruby>前期<rt>ぜんき</rt></ruby>'}`;
       document.getElementById('date-display').innerHTML = periodStr;
@@ -486,6 +507,7 @@ const newsPool = [
           </div>
         `;
       }
+      requestAnimationFrame(() => { alignMobileCardRows(); requestAnimationFrame(alignMobileCardRows); });
       setTimeout(() => { for (let key in companies) drawChart(`chart-${key}`, companies[key].history, companies[key].color); }, 0);
     }
 
@@ -741,6 +763,7 @@ fxHistory.push(fxRate);
       document.getElementById('survived-period').textContent = period;
       document.getElementById('game-over-screen').style.display = 'block';
     }
+    window.addEventListener("resize", () => requestAnimationFrame(alignMobileCardRows));
   </script>
 </body>
 </html>
