@@ -495,7 +495,7 @@ const newsPool = [
           <div class="company-card ${flagClass}">
             <div class="company-name">${c.name}</div>
             <div class="company-sector">${c.sector}</div>
-            <canvas id="chart-${key}" class="chart-canvas" width="280" height="60"></canvas>
+            <canvas id="chart-${key}" class="chart-canvas" width="280" height="${window.innerWidth <= 768 ? 78 : 60}"></canvas>
             <div class="price-info"><strong>${unit}${priceStr}</strong> <span class="${priceClass}" style="font-size:0.8em;">${arrow}</span></div>
             ${convertedHtml}
             <div class="financial-info"><ruby>利回<rt>りまわ</rt></ruby>り: <strong>${yieldPercent}%</strong><br>(${unit}${c.divBase})</div>
