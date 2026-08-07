@@ -288,19 +288,428 @@
     };
 
     const newsPool = [
-      { text: "【<ruby>為替<rt>かわせ</rt></ruby>】<ruby>日米<rt>にちべい</rt></ruby>の<ruby>金利差<rt>きんりさ</rt></ruby>が<ruby>拡大<rt>かくだい</rt></ruby>！<ruby>急速<rt>きゅうそく</rt></ruby>な「<ruby>円安<rt>えんやす</rt></ruby>・ドル<ruby>高<rt>たか</rt></ruby>」が<ruby>進行<rt>しんこう</rt></ruby><ruby>中<rt>ちゅう</rt></ruby>。", effects: { food: 0.85, auto: 1.15, energy: 0.9, bank: 1.05 }, fxEffect: 1.05 },
-      { text: "【<ruby>為替<rt>かわせ</rt></ruby>】アメリカの<ruby>景気不安<rt>けいきふあん</rt></ruby>からドルが<ruby>売<rt>う</rt></ruby>られ、<ruby>急激<rt>きゅうげき</rt></ruby>な「<ruby>円高<rt>えんだか</rt></ruby>」に！", effects: { auto: 0.85, bank: 0.95 }, fxEffect: 0.95 },
-      { text: "【<ruby>米経済<rt>べいけいざい</rt></ruby>】アメリカで<ruby>記録적<rt>きろくてき</rt></ruby>なインフレ。メガマートの<ruby>売上<rt>うりあげ</rt></ruby>が<ruby>伸<rt>の</rt></ruby>び<ruby>悩<rt>なや</rt></ruby>む。", effects: { us_shop: 0.85, us_it: 0.95 }, fxEffect: 1.02 },
-      { text: "【<ruby>技術<rt>ぎじゅつ</rt></ruby>】ボルテックスEVが<ruby>完全<rt>かんぜん</rt></ruby><ruby>自動運転<rt>じどううんてん</rt></ruby>を<ruby>発表<rt>はっぴょう</rt></ruby>！<ruby>株価<rt>かぶか</rt></ruby>が<ruby>急騰<rt>きゅうとう</rt></ruby>！", effects: { us_ev: 1.4, auto: 0.9 }, fxEffect: 1.0 },
-      { text: "【<ruby>技術革新<rt>ぎじゅつかくしん</rt></ruby>】グローバル・アップルが<ruby>新型<rt>しんがた</rt></ruby>スマホを<ruby>発売<rt>はつばい</rt></ruby>し、<ruby>世界中<rt>せかいじゅう</rt></ruby>で<ruby>大行列<rt>だいぎょうれつ</rt></ruby>！", effects: { us_it: 1.3, game: 1.1 }, fxEffect: 1.0 },
-      { text: "【<ruby>金利<rt>きんり</rt></ruby>】<ruby>日本銀行<rt>にっぽんぎんこう</rt></ruby>が<ruby>金利<rt>きんり</rt></ruby>引き上げを<ruby>発表<rt>はっぴょう</rt></ruby>。<ruby>銀行<rt>ぎんこう</rt></ruby>の<ruby>利益<rt>りえき</rt></ruby>アップに<ruby>期待<rt>きたい</rt></ruby>！", effects: { bank: 1.15 }, fxEffect: 0.98 },
-      { text: "【<ruby>社会問題<rt>しゃかいもんだい</rt></ruby>】<ruby>世界的<rt>せかいてき</rt></ruby>な<ruby>原油高<rt>げんゆだか</rt></ruby>で<ruby>火力発電<rt>かりょくはつでん</rt></ruby>のコストが<ruby>急上昇<rt>きゅうじょうしょう</rt></ruby>！", effects: { energy: 0.75, food: 0.85 }, fxEffect: 1.01 },
-      { text: "【<ruby>新薬<rt>しんやく</rt></ruby>】フェニックス<ruby>製薬<rt>せいやく</rt></ruby>の<ruby>画期적<rt>かっきてき</rt></ruby>な<ruby>新薬<rt>しんやく</rt></ruby>がアメリカで<ruby>承認<rt>しょうにん</rt></ruby>された！", effects: { pharma: 1.35 }, fxEffect: 1.0 },
-      { text: "【<ruby>景気<rt>けいき</rt></ruby>】<ruby>世界的<rt>せかいてき</rt></ruby>な<ruby>好景気<rt>こうけいき</rt></ruby>！<ruby>企業業績<rt>きぎょうぎょうせき</rt></ruby>への<ruby>期待<rt>きたい</rt></ruby>から<ruby>買<rt>か</rt></ruby>い<ruby>注文<rt>ちゅうもん</rt></ruby>が<ruby>殺到中<rt>さっとうちゅう</rt></ruby>！", effects: { game: 1.1, auto: 1.1, bank: 1.1, us_it: 1.1, us_ev: 1.1, us_shop: 1.1 }, fxEffect: 1.02 },
-      { text: "【<ruby>景気<rt>けいき</rt></ruby>】<ruby>市場<rt>しじょう</rt></ruby>が<ruby>不安定<rt>ふあんてい</rt></ruby>になり、<ruby>投資家<rt>とうしか</rt></ruby>が<ruby>一時的<rt>いちじてき</rt></ruby>に<ruby>株<rt>かぶ</rt></ruby>を<ruby>売<rt>う</rt></ruby>り<ruby>払<rt>はら</rt></ruby>っている。", effects: { game: 0.9, auto: 0.9, energy: 0.95, pharma: 0.9, food: 0.9, us_it: 0.9, us_ev: 0.85, us_shop: 0.9, bank: 0.95 }, fxEffect: 0.99 },
-      { text: "【<ruby>貿易<rt>ぼうえき</rt></ruby>】<ruby>日米間<rt>にちべいかん</rt></ruby>の<ruby>貿易協定<rt>ぼうえききょうてい</rt></ruby>が見<ruby>直<rt>なお</rt></ruby>され、<ruby>輸出企業<rt>ゆしゅつきぎょう</rt></ruby>の<ruby>業績<rt>ぎょうせき</rt></ruby>に<ruby>影響<rt>えいきょう</rt></ruby>か。", effects: { auto: 1.2, us_ev: 0.9 }, fxEffect: 1.03 }
-    ];
+  {
+    text: "【<ruby>為替<rt>かわせ</rt></ruby>】<ruby>日米<rt>にちべい</rt></ruby>の<ruby>金利差<rt>きんりさ</rt></ruby>が<ruby>拡大<rt>かくだい</rt></ruby>！<ruby>円安<rt>えんやす</rt></ruby>が<ruby>進<rt>すす</rt></ruby>み<ruby>輸出企業<rt>ゆしゅつきぎょう</rt></ruby>に<ruby>追<rt>お</rt></ruby>い<ruby>風<rt>かぜ</rt></ruby>。",
 
+    effects:{food:0.85,auto:1.15,energy:0.90,bank:1.05},
+    fxEffect:1.05,
+    rarity:"common"
+  },
+
+  {
+    text:"【<ruby>為替<rt>かわせ</rt></ruby>】アメリカの<ruby>景気不安<rt>けいきふあん</rt></ruby>からドルが<ruby>売<rt>う</rt></ruby>られ、<ruby>急激<rt>きゅうげき</rt></ruby>な<ruby>円高<rt>えんだか</rt></ruby>に！",
+    effects:{auto:0.85,bank:0.95},
+    fxEffect:0.95,
+    rarity:"common"
+  },
+
+  {
+    text:"【<ruby>景気<rt>けいき</rt></ruby>】<ruby>世界経済<rt>せかいけいざい</rt></ruby>が<ruby>好調<rt>こうちょう</rt></ruby>！<ruby>投資家<rt>とうしか</rt></ruby>の<ruby>買<rt>か</rt></ruby>いが<ruby>集<rt>あつ</rt></ruby>まる。",
+    effects:{game:1.10,auto:1.10,bank:1.10,us_it:1.10,us_ev:1.10,us_shop:1.10},
+    fxEffect:1.02,
+    rarity:"common"
+  },
+
+  {
+    text:"【<ruby>景気<rt>けいき</rt></ruby>】<ruby>世界景気<rt>せかいけいき</rt></ruby>の<ruby>減速<rt>げんそく</rt></ruby>が<ruby>心配<rt>しんぱい</rt></ruby>されている。",
+    effects:{game:0.90,auto:0.90,bank:0.95,food:0.90,us_it:0.90,us_ev:0.90,us_shop:0.90},
+    fxEffect:0.99,
+    rarity:"common"
+  },
+
+  {
+    text:"【<ruby>金利<rt>きんり</rt></ruby>】<ruby>日本銀行<rt>にっぽんぎんこう</rt></ruby>が<ruby>追加<rt>ついか</rt></ruby><ruby>利上<rt>りあ</rt></ruby>げを<ruby>発表<rt>はっぴょう</rt></ruby>。",
+    effects:{bank:1.15},
+    fxEffect:0.98,
+    rarity:"common"
+  },
+
+  {
+    text:"【<ruby>原油<rt>げんゆ</rt></ruby>】<ruby>原油価格<rt>げんゆかかく</rt></ruby>が<ruby>急騰<rt>きゅうとう</rt></ruby>。",
+    effects:{energy:0.80,food:0.90},
+    fxEffect:1.01,
+    rarity:"common"
+  },
+
+  {
+    text:"【<ruby>原油<rt>げんゆ</rt></ruby>】<ruby>原油価格<rt>げんゆかかく</rt></ruby>が<ruby>下落<rt>げらく</rt></ruby>し、<ruby>燃料費<rt>ねんりょうひ</rt></ruby>が<ruby>改善<rt>かいぜん</rt></ruby>。",
+    effects:{energy:1.15,food:1.05,auto:1.05},
+    fxEffect:0.99,
+    rarity:"common"
+  },
+
+  {
+    text:"【<ruby>食品<rt>しょくひん</rt></ruby>】<ruby>小麦価格<rt>こむぎかかく</rt></ruby>が<ruby>上昇<rt>じょうしょう</rt></ruby>。",
+    effects:{food:0.90},
+    fxEffect:1.00,
+    rarity:"common"
+  },
+
+  {
+    text:"【<ruby>食品<rt>しょくひん</rt></ruby>】<ruby>豊作<rt>ほうさく</rt></ruby>で<ruby>原材料費<rt>げんざいりょうひ</rt></ruby>が<ruby>下<rt>さ</rt></ruby>がる。",
+    effects:{food:1.10},
+    fxEffect:1.00,
+    rarity:"common"
+  },
+
+  {
+    text:"【<ruby>自動車<rt>じどうしゃ</rt></ruby>】<ruby>海外販売<rt>かいがいはんばい</rt></ruby>が<ruby>好調<rt>こうちょう</rt></ruby>！",
+    effects:{auto:1.15},
+    fxEffect:1.02,
+    rarity:"common"
+  },
+
+  {
+    text:"【<ruby>電力<rt>でんりょく</rt></ruby>】<ruby>猛暑<rt>もうしょ</rt></ruby>で<ruby>電力需要<rt>でんりょくじゅよう</rt></ruby>が<ruby>増加<rt>ぞうか</rt></ruby>。",
+    effects:{energy:1.10},
+    fxEffect:1.00,
+    rarity:"common"
+  },
+
+  {
+    text:"【<ruby>観光<rt>かんこう</rt></ruby>】<ruby>外国人旅行者<rt>がいこくじんりょこうしゃ</rt></ruby>が<ruby>増加<rt>ぞうか</rt></ruby>し、<ruby>消費<rt>しょうひ</rt></ruby>が<ruby>伸<rt>の</rt></ruby>びる。",
+    effects:{food:1.10,game:1.05},
+    fxEffect:1.01,
+    rarity:"common"
+  },
+
+        {
+    text:"【<ruby>米経済<rt>べいけいざい</rt></ruby>】アメリカで<ruby>個人消費<rt>こじんしょうひ</rt></ruby>が<ruby>好調<rt>こうちょう</rt></ruby>！",
+    effects:{us_shop:1.15,us_it:1.05},
+    fxEffect:1.02,
+    rarity:"common"
+  },
+
+  {
+    text:"【<ruby>米経済<rt>べいけいざい</rt></ruby>】アメリカで<ruby>景気後退<rt>けいきこうたい</rt></ruby>への<ruby>不安<rt>ふあん</rt></ruby>。",
+    effects:{us_shop:0.90,us_it:0.95},
+    fxEffect:0.99,
+    rarity:"common"
+  },
+
+  {
+    text:"【<ruby>物流<rt>ぶつりゅう</rt></ruby>】<ruby>物流費<rt>ぶつりゅうひ</rt></ruby>が<ruby>下<rt>さ</rt></ruby>がり、<ruby>企業<rt>きぎょう</rt></ruby>の<ruby>利益<rt>りえき</rt></ruby>が<ruby>改善<rt>かいぜん</rt></ruby>。",
+    effects:{food:1.05,auto:1.05,us_shop:1.05},
+    fxEffect:1.00,
+    rarity:"common"
+  },
+
+  {
+    text:"【<ruby>物流<rt>ぶつりゅう</rt></ruby>】<ruby>港<rt>みなと</rt></ruby>の<ruby>混雑<rt>こんざつ</rt></ruby>で<ruby>輸送<rt>ゆそう</rt></ruby>に<ruby>遅<rt>おく</rt></ruby>れ。",
+    effects:{food:0.95,auto:0.95},
+    fxEffect:1.00,
+    rarity:"common"
+  },
+
+  {
+    text:"【<ruby>新製品<rt>しんせいひん</rt></ruby>】ゲームソフトが<ruby>好調<rt>こうちょう</rt></ruby>な<ruby>売<rt>う</rt></ruby>れ<ruby>行<rt>ゆ</rt></ruby>き！",
+    effects:{game:1.15},
+    fxEffect:1.00,
+    rarity:"common"
+  },
+
+  {
+    text:"【<ruby>新製品<rt>しんせいひん</rt></ruby>】ゲームソフトの<ruby>発売<rt>はつばい</rt></ruby><ruby>延期<rt>えんき</rt></ruby>。",
+    effects:{game:0.90},
+    fxEffect:1.00,
+    rarity:"common"
+  },
+
+  {
+    text:"【🤖AI】AI<ruby>需要<rt>じゅよう</rt></ruby>が<ruby>急増<rt>きゅうぞう</rt></ruby>！",
+    effects:{us_it:1.30,game:1.10},
+    fxEffect:1.00,
+    rarity:"rare"
+  },
+
+  {
+    text:"【<ruby>半導体<rt>はんどうたい</rt></ruby>】<ruby>最新<rt>さいしん</rt></ruby>AIチップを<ruby>発表<rt>はっぴょう</rt></ruby>！",
+    effects:{us_it:1.25},
+    fxEffect:1.00,
+    rarity:"rare"
+  },
+
+  {
+    text:"【<ruby>自動車<rt>じどうしゃ</rt></ruby>】EVの<ruby>販売<rt>はんばい</rt></ruby>が<ruby>過去最高<rt>かこさいこう</rt></ruby>！",
+    effects:{us_ev:1.30,auto:1.10},
+    fxEffect:1.01,
+    rarity:"rare"
+  },
+
+  {
+    text:"【<ruby>製薬<rt>せいやく</rt></ruby>】<ruby>新薬<rt>しんやく</rt></ruby>が<ruby>承認<rt>しょうにん</rt></ruby>！",
+    effects:{pharma:1.35},
+    fxEffect:1.00,
+    rarity:"rare"
+  },
+
+  {
+    text:"【<ruby>製薬<rt>せいやく</rt></ruby>】<ruby>治験<rt>ちけん</rt></ruby>が<ruby>成功<rt>せいこう</rt></ruby>！",
+    effects:{pharma:1.25},
+    fxEffect:1.00,
+    rarity:"rare"
+  },
+
+  {
+    text:"【<ruby>銀行<rt>ぎんこう</rt></ruby>】<ruby>最高益<rt>さいこうえき</rt></ruby>を<ruby>更新<rt>こうしん</rt></ruby>！",
+    effects:{bank:1.20},
+    fxEffect:1.00,
+    rarity:"rare"
+  },
+
+      
+  {
+    text:"【<ruby>技術革新<rt>ぎじゅつかくしん</rt></ruby>】グローバル・アップルが<ruby>新型<rt>しんがた</rt></ruby>スマホを<ruby>発表<rt>はっぴょう</rt></ruby>！",
+    effects:{us_it:1.30,game:1.05},
+    fxEffect:1.00,
+    rarity:"rare"
+  },
+
+  {
+    text:"【<ruby>技術<rt>ぎじゅつ</rt></ruby>】ボルテックスEVが<ruby>新型<rt>しんがた</rt></ruby>バッテリーを<ruby>発表<rt>はっぴょう</rt></ruby>！",
+    effects:{us_ev:1.35,auto:1.05},
+    fxEffect:1.00,
+    rarity:"rare"
+  },
+
+  {
+    text:"【<ruby>消費<rt>しょうひ</rt></ruby>】アメリカの<ruby>年末商戦<rt>ねんまつしょうせん</rt></ruby>が<ruby>好調<rt>こうちょう</rt></ruby>！",
+    effects:{us_shop:1.25},
+    fxEffect:1.01,
+    rarity:"rare"
+  },
+
+  {
+    text:"【<ruby>観光<rt>かんこう</rt></ruby>】<ruby>訪日外国人<rt>ほうにちがいこくじん</rt></ruby>が<ruby>過去最多<rt>かこさいた</rt></ruby>を<ruby>更新<rt>こうしん</rt></ruby>！",
+    effects:{food:1.20,game:1.10},
+    fxEffect:1.02,
+    rarity:"rare"
+  },
+
+  {
+    text:"【<ruby>再生可能<rt>さいせいかのう</rt></ruby>エネルギー】<ruby>太陽光発電<rt>たいようこうはつでん</rt></ruby>への<ruby>投資<rt>とうし</rt></ruby>が<ruby>急増<rt>きゅうぞう</rt></ruby>！",
+    effects:{energy:1.25},
+    fxEffect:1.00,
+    rarity:"rare"
+  },
+
+  {
+    text:"【<ruby>企業<rt>きぎょう</rt></ruby>】<ruby>自社株買<rt>じしゃかぶが</rt></ruby>いを<ruby>発表<rt>はっぴょう</rt></ruby>！",
+    effects:{game:1.15,bank:1.15,us_it:1.10},
+    fxEffect:1.00,
+    rarity:"epic"
+  },
+
+  {
+    text:"【<ruby>企業<rt>きぎょう</rt></ruby>】<ruby>株式分割<rt>かぶしきぶんかつ</rt></ruby>を<ruby>発表<rt>はっぴょう</rt></ruby>！",
+    effects:{game:1.20,us_it:1.15},
+    fxEffect:1.00,
+    rarity:"epic"
+  },
+
+  {
+    text:"【<ruby>企業<rt>きぎょう</rt></ruby>】<ruby>大型<rt>おおがた</rt></ruby>M&Aが<ruby>成立<rt>せいりつ</rt></ruby>！",
+    effects:{bank:1.15,game:1.10,auto:1.10},
+    fxEffect:1.01,
+    rarity:"epic"
+  },
+
+  {
+    text:"【<ruby>契約<rt>けいやく</rt></ruby>】<ruby>大型契約<rt>おおがたけいやく</rt></ruby>を<ruby>獲得<rt>かくとく</rt></ruby>！",
+    effects:{us_it:1.20,auto:1.10},
+    fxEffect:1.00,
+    rarity:"epic"
+  },
+
+  {
+    text:"【<ruby>配当<rt>はいとう</rt></ruby>】<ruby>特別配当<rt>とくべつはいとう</rt></ruby>を<ruby>発表<rt>はっぴょう</rt></ruby>！",
+    effects:{bank:1.20,food:1.10},
+    fxEffect:1.00,
+    rarity:"epic"
+  },
+
+  {
+    text:"【<ruby>宇宙<rt>うちゅう</rt></ruby>】<ruby>新型<rt>しんがた</rt></ruby>ロケットの<ruby>打<rt>う</rt></ruby>ち<ruby>上<rt>あ</rt></ruby>げが<ruby>成功<rt>せいこう</rt></ruby>！",
+    effects:{us_it:1.15,game:1.05},
+    fxEffect:1.00,
+    rarity:"epic"
+  },
+
+  {
+    text:"【<ruby>世界<rt>せかい</rt></ruby>】<ruby>大型<rt>おおがた</rt></ruby><ruby>自由貿易協定<rt>じゆうぼうえききょうてい</rt></ruby>が<ruby>締結<rt>ていけつ</rt></ruby>！",
+    effects:{auto:1.15,food:1.10,us_shop:1.10},
+    fxEffect:1.03,
+    rarity:"epic"
+  },
+
+        {
+    text:"【💥<ruby>暴落<rt>ぼうらく</rt></ruby>】ブラックマンデー<ruby>級<rt>きゅう</rt></ruby>の<ruby>暴落<rt>ぼうらく</rt></ruby>！",
+    effects:{game:0.75,auto:0.75,energy:0.80,pharma:0.90,food:0.80,us_it:0.70,us_ev:0.65,us_shop:0.75,bank:0.75},
+    fxEffect:0.96,
+    rarity:"legendary"
+  },
+
+  {
+    text:"【🚀AI】AI<ruby>革命<rt>かくめい</rt></ruby>！AI<ruby>需要<rt>じゅよう</rt></ruby>が<ruby>世界中<rt>せかいじゅう</rt></ruby>で<ruby>爆発<rt>ばくはつ</rt></ruby>！",
+    effects:{us_it:1.50,game:1.20},
+    fxEffect:1.01,
+    rarity:"legendary"
+  },
+
+  {
+    text:"【💎<ruby>投資<rt>とうし</rt></ruby>】<ruby>世界的投資家<rt>せかいてきとうしか</rt></ruby>が<ruby>日本株<rt>にほんかぶ</rt></ruby>への<ruby>大型投資<rt>おおがたとうし</rt></ruby>を<ruby>発表<rt>はっぴょう</rt></ruby>！",
+    effects:{game:1.25,auto:1.25,energy:1.20,food:1.20,bank:1.25,pharma:1.20},
+    fxEffect:1.05,
+    rarity:"legendary"
+  },
+
+  {
+    text:"【🎮<ruby>ゲーム<rt>げーむ</rt></ruby>】<ruby>新型<rt>しんがた</rt></ruby>ゲーム<ruby>機<rt>き</rt></ruby>が<ruby>世界的大<rt>せかいてきだい</rt></ruby>ヒット！",
+    effects:{game:1.35},
+    fxEffect:1.00,
+    rarity:"epic"
+  },
+
+  {
+    text:"【📱<ruby>技術<rt>ぎじゅつ</rt></ruby>】<ruby>折<rt>お</rt></ruby>りたたみスマホが<ruby>大人気<rt>だいにんき</rt></ruby>！",
+    effects:{us_it:1.20},
+    fxEffect:1.00,
+    rarity:"epic"
+  },
+
+  {
+    text:"【🏭<ruby>工場<rt>こうじょう</rt></ruby>】<ruby>大規模火災<rt>だいきぼかさい</rt></ruby>が<ruby>発生<rt>はっせい</rt></ruby>。",
+    effects:{auto:0.90,us_it:0.90,energy:0.95},
+    fxEffect:1.00,
+    rarity:"rare"
+  },
+
+  {
+    text:"【⚡<ruby>電力<rt>でんりょく</rt></ruby>】<ruby>大規模停電<rt>だいきぼていでん</rt></ruby>が<ruby>発生<rt>はっせい</rt></ruby>。",
+    effects:{energy:0.85,game:0.95,us_it:0.95},
+    fxEffect:0.99,
+    rarity:"rare"
+  },
+
+  {
+    text:"【🌪️<ruby>災害<rt>さいがい</rt></ruby>】<ruby>大型台風<rt>おおがたたいふう</rt></ruby>が<ruby>日本<rt>にほん</rt></ruby>を<ruby>直撃<rt>ちょくげき</rt></ruby>。",
+    effects:{food:0.90,auto:0.90,energy:1.10},
+    fxEffect:0.99,
+    rarity:"common"
+  },
+
+  {
+    text:"【🌾<ruby>農業<rt>のうぎょう</rt></ruby>】<ruby>記録的豊作<rt>きろくてきほうさく</rt></ruby>で<ruby>食品価格<rt>しょくひんかかく</rt></ruby>が<ruby>下落<rt>げらく</rt></ruby>！",
+    effects:{food:1.15},
+    fxEffect:1.00,
+    rarity:"common"
+  },
+
+  {
+    text:"【🦠<ruby>医療<rt>いりょう</rt></ruby>】<ruby>感染症<rt>かんせんしょう</rt></ruby>が<ruby>収束<rt>しゅうそく</rt></ruby>し、<ruby>景気<rt>けいき</rt></ruby>が<ruby>回復<rt>かいふく</rt></ruby>。",
+    effects:{game:1.10,food:1.05,us_shop:1.10},
+    fxEffect:1.02,
+    rarity:"rare"
+  },
+
+  {
+    text:"【🏦<ruby>金融<rt>きんゆう</rt></ruby>】FRBが<ruby>利下<rt>りさ</rt></ruby>げを<ruby>発表<rt>はっぴょう</rt></ruby>！",
+    effects:{us_it:1.15,us_ev:1.15,us_shop:1.15},
+    fxEffect:0.98,
+    rarity:"rare"
+  },
+
+  {
+    text:"【🏦<ruby>金融<rt>きんゆう</rt></ruby>】FRBが<ruby>利上<rt>りあ</rt></ruby>げを<ruby>発表<rt>はっぴょう</rt></ruby>。",
+    effects:{us_it:0.90,us_ev:0.85,us_shop:0.90},
+    fxEffect:1.03,
+    rarity:"rare"
+  },
+
+    {
+    text:"【🌍<ruby>景気<rt>けいき</rt></ruby>】<ruby>世界中<rt>せかいじゅう</rt></ruby>で<ruby>株高<rt>かぶだか</rt></ruby>！",
+    effects:{game:1.15,auto:1.15,energy:1.15,food:1.15,bank:1.15,pharma:1.15,us_it:1.15,us_ev:1.15,us_shop:1.15},
+    fxEffect:1.03,
+    rarity:"epic"
+  },
+
+  {
+    text:"【📉<ruby>景気<rt>けいき</rt></ruby>】<ruby>世界的<rt>せかいてき</rt></ruby>な<ruby>株安<rt>かぶやす</rt></ruby>が<ruby>進行<rt>しんこう</rt></ruby>。",
+    effects:{game:0.90,auto:0.90,energy:0.90,food:0.90,bank:0.90,pharma:0.90,us_it:0.90,us_ev:0.90,us_shop:0.90},
+    fxEffect:0.98,
+    rarity:"rare"
+  },
+
+  {
+    text:"【🚗<ruby>自動車<rt>じどうしゃ</rt></ruby>】<ruby>世界販売<rt>せかいはんばい</rt></ruby>が<ruby>過去最高<rt>かこさいこう</rt></ruby>！",
+    effects:{auto:1.20},
+    fxEffect:1.01,
+    rarity:"rare"
+  },
+
+  {
+    text:"【💊<ruby>製薬<rt>せいやく</rt></ruby>】<ruby>画期的<rt>かっきてき</rt></ruby>な<ruby>新薬<rt>しんやく</rt></ruby>を<ruby>開発<rt>かいはつ</rt></ruby>！",
+    effects:{pharma:1.30},
+    fxEffect:1.00,
+    rarity:"rare"
+  },
+
+  {
+    text:"【⚡<ruby>電力<rt>でんりょく</rt></ruby>】<ruby>再生可能<rt>さいせいかのう</rt></ruby>エネルギーが<ruby>急成長<rt>きゅうせいちょう</rt></ruby>！",
+    effects:{energy:1.20},
+    fxEffect:1.00,
+    rarity:"rare"
+  },
+
+  {
+    text:"【🍔<ruby>食品<rt>しょくひん</rt></ruby>】<ruby>新商品<rt>しんしょうひん</rt></ruby>が<ruby>大人気<rt>だいにんき</rt></ruby>！",
+    effects:{food:1.15},
+    fxEffect:1.00,
+    rarity:"common"
+  },
+
+  {
+    text:"【🎯<ruby>ゲーム<rt>げーむ</rt></ruby>】<ruby>人気作品<rt>にんきさくひん</rt></ruby>が1000<ruby>万本<rt>まんぼん</rt></ruby><ruby>突破<rt>とっぱ</rt></ruby>！",
+    effects:{game:1.25},
+    fxEffect:1.00,
+    rarity:"rare"
+  },
+
+  {
+    text:"【🏭<ruby>工場<rt>こうじょう</rt></ruby>】<ruby>新工場<rt>しんこうじょう</rt></ruby>が<ruby>完成<rt>かんせい</rt></ruby>し<ruby>生産力<rt>せいさんりょく</rt></ruby>アップ！",
+    effects:{auto:1.10,us_it:1.10},
+    fxEffect:1.00,
+    rarity:"common"
+  },
+
+  {
+    text:"【📈<ruby>決算<rt>けっさん</rt></ruby>】<ruby>主要企業<rt>しゅようきぎょう</rt></ruby>が<ruby>最高益<rt>さいこうえき</rt></ruby>を<ruby>更新<rt>こうしん</rt></ruby>！",
+    effects:{game:1.15,auto:1.15,bank:1.15,us_it:1.15},
+    fxEffect:1.02,
+    rarity:"epic"
+  },
+
+  {
+    text:"【🌟<ruby>奇跡<rt>きせき</rt></ruby>】<ruby>歴史的<rt>れきしてき</rt></ruby>な<ruby>大相場<rt>おおそうば</rt></ruby>が<ruby>到来<rt>とうらい</rt></ruby>！",
+    effects:{game:1.40,auto:1.35,energy:1.30,food:1.30,bank:1.35,pharma:1.30,us_it:1.45,us_ev:1.40,us_shop:1.35},
+    fxEffect:1.05,
+    rarity:"legendary"
+  },
+
+  {
+    text:"【🌏<ruby>経済<rt>けいざい</rt></ruby>】<ruby>世界経済<rt>せかいけいざい</rt></ruby>が<ruby>安定<rt>あんてい</rt></ruby>し<ruby>投資<rt>とうし</rt></ruby>が<ruby>活発化<rt>かっぱつか</rt></ruby>！",
+    effects:{game:1.10,auto:1.10,energy:1.10,food:1.10,bank:1.10,pharma:1.10,us_it:1.10,us_ev:1.10,us_shop:1.10},
+    fxEffect:1.01,
+    rarity:"common"
+  },
+
+  {
+    text:"【🏆<ruby>市場<rt>しじょう</rt></ruby>】<ruby>世界中<rt>せかいじゅう</rt></ruby>の<ruby>投資家<rt>とうしか</rt></ruby>が<ruby>強気<rt>つよき</rt></ruby>！",
+    effects:{game:1.20,auto:1.20,energy:1.20,food:1.20,bank:1.20,pharma:1.20,us_it:1.20,us_ev:1.20,us_shop:1.20},
+    fxEffect:1.03,
+    rarity:"legendary"
+  }
+];    
     function drawChart(canvasId, history, color) {
       const canvas = document.getElementById(canvasId);
       if (!canvas) return;
@@ -481,19 +890,50 @@
       else { isLatePeriod = true; }
 
       let currentNewsList = [];
-      const newsCount = Math.floor(Math.random() * 3) + 1;
-      let tempPool = [...newsPool];
-      let combinedEffects = {};
-      let totalFxEffect = 1.0;
+const newsCount = Math.floor(Math.random() * 3) + 1;
+let tempPool = [...newsPool];
+let combinedEffects = {};
+let totalFxEffect = 1.0;
 
-      for (let i = 0; i < newsCount; i++) {
-        if (tempPool.length === 0) break;
-        const idx = Math.floor(Math.random() * tempPool.length);
-        const selected = tempPool.splice(idx, 1)[0];
-        currentNewsList.push(selected.text);
-        for (let k in selected.effects) combinedEffects[k] = (combinedEffects[k] || 1.0) * selected.effects[k];
-        totalFxEffect *= (selected.fxEffect || 1.0);
-      }
+for (let i = 0; i < newsCount; i++) {
+  if (tempPool.length === 0) break;
+
+  // レア度を抽選
+  const roll = Math.random();
+  let rarity;
+
+  if (roll < 0.65) {
+    rarity = "common";
+  } else if (roll < 0.90) {
+    rarity = "rare";
+  } else if (roll < 0.98) {
+    rarity = "epic";
+  } else {
+    rarity = "legendary";
+  }
+
+  // 該当レア度のニュースだけ抽出
+  let candidates = tempPool.filter(n => n.rarity === rarity);
+
+  // 該当レア度がなければ残り全部から選ぶ
+  if (candidates.length === 0) {
+    candidates = tempPool;
+  }
+
+  // ランダムに1件選ぶ
+  const selected = candidates[Math.floor(Math.random() * candidates.length)];
+
+  // 同じターンでは重複しないように削除
+  tempPool.splice(tempPool.indexOf(selected), 1);
+
+  currentNewsList.push(selected.text);
+
+  for (let k in selected.effects) {
+    combinedEffects[k] = (combinedEffects[k] || 1.0) * selected.effects[k];
+  }
+
+  totalFxEffect *= (selected.fxEffect || 1.0);
+}
 
       // --- 決算発表の処理 ---
       if ((month === 9 || month === 3) && isLatePeriod) {
