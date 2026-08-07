@@ -135,38 +135,77 @@
     .controls { flex-direction: column; gap: 4px; margin-top: auto; }
     button.action-btn { font-size: 0.65em; padding: 6px 2px; }
     .next-turn-btn { font-size: 1.1em; padding: 12px 20px; margin: 15px 0; width: 90%; }
-    /* スクロールできることを伝えるUI */
+    /* スクロール案内は初回だけ。以後は細い色付きバーで常時案内 */
     .market-scroll-shell { position: relative; }
-    .market {
-      scrollbar-width: thin;
-      scrollbar-color: #f6ad55 #2d3748;
-    }
+
+    /* 対応ブラウザではネイティブのスクロールバーも着色 */
+    html { scrollbar-width: thin; scrollbar-color: #63b3ed #2d3748; }
+    .market { scrollbar-width: thin; scrollbar-color: #f6ad55 #2d3748; }
+    body::-webkit-scrollbar, #title-screen::-webkit-scrollbar { width: 7px; }
+    body::-webkit-scrollbar-track, #title-screen::-webkit-scrollbar-track { background: #2d3748; }
+    body::-webkit-scrollbar-thumb, #title-screen::-webkit-scrollbar-thumb { background: #63b3ed; border-radius: 8px; }
     .market::-webkit-scrollbar { width: 7px; }
     .market::-webkit-scrollbar-track { background: #2d3748; border-radius: 8px; }
     .market::-webkit-scrollbar-thumb { background: #f6ad55; border-radius: 8px; }
 
-    .market-scroll-shell::after {
-      content: "";
-      position: absolute;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      height: 28px;
-      border-radius: 0 0 10px 10px;
-      background: linear-gradient(to bottom, rgba(26,32,44,0), rgba(26,32,44,0.92));
+    /* iPhoneでも消えない、画面全体のカスタムスクロールバー */
+    .page-scrollbar {
+      position: fixed;
+      top: 5px;
+      right: 2px;
+      bottom: 5px;
+      width: 4px;
+      border-radius: 999px;
+      background: rgba(99,179,237,0.20);
+      z-index: 245;
       pointer-events: none;
-      opacity: 0;
-      transition: opacity 0.2s ease;
-      z-index: 8;
+      overflow: hidden;
     }
-    .market-scroll-shell.has-more::after { opacity: 1; }
+    .page-scrollbar-thumb {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      min-height: 24px;
+      border-radius: 999px;
+      background: #63b3ed;
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.18);
+      will-change: transform, height;
+    }
+
+    /* 銘柄欄のカスタムスクロールバー */
+    .market-scrollbar {
+      position: absolute;
+      top: 3px;
+      right: 1px;
+      bottom: 3px;
+      width: 4px;
+      border-radius: 999px;
+      background: rgba(246,173,85,0.20);
+      z-index: 10;
+      pointer-events: none;
+      overflow: hidden;
+    }
+    .market-scrollbar-thumb {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      min-height: 20px;
+      border-radius: 999px;
+      background: #f6ad55;
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.15);
+      will-change: transform, height;
+    }
+    .page-scrollbar.no-scroll,
+    .market-scrollbar.no-scroll { opacity: 0; }
 
     .market-scroll-hint {
       position: absolute;
       left: 50%;
       bottom: 5px;
       transform: translateX(-50%) translateY(3px);
-      z-index: 9;
+      z-index: 12;
       padding: 4px 9px;
       border: 1px solid #f6ad55;
       border-radius: 999px;
@@ -188,7 +227,7 @@
     .page-scroll-hint {
       display: block;
       position: fixed;
-      right: 7px;
+      right: 9px;
       bottom: max(8px, env(safe-area-inset-bottom));
       z-index: 250;
       padding: 6px 9px;
@@ -219,6 +258,7 @@
 </head>
 <body>
   <div id="page-scroll-hint" class="page-scroll-hint" aria-hidden="true">↓ したにもつづきます</div>
+  <div id="page-scrollbar" class="page-scrollbar" aria-hidden="true"><div id="page-scrollbar-thumb" class="page-scrollbar-thumb"></div></div>
 
   <!-- ================= タイトル＆説明画面 ================= -->
   <div id="title-screen">
@@ -298,6 +338,7 @@
     <div class="market-scroll-shell" id="market-scroll-shell">
       <div class="market" id="market-container"></div>
       <div id="market-scroll-hint" class="market-scroll-hint" aria-hidden="true">↕ めいがらを うえ・したにスクロール</div>
+      <div id="market-scrollbar" class="market-scrollbar" aria-hidden="true"><div id="market-scrollbar-thumb" class="market-scrollbar-thumb"></div></div>
     </div>
     
     <button class="next-turn-btn" id="next-btn" onclick="nextTurn()"><ruby>次<rt>つぎ</rt></ruby>の<ruby>半月<rt>はんつき</rt></ruby>へすすむ ➡</button>
@@ -847,24 +888,62 @@ fxHistory.push(fxRate);
       document.getElementById('game-over-screen').style.display = 'block';
     }
     window.addEventListener("resize", () => requestAnimationFrame(alignMobileCardRows));
-    // スクロールできる場所をスマホで分かりやすく案内
-    function updateScrollHints() {
+    // スクロール案内は初回だけ。以後はカラースクロールバーを常時表示
+    const SCROLL_HINT_STORAGE_KEY = 'tradeSimulatorScrollHintSeen_v2';
+    let scrollHintsAllowedThisLoad = false;
+    try {
+      scrollHintsAllowedThisLoad = localStorage.getItem(SCROLL_HINT_STORAGE_KEY) !== '1';
+      if (scrollHintsAllowedThisLoad) localStorage.setItem(SCROLL_HINT_STORAGE_KEY, '1');
+    } catch (e) {
+      // 保存できない環境でも、この読み込み中は初回表示だけにする
+      scrollHintsAllowedThisLoad = true;
+    }
+
+    function dismissScrollHints() {
+      scrollHintsAllowedThisLoad = false;
+      const pageHint = document.getElementById('page-scroll-hint');
+      const marketHint = document.getElementById('market-scroll-hint');
+      if (pageHint) pageHint.classList.remove('show');
+      if (marketHint) marketHint.classList.remove('show');
+    }
+
+    function positionScrollThumb(track, thumb, scrollTop, scrollHeight, clientHeight, minThumb) {
+      if (!track || !thumb) return;
+      const canScroll = scrollHeight > clientHeight + 2;
+      track.classList.toggle('no-scroll', !canScroll);
+      if (!canScroll) return;
+
+      const trackHeight = track.clientHeight;
+      if (trackHeight <= 0) return;
+      const thumbHeight = Math.max(minThumb, Math.min(trackHeight, trackHeight * (clientHeight / scrollHeight)));
+      const maxScroll = Math.max(1, scrollHeight - clientHeight);
+      const maxTravel = Math.max(0, trackHeight - thumbHeight);
+      const top = maxTravel * Math.min(1, Math.max(0, scrollTop / maxScroll));
+      thumb.style.height = thumbHeight + 'px';
+      thumb.style.transform = `translateY(${top}px)`;
+    }
+
+    function updateScrollUI() {
       const pageHint = document.getElementById('page-scroll-hint');
       const market = document.getElementById('market-container');
       const marketHint = document.getElementById('market-scroll-hint');
-      const marketShell = document.getElementById('market-scroll-shell');
       const titleScreen = document.getElementById('title-screen');
+      const pageBar = document.getElementById('page-scrollbar');
+      const pageThumb = document.getElementById('page-scrollbar-thumb');
+      const marketBar = document.getElementById('market-scrollbar');
+      const marketThumb = document.getElementById('market-scrollbar-thumb');
 
-      if (!pageHint || !market || !marketHint || !marketShell) return;
+      if (!pageHint || !market || !marketHint || !pageBar || !pageThumb || !marketBar || !marketThumb) return;
 
       if (window.innerWidth > 768) {
         pageHint.classList.remove('show');
         marketHint.classList.remove('show');
-        marketShell.classList.remove('has-more');
+        pageBar.classList.add('no-scroll');
+        marketBar.classList.add('no-scroll');
         return;
       }
 
-      // 画面全体（タイトル画面ではタイトル領域、ゲーム中はページ全体）
+      // 画面全体：タイトル画面表示中はそのスクロール、ゲーム中はページ全体
       const titleVisible = titleScreen && getComputedStyle(titleScreen).display !== 'none';
       let pageTop, pageHeight, pageViewHeight;
       if (titleVisible) {
@@ -873,41 +952,53 @@ fxHistory.push(fxRate);
         pageViewHeight = titleScreen.clientHeight;
       } else {
         pageTop = window.scrollY || document.documentElement.scrollTop || 0;
-        pageHeight = document.documentElement.scrollHeight;
+        pageHeight = Math.max(document.body.scrollHeight, document.documentElement.scrollHeight);
         pageViewHeight = window.innerHeight;
       }
-
-      const pageCanScroll = pageHeight > pageViewHeight + 20;
-      const pageHasStarted = pageTop > 18;
-      const pageNearBottom = pageTop + pageViewHeight >= pageHeight - 30;
-      pageHint.classList.toggle('show', pageCanScroll && !pageHasStarted && !pageNearBottom);
+      const pageCanScroll = pageHeight > pageViewHeight + 2;
+      positionScrollThumb(pageBar, pageThumb, pageTop, pageHeight, pageViewHeight, 28);
 
       // 銘柄部分
-      const marketCanScroll = market.scrollHeight > market.clientHeight + 6;
-      const marketHasStarted = market.scrollTop > 10;
-      const marketNearBottom = market.scrollTop + market.clientHeight >= market.scrollHeight - 8;
+      const marketCanScroll = market.scrollHeight > market.clientHeight + 2;
+      positionScrollThumb(marketBar, marketThumb, market.scrollTop, market.scrollHeight, market.clientHeight, 22);
 
-      marketHint.classList.toggle('show', marketCanScroll && !marketHasStarted);
-      marketShell.classList.toggle('has-more', marketCanScroll && !marketNearBottom);
+      // 案内文はこの端末で最初の1回だけ。表示後約3秒、またはスクロール開始で消える
+      pageHint.classList.toggle('show', scrollHintsAllowedThisLoad && pageCanScroll && pageTop <= 18);
+      marketHint.classList.toggle('show', scrollHintsAllowedThisLoad && marketCanScroll && market.scrollTop <= 10);
     }
 
-    function setupScrollHints() {
+    function setupScrollUI() {
       const market = document.getElementById('market-container');
       const titleScreen = document.getElementById('title-screen');
 
-      window.addEventListener('scroll', updateScrollHints, { passive: true });
-      window.addEventListener('resize', updateScrollHints);
-      if (titleScreen) titleScreen.addEventListener('scroll', updateScrollHints, { passive: true });
+      const onPageScroll = () => {
+        dismissScrollHints();
+        updateScrollUI();
+      };
+      const onMarketScroll = () => {
+        dismissScrollHints();
+        updateScrollUI();
+      };
+
+      window.addEventListener('scroll', onPageScroll, { passive: true });
+      window.addEventListener('resize', updateScrollUI);
+      if (titleScreen) titleScreen.addEventListener('scroll', onPageScroll, { passive: true });
       if (market) {
-        market.addEventListener('scroll', updateScrollHints, { passive: true });
-        const observer = new MutationObserver(() => requestAnimationFrame(updateScrollHints));
+        market.addEventListener('scroll', onMarketScroll, { passive: true });
+        const observer = new MutationObserver(() => requestAnimationFrame(updateScrollUI));
         observer.observe(market, { childList: true, subtree: true });
       }
 
-      requestAnimationFrame(() => requestAnimationFrame(updateScrollHints));
+      requestAnimationFrame(() => requestAnimationFrame(updateScrollUI));
+      if (scrollHintsAllowedThisLoad) {
+        setTimeout(() => {
+          dismissScrollHints();
+          updateScrollUI();
+        }, 3200);
+      }
     }
 
-    setupScrollHints();
+    setupScrollUI();
   </script>
 </body>
 </html>
