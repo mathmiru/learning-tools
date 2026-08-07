@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>トレーダー シミュレーション</title>
+<title>トレードシミュレーター</title>
 <style>
   body {
     font-family: 'Hiragino Maru Gothic ProN', 'Rounded Mplus 1c', sans-serif;
@@ -102,7 +102,7 @@
     
     .market {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(3, minmax(0,1fr));
       gap: 5px;
       max-height: 50vh; 
       overflow-y: auto;
@@ -141,7 +141,7 @@
   <!-- ================= タイトル＆説明画面 ================= -->
   <div id="title-screen">
     <div class="title-box">
-      <h1>トレードシミュレーター</h1>
+      <h1>トレードシュミレーター</h1>
       <div class="title-section">
         <h2>📜 ルール説<ruby>明<rt>めい</rt></ruby></h2>
         <p>あなたは<ruby>今日<rt>きょう</rt></ruby>から<ruby>投資家<rt>とうしか</rt></ruby>です。<ruby>初期<rt>しょき</rt></ruby><ruby>資金<rt>しきん</rt></ruby>の<strong>100,000<ruby>円<rt>えん</rt></ruby></strong>を使って、<ruby>日本<rt>にほん</rt></ruby>とアメリカの<ruby>会社<rt>かいしゃ</rt></ruby>の<ruby>株<rt>かぶ</rt></ruby>を<ruby>売<rt>う</rt></ruby>り<ruby>買<rt>か</rt></ruby>いし、<ruby>資産<rt>しさん</rt></ruby>を<ruby>増<rt>ふ</rt></ruby>やしていくのが<ruby>目的<rt>もくてき</rt></ruby>です。</p>
@@ -193,7 +193,7 @@
 
   <!-- ================= メインゲーム画面 ================= -->
   <div id="game-ui">
-    <h1>トレードシミュレーター</h1>
+    <h1>🌍 こどもトレーダー GLOBAL (<ruby>手数料<rt>てすうりょう</rt></ruby><ruby>無料<rt>むりょう</rt></ruby>)</h1>
 
     <div class="dashboard">
       <div class="stat-box">📅 <span id="date-display">4<ruby>月<rt>がつ</rt></ruby> <ruby>前期<rt>ぜんき</rt></ruby></span></div>
