@@ -135,10 +135,90 @@
     .controls { flex-direction: column; gap: 4px; margin-top: auto; }
     button.action-btn { font-size: 0.65em; padding: 6px 2px; }
     .next-turn-btn { font-size: 1.1em; padding: 12px 20px; margin: 15px 0; width: 90%; }
+    /* スクロールできることを伝えるUI */
+    .market-scroll-shell { position: relative; }
+    .market {
+      scrollbar-width: thin;
+      scrollbar-color: #f6ad55 #2d3748;
+    }
+    .market::-webkit-scrollbar { width: 7px; }
+    .market::-webkit-scrollbar-track { background: #2d3748; border-radius: 8px; }
+    .market::-webkit-scrollbar-thumb { background: #f6ad55; border-radius: 8px; }
+
+    .market-scroll-shell::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 28px;
+      border-radius: 0 0 10px 10px;
+      background: linear-gradient(to bottom, rgba(26,32,44,0), rgba(26,32,44,0.92));
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+      z-index: 8;
+    }
+    .market-scroll-shell.has-more::after { opacity: 1; }
+
+    .market-scroll-hint {
+      position: absolute;
+      left: 50%;
+      bottom: 5px;
+      transform: translateX(-50%) translateY(3px);
+      z-index: 9;
+      padding: 4px 9px;
+      border: 1px solid #f6ad55;
+      border-radius: 999px;
+      background: rgba(45,55,72,0.94);
+      color: #fff5d6;
+      font-size: 0.62em;
+      font-weight: bold;
+      white-space: nowrap;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+    }
+    .market-scroll-hint.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+      animation: scrollHintBounce 1.25s ease-in-out infinite;
+    }
+
+    .page-scroll-hint {
+      display: block;
+      position: fixed;
+      right: 7px;
+      bottom: max(8px, env(safe-area-inset-bottom));
+      z-index: 250;
+      padding: 6px 9px;
+      border: 1px solid #63b3ed;
+      border-radius: 999px;
+      background: rgba(26,32,44,0.94);
+      color: #e6f6ff;
+      font-size: 0.68em;
+      font-weight: bold;
+      white-space: nowrap;
+      pointer-events: none;
+      opacity: 0;
+      transform: translateY(4px);
+      transition: opacity 0.2s ease, transform 0.2s ease;
+    }
+    .page-scroll-hint.show {
+      opacity: 1;
+      transform: translateY(0);
+      animation: scrollHintBounce 1.25s ease-in-out infinite;
+    }
+
+    @keyframes scrollHintBounce {
+      0%, 100% { translate: 0 0; }
+      50% { translate: 0 3px; }
+    }
   }
 </style>
 </head>
 <body>
+  <div id="page-scroll-hint" class="page-scroll-hint" aria-hidden="true">↓ したにもつづきます</div>
 
   <!-- ================= タイトル＆説明画面 ================= -->
   <div id="title-screen">
@@ -215,7 +295,10 @@
       </ul>
     </div>
 
-    <div class="market" id="market-container"></div>
+    <div class="market-scroll-shell" id="market-scroll-shell">
+      <div class="market" id="market-container"></div>
+      <div id="market-scroll-hint" class="market-scroll-hint" aria-hidden="true">↕ めいがらを うえ・したにスクロール</div>
+    </div>
     
     <button class="next-turn-btn" id="next-btn" onclick="nextTurn()"><ruby>次<rt>つぎ</rt></ruby>の<ruby>半月<rt>はんつき</rt></ruby>へすすむ ➡</button>
   </div>
@@ -764,6 +847,67 @@ fxHistory.push(fxRate);
       document.getElementById('game-over-screen').style.display = 'block';
     }
     window.addEventListener("resize", () => requestAnimationFrame(alignMobileCardRows));
+    // スクロールできる場所をスマホで分かりやすく案内
+    function updateScrollHints() {
+      const pageHint = document.getElementById('page-scroll-hint');
+      const market = document.getElementById('market-container');
+      const marketHint = document.getElementById('market-scroll-hint');
+      const marketShell = document.getElementById('market-scroll-shell');
+      const titleScreen = document.getElementById('title-screen');
+
+      if (!pageHint || !market || !marketHint || !marketShell) return;
+
+      if (window.innerWidth > 768) {
+        pageHint.classList.remove('show');
+        marketHint.classList.remove('show');
+        marketShell.classList.remove('has-more');
+        return;
+      }
+
+      // 画面全体（タイトル画面ではタイトル領域、ゲーム中はページ全体）
+      const titleVisible = titleScreen && getComputedStyle(titleScreen).display !== 'none';
+      let pageTop, pageHeight, pageViewHeight;
+      if (titleVisible) {
+        pageTop = titleScreen.scrollTop;
+        pageHeight = titleScreen.scrollHeight;
+        pageViewHeight = titleScreen.clientHeight;
+      } else {
+        pageTop = window.scrollY || document.documentElement.scrollTop || 0;
+        pageHeight = document.documentElement.scrollHeight;
+        pageViewHeight = window.innerHeight;
+      }
+
+      const pageCanScroll = pageHeight > pageViewHeight + 20;
+      const pageHasStarted = pageTop > 18;
+      const pageNearBottom = pageTop + pageViewHeight >= pageHeight - 30;
+      pageHint.classList.toggle('show', pageCanScroll && !pageHasStarted && !pageNearBottom);
+
+      // 銘柄部分
+      const marketCanScroll = market.scrollHeight > market.clientHeight + 6;
+      const marketHasStarted = market.scrollTop > 10;
+      const marketNearBottom = market.scrollTop + market.clientHeight >= market.scrollHeight - 8;
+
+      marketHint.classList.toggle('show', marketCanScroll && !marketHasStarted);
+      marketShell.classList.toggle('has-more', marketCanScroll && !marketNearBottom);
+    }
+
+    function setupScrollHints() {
+      const market = document.getElementById('market-container');
+      const titleScreen = document.getElementById('title-screen');
+
+      window.addEventListener('scroll', updateScrollHints, { passive: true });
+      window.addEventListener('resize', updateScrollHints);
+      if (titleScreen) titleScreen.addEventListener('scroll', updateScrollHints, { passive: true });
+      if (market) {
+        market.addEventListener('scroll', updateScrollHints, { passive: true });
+        const observer = new MutationObserver(() => requestAnimationFrame(updateScrollHints));
+        observer.observe(market, { childList: true, subtree: true });
+      }
+
+      requestAnimationFrame(() => requestAnimationFrame(updateScrollHints));
+    }
+
+    setupScrollHints();
   </script>
 </body>
 </html>
