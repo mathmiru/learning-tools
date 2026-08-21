@@ -701,13 +701,56 @@
     function setupDragAndDrop(piece) {
       let isDragging = false; let hasMoved = false;
       let startMouseX, startMouseY, startPieceX, startPieceY;
+      let startScrollY = 0;
+      let currentPointerX = 0, currentPointerY = 0;
+      let autoScrollFrame = null;
+      const useMobileTransform = window.matchMedia('(hover: none) and (pointer: coarse)').matches;
+      const AUTO_SCROLL_ZONE = 100;
+      const AUTO_SCROLL_MAX_SPEED = 16;
+
+      const updateDragPosition = () => {
+        const dx = currentPointerX - startMouseX;
+        const scrollDy = useMobileTransform ? window.scrollY - startScrollY : 0;
+        const dy = currentPointerY - startMouseY + scrollDy;
+        if (Math.abs(dx) > 3 || Math.abs(dy) > 3) hasMoved = true;
+        if (useMobileTransform) {
+          piece.x = startPieceX + dx;
+          piece.y = startPieceY + dy;
+          piece.el.style.transform = `translate3d(${dx}px, ${dy}px, 0)`;
+        } else {
+          setPiecePosition(piece, startPieceX + dx, startPieceY + dy);
+        }
+      };
+
+      const autoScroll = () => {
+        if (!isDragging || !useMobileTransform) {
+          autoScrollFrame = null;
+          return;
+        }
+        let scrollAmount = 0;
+        if (currentPointerY < AUTO_SCROLL_ZONE) {
+          const ratio = Math.min(1, Math.max(0, (AUTO_SCROLL_ZONE - currentPointerY) / AUTO_SCROLL_ZONE));
+          scrollAmount = -Math.ceil(AUTO_SCROLL_MAX_SPEED * ratio);
+        } else if (currentPointerY > window.innerHeight - AUTO_SCROLL_ZONE) {
+          const ratio = Math.min(1, Math.max(0, (currentPointerY - (window.innerHeight - AUTO_SCROLL_ZONE)) / AUTO_SCROLL_ZONE));
+          scrollAmount = Math.ceil(AUTO_SCROLL_MAX_SPEED * ratio);
+        }
+        if (scrollAmount !== 0) {
+          const beforeScrollY = window.scrollY;
+          window.scrollBy(0, scrollAmount);
+          if (window.scrollY !== beforeScrollY) updateDragPosition();
+        }
+        autoScrollFrame = requestAnimationFrame(autoScroll);
+      };
 
       piece.el.addEventListener('pointerdown', (e) => {
         e.preventDefault();
         isDragging = true; hasMoved = false;
         startMouseX = e.clientX; startMouseY = e.clientY;
+        currentPointerX = e.clientX; currentPointerY = e.clientY;
         startPieceX = piece.x; startPieceY = piece.y;
-        
+        startScrollY = window.scrollY;
+        if (useMobileTransform) { piece.el.style.willChange = 'transform'; piece.el.style.transform = 'translate3d(0, 0, 0)'; }
         piece.el.style.zIndex = 100;
         removePieceFromBoard(piece.id);
         piece.el.setPointerCapture(e.pointerId);
@@ -715,18 +758,23 @@
 
       piece.el.addEventListener('pointermove', (e) => {
         if (!isDragging) return;
-        const dx = e.clientX - startMouseX;
-        const dy = e.clientY - startMouseY;
-        if (Math.abs(dx) > 3 || Math.abs(dy) > 3) hasMoved = true;
-        setPiecePosition(piece, startPieceX + dx, startPieceY + dy);
+        currentPointerX = e.clientX; currentPointerY = e.clientY;
+        updateDragPosition();
+        if (useMobileTransform && hasMoved && autoScrollFrame === null) {
+          autoScrollFrame = requestAnimationFrame(autoScroll);
+        }
       });
 
       const onPointerUp = (e) => {
         if (!isDragging) return;
         isDragging = false;
+        if (autoScrollFrame !== null) {
+          cancelAnimationFrame(autoScrollFrame);
+          autoScrollFrame = null;
+        }
         piece.el.releasePointerCapture(e.pointerId);
         piece.el.style.zIndex = 10;
-
+        if (useMobileTransform && hasMoved) { piece.el.style.transform = ''; piece.el.style.willChange = ''; setPiecePosition(piece, piece.x, piece.y); }
         if (!hasMoved) {
           piece.shape = rotateMatrix(piece.shape);
           renderPiece(piece);
