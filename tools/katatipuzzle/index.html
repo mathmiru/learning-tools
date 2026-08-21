@@ -166,10 +166,36 @@
       -webkit-overflow-scrolling: touch;
       overscroll-behavior-x: contain;
       touch-action: pan-x;
+      scrollbar-width: thin;
     }
     #pieces-scroll-inner {
       height: 1px;
     }
+    .scroll-cue {
+      position: absolute;
+      width: 38px;
+      height: 54px;
+      z-index: 80;
+      pointer-events: none;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      font-size: 34px;
+      font-family: Arial, sans-serif;
+      font-weight: bold;
+      color: rgba(80, 80, 80, 0.72);
+      text-shadow: 0 1px 2px rgba(255,255,255,0.9);
+    }
+    .scroll-cue-left {
+      left: 0;
+      background: linear-gradient(to right, rgba(244,247,246,0.96), rgba(244,247,246,0));
+    }
+    .scroll-cue-right {
+      right: 0;
+      background: linear-gradient(to left, rgba(244,247,246,0.96), rgba(244,247,246,0));
+    }
+    .scroll-cue-left::after { content: "‹"; }
+    .scroll-cue-right::after { content: "›"; }
 
     #pieces-container {
       position: absolute;
@@ -326,6 +352,8 @@
       <div id="pieces-scroll">
         <div id="pieces-scroll-inner"></div>
       </div>
+      <div id="scroll-cue-left" class="scroll-cue scroll-cue-left" aria-hidden="true"></div>
+      <div id="scroll-cue-right" class="scroll-cue scroll-cue-right" aria-hidden="true"></div>
       <div id="pieces-container"></div>
     </div>
 
@@ -547,7 +575,7 @@
           let nc = cell.c + d[1];
           if (nr >= 0 && nr < size && nc >= 0 && nc < size) {
             if (board[nr][nc] === -1) {
-              let key = `{nc}`;
+              let key = `${nr},${nc}`;
               if (!seen.has(key)) { seen.add(key); adj.push({r: nr, c: nc}); }
             }
           }
@@ -682,8 +710,9 @@
       scrollEl.style.height = `${trayHeight}px`;
       scrollInner.style.width = `${Math.max(scrollEl.clientWidth, currentX + 20)}px`;
       scrollInner.style.height = `${Math.max(1, trayHeight - 16)}px`;
-      scrollEl.onscroll = updateTrayPositions;
+      scrollEl.onscroll = () => { updateTrayPositions(); updateScrollCues(); };
       updateTrayPositions();
+      updateScrollCues();
 
       const gameAreaHeight = scrollEl.offsetTop + trayHeight + 20;
       document.getElementById('game-area').style.minHeight = gameAreaHeight + 'px';
@@ -710,10 +739,24 @@
       });
     }
 
+    function updateScrollCues() {
+      const scrollEl = document.getElementById('pieces-scroll');
+      const leftCue = document.getElementById('scroll-cue-left');
+      const rightCue = document.getElementById('scroll-cue-right');
+      if (!scrollEl || !leftCue || !rightCue) return;
+      const canScroll = scrollEl.scrollWidth > scrollEl.clientWidth + 2;
+      const cueTop = scrollEl.offsetTop + Math.max(0, (scrollEl.clientHeight - 54) / 2);
+      leftCue.style.top = `${cueTop}px`;
+      rightCue.style.top = `${cueTop}px`;
+      leftCue.style.display = canScroll && scrollEl.scrollLeft > 3 ? 'flex' : 'none';
+      rightCue.style.display = canScroll && scrollEl.scrollLeft < scrollEl.scrollWidth - scrollEl.clientWidth - 3 ? 'flex' : 'none';
+    }
+
     function returnPieceToTray(piece) {
       piece.isPlaced = false;
       piece.isDragging = false;
       updateTrayPositions();
+      updateScrollCues();
     }
 
     function renderPiece(piece) {
@@ -802,6 +845,7 @@
 
         requestAnimationFrame(() => {
           piece.el.classList.remove('dragging');
+          void piece.el.offsetWidth;
         });
       };
 
