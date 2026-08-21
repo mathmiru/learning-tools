@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>形(かたち)パズル</title>
+  <style>
+    :root {
+      --cell-size: 40px; 
+      --board-bg: #e0e5ec;
+      --target-bg: #b0bec5;
+      --grid-color: #ffffff;
+      --text: #333;
+    }
+
+    /* ★ touch-action: manipulation; を追加してダブルタップによるズームを禁止 */
+    * { box-sizing: border-box; touch-action: manipulation; }
+
+    body {
+      font-family: 'Hiragino Maru Gothic ProN', 'Rounded M+ 1c', sans-serif;
+      background-color: #f4f7f6;
+      color: var(--text);
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh; 
+      user-select: none;
+      overflow-x: hidden; 
+    }
+
+    h1 { margin: 20px 0 10px; font-size: 28px;}
+    p { text-align: center; line-height: 1.5; font-size: 14px; padding: 0 15px; margin-bottom: 20px; color: #555;}
+
+    .screen {
+      display: none;
+      width: 100%;
+      max-width: 600px;
+      min-height: 100vh;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+    }
+    .screen.active {
+      display: flex;
+    }
+
+    .total-score-box {
+      background: white;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 18px;
+      font-weight: bold;
+      color: #333;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+      border: 2px solid #FF9800;
+    }
+
+    button {
+      padding: 12px 24px;
+      font-size: 16px;
+      font-weight: bold;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.15);
+      transition: transform 0.1s, box-shadow 0.1s;
+      margin: 5px;
+    }
+    button:active {
+      transform: translateY(2px);
+      box-shadow: 0 2px 3px rgba(0,0,0,0.1);
+    }
+    
+    .btn-level { width: 100%; max-width: 250px; color: white; }
+    .level-1 { background-color: #8BC34A; } 
+    .level-2 { background-color: #03A9F4; } 
+    .level-3 { background-color: #FF9800; } 
+    .level-4 { background-color: #E91E63; } 
+    .level-5 { background-color: #9C27B0; } 
+    .level-6 { background-color: #3F51B5; } 
+    
+    .btn-back { background-color: #9e9e9e; color: white; padding: 8px 16px; font-size: 14px;}
+    .btn-giveup { background-color: #E53935; color: white; padding: 8px 16px; font-size: 14px;}
+    .btn-next-small { background-color: #4CAF50; color: white; padding: 8px 16px; font-size: 14px;}
+    .btn-next { background-color: #4CAF50; color: white; font-size: 18px; padding: 15px 30px;}
+
+    #game-header {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      padding: 10px 20px;
+      background: white;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+      z-index: 10;
+    }
+    .header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .header-bottom {
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .score-info {
+      text-align: right;
+      font-weight: bold;
+      font-size: 14px;
+    }
+    .combo-text { color: #FF9800; }
+
+    #game-area {
+      flex: 1;
+      width: 100%;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    #board-wrapper {
+      width: 100%;
+      min-height: 300px; 
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    #board {
+      display: grid;
+      box-shadow: 0 0 0 2px #ccc;
+      background-color: var(--grid-color);
+    }
+
+    .cell {
+      width: var(--cell-size);
+      height: var(--cell-size);
+      background-color: var(--board-bg);
+      border: 1px solid var(--grid-color);
+      box-sizing: border-box;
+    }
+
+    .target-cell {
+      background-color: var(--target-bg);
+      position: relative;
+    }
+    .target-cell::after {
+      content: '';
+      position: absolute;
+      top: 3px; left: 3px; right: 3px; bottom: 3px;
+      border: 2px dashed #78909c;
+      pointer-events: none;
+    }
+
+    #pieces-container {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      pointer-events: none;
+    }
+
+    .piece {
+      position: absolute;
+      cursor: grab;
+      filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));
+      pointer-events: auto;
+      touch-action: none;
+    }
+    .piece:active {
+      cursor: grabbing;
+      filter: drop-shadow(0 8px 12px rgba(0,0,0,0.5));
+    }
+
+    .block {
+      position: absolute;
+      width: var(--cell-size);
+      height: var(--cell-size);
+      box-sizing: border-box;
+      border: 2px solid rgba(255,255,255,0.4);
+      border-radius: 4px;
+    }
+
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(0, 0, 0, 0.6);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 2000;
+    }
+    .modal-box {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      text-align: center;
+      width: 85%;
+      max-width: 320px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    }
+    .modal-box p { margin: 0 0 15px; font-size: 16px; font-weight: bold; line-height: 1.5; }
+    .modal-box .warn { font-size: 12px; color: #E53935; display: block; margin-top: 5px; }
+    .modal-buttons { display: flex; justify-content: center; gap: 10px; }
+
+    #clear-overlay {
+      position: fixed; 
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(255, 255, 255, 0.85);
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+    #clear-overlay h2 {
+      font-size: 42px;
+      color: #FF9800;
+      margin-bottom: 10px;
+      text-shadow: 2px 2px 0px #fff, 4px 4px 0px rgba(0,0,0,0.1);
+      animation: pop 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    }
+    #result-details {
+      margin-bottom: 25px;
+      font-size: 18px;
+      font-weight: bold;
+      text-align: center;
+      line-height: 1.6;
+    }
+    
+    @keyframes pop {
+      0% { transform: scale(0.5) rotate(-10deg); opacity: 0; }
+      100% { transform: scale(1) rotate(0deg); opacity: 1; }
+    }
+    .buttons-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      align-items: center;
+    }
+
+    #toast-msg {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(229, 57, 53, 0.95);
+      color: white;
+      padding: 12px 24px;
+      border-radius: 8px;
+      display: none;
+      z-index: 3000;
+      font-weight: bold;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+    }
+    
+    ruby { ruby-align: center; }
+    rt { font-size: 10px; color: #666; }
+    .btn-level rt { color: #f0f0f0; }
+    .btn-next rt, .btn-next-small rt, .btn-giveup rt, .btn-back rt { color: #fff; }
+  </style>
+</head>
+<body>
+
+  <div id="toast-msg"></div>
+
+  <div id="title-screen" class="screen active">
+    <h1><ruby>形<rt>かたち</rt></ruby>パズル</h1>
+    
+    <div class="total-score-box">
+      <ruby>通算<rt>つうさん</rt></ruby>スコア: <span id="title-total-score">0</span>
+    </div>
+
+    <p style="margin-bottom: 10px;">
+      グレーの<ruby>枠<rt>わく</rt></ruby>に、すべてのピースをピッタリはめてください。<br>
+      <strong>タップで<ruby>回転<rt>かいてん</rt></ruby>、ドラッグで<ruby>移動<rt>いどう</rt></ruby>！</strong><br>
+      <ruby>連続<rt>れんぞく</rt></ruby><ruby>正解<rt>せいかい</rt></ruby>でコンボボーナスがもらえます！
+    </p>
+    
+    <h3 style="margin: 10px 0;">レベルを<ruby>選択<rt>せんたく</rt></ruby></h3>
+    <div id="level-buttons-container" style="width: 100%; display: flex; flex-direction: column; align-items: center;">
+      <!-- JSでボタンを生成 -->
+    </div>
+  </div>
+
+  <div id="game-screen" class="screen">
+    <div id="game-header">
+      <div class="header-top">
+        <span id="level-display" style="font-weight: bold; font-size: 20px;"></span>
+        <div class="score-info">
+          Score: <span id="score-display">0</span><br>
+          <span class="combo-text">Combo: <span id="combo-display">0</span></span>
+        </div>
+      </div>
+      <div class="header-bottom">
+        <button id="btn-giveup-action" class="btn-giveup" onclick="showConfirm()"><ruby>正解<rt>せいかい</rt></ruby>を<ruby>見<rt>み</rt></ruby>る</button>
+        <button id="btn-next-action" class="btn-next-small" style="display:none;" onclick="nextPuzzle()"><ruby>次<rt>つぎ</rt></ruby>の<ruby>問題<rt>もんだい</rt></ruby>へ</button>
+        <button class="btn-back" onclick="showTitle()">やめる</button>
+      </div>
+    </div>
+    
+    <div id="game-area">
+      <div id="board-wrapper">
+        <div id="board"></div>
+      </div>
+      <div id="pieces-container"></div>
+    </div>
+
+    <div id="clear-overlay">
+      <h2 id="result-title">CLEAR!!</h2>
+      <div id="result-details"></div>
+      <div class="buttons-wrap">
+        <button class="btn-next" onclick="nextPuzzle()"><ruby>次<rt>つぎ</rt></ruby>の<ruby>問題<rt>もんだい</rt></ruby>へ！</button>
+        <button class="btn-back" onclick="showTitle()" style="background:#757575;">タイトルに<ruby>戻<rt>もど</rt></ruby>る</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="confirm-overlay" class="modal-overlay">
+    <div class="modal-box">
+      <p><ruby>正解<rt>せいかい</rt></ruby>を<ruby>見<rt>み</rt></ruby>ますか？<br>
+        <span class="warn">※スコアが<ruby>減少<rt>げんしょう</rt></ruby>し、コンボがリセットされます。</span>
+      </p>
+      <div class="modal-buttons">
+        <button class="btn-back" onclick="closeConfirm()">キャンセル</button>
+        <button class="btn-giveup" onclick="executeGiveUp()"><ruby>見<rt>み</rt></ruby>る</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let CELL_SIZE = 40; 
+    
+    const LEVELS = {
+      1: { totalCells: 6, pieceCount: 2 },
+      2: { totalCells: 9, pieceCount: 3 },
+      3: { totalCells: 12, pieceCount: 4 },
+      4: { totalCells: 16, pieceCount: 4 },
+      5: { totalCells: 20, pieceCount: 5 },
+      6: { totalCells: 36, pieceCount: 7 } 
+    };
+    
+    const GOALS = { 1: 1500, 2: 3000, 3: 4500, 4: 6000, 5: 9000, 6: 15000 };
+
+    const PALETTE = [
+      '#FF5722', '#2196F3', '#4CAF50', '#FFC107', '#9C27B0',
+      '#00BCD4', '#E91E63', '#3F51B5', '#8BC34A', '#FF9800'
+    ];
+
+    let userData = {
+      totalScore: 0,
+      combo: 0,
+      levelScores: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 }
+    };
+
+    let currentLevel = 1;
+    let puzzleData = null; 
+    let boardState = [];
+    let pieces = [];
+
+    function loadData() {
+      const saved = localStorage.getItem('shapePuzzleData');
+      if (saved) {
+        userData = JSON.parse(saved);
+        if (userData.levelScores[6] === undefined) {
+          userData.levelScores[6] = 0;
+        }
+      }
+      updateTitleScreen();
+    }
+
+    function saveData() {
+      localStorage.setItem('shapePuzzleData', JSON.stringify(userData));
+    }
+    
+    function updateTitleScreen() {
+      document.getElementById('title-total-score').innerText = userData.totalScore;
+      
+      const container = document.getElementById('level-buttons-container');
+      container.innerHTML = '';
+      
+      for(let i = 1; i <= 6; i++) {
+        const goal = GOALS[i];
+        const current = userData.levelScores[i];
+        const isCleared = current >= goal;
+        
+        const wrap = document.createElement('div');
+        wrap.style.textAlign = 'center';
+        wrap.style.margin = '8px 0';
+        wrap.style.width = '100%';
+
+        const btn = document.createElement('button');
+        btn.className = `btn-level level-${i}`;
+        btn.innerHTML = `レベル ${i} ${isCleared ? '👑' : ''}`;
+        btn.onclick = () => startGame(i);
+        
+        const info = document.createElement('div');
+        info.style.fontSize = '12px';
+        info.style.color = isCleared ? '#4CAF50' : '#777';
+        info.style.fontWeight = 'bold';
+        info.style.marginTop = '4px';
+        info.innerHTML = `<ruby>目標<rt>もくひょう</rt></ruby>: ${current} / ${goal} pt ${isCleared ? '<ruby>達成<rt>たっせい</rt></ruby>！' : ''}`;
+
+        wrap.appendChild(btn);
+        wrap.appendChild(info);
+        container.appendChild(wrap);
+      }
+    }
+
+    function updateHeaderInfo() {
+      document.getElementById('score-display').innerText = userData.totalScore;
+      document.getElementById('combo-display').innerText = userData.combo;
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast-msg');
+      toast.innerText = msg;
+      toast.style.display = 'block';
+      setTimeout(() => {
+        toast.style.display = 'none';
+      }, 3000);
+    }
+
+    window.onload = () => {
+      loadData();
+    };
+    
+    function showTitle() {
+      saveData();
+      updateTitleScreen();
+      document.getElementById('title-screen').classList.add('active');
+      document.getElementById('game-screen').classList.remove('active');
+      document.getElementById('clear-overlay').style.display = 'none';
+      window.scrollTo(0, 0);
+    }
+
+    function startGame(level) {
+      currentLevel = level;
+      document.getElementById('level-display').innerText = `レベル ${level}`;
+      document.getElementById('title-screen').classList.remove('active');
+      document.getElementById('game-screen').classList.add('active');
+      
+      updateHeaderInfo();
+
+      const maxWidth = window.innerWidth - 40;
+      const expectedCols = Math.sqrt(LEVELS[level].totalCells) + 2; 
+      CELL_SIZE = Math.min(45, Math.floor(maxWidth / expectedCols));
+      document.documentElement.style.setProperty('--cell-size', `${CELL_SIZE}px`);
+
+      nextPuzzle();
+    }
+
+    function nextPuzzle() {
+      document.getElementById('clear-overlay').style.display = 'none';
+      document.getElementById('btn-giveup-action').style.display = 'inline-block';
+      document.getElementById('btn-next-action').style.display = 'none';
+      window.scrollTo(0, 0); 
+      
+      puzzleData = generatePuzzle(LEVELS[currentLevel]);
+      initBoard();
+      initPieces();
+      updateHeaderInfo();
+    }
+
+    function generatePuzzle(config) {
+      const { totalCells, pieceCount } = config;
+      const genBoardSize = 16; 
+      
+      let pieceSizes = new Array(pieceCount).fill(Math.floor(totalCells / pieceCount));
+      let remainder = totalCells % pieceCount;
+      for (let i = 0; i < remainder; i++) pieceSizes[i]++;
+
+      let generated = null;
+      let attempts = 0;
+      
+      while (!generated && attempts < 200) {
+        generated = tryGenerate(pieceSizes, genBoardSize);
+        attempts++;
+      }
+      return formatPuzzleData(generated, genBoardSize);
+    }
+
+    function tryGenerate(pieceSizes, size) {
+      let board = Array.from({length: size}, () => Array(size).fill(-1));
+      let piecesCells = []; 
+      let allCells = [];    
+
+      for (let pIdx = 0; pIdx < pieceSizes.length; pIdx++) {
+        let pSize = pieceSizes[pIdx];
+        let cells = [];
+        let startPoint;
+        if (pIdx === 0) {
+          startPoint = {r: Math.floor(size/2), c: Math.floor(size/2)};
+        } else {
+          let adjCells = getAdjacentEmptyCells(board, allCells, size);
+          if (adjCells.length === 0) return null; 
+          startPoint = adjCells[Math.floor(Math.random() * adjCells.length)];
+        }
+
+        board[startPoint.r][startPoint.c] = pIdx;
+        cells.push(startPoint);
+        allCells.push(startPoint);
+
+        for (let i = 1; i < pSize; i++) {
+          let adj = getAdjacentEmptyCells(board, cells, size);
+          if (adj.length === 0) return null; 
+          let nextPoint = adj[Math.floor(Math.random() * adj.length)];
+          board[nextPoint.r][nextPoint.c] = pIdx;
+          cells.push(nextPoint);
+          allCells.push(nextPoint);
+        }
+        piecesCells.push(cells);
+      }
+      return piecesCells;
+    }
+
+    function getAdjacentEmptyCells(board, cells, size) {
+      let adj = [];
+      let dirs = [[-1,0],[1,0],[0,-1],[0,1]];
+      let seen = new Set();
+      for (let cell of cells) {
+        for (let d of dirs) {
+          let nr = cell.r + d[0];
+          let nc = cell.c + d[1];
+          if (nr >= 0 && nr < size && nc >= 0 && nc < size) {
+            if (board[nr][nc] === -1) {
+              let key = `nr,{nc}`;
+              if (!seen.has(key)) { seen.add(key); adj.push({r: nr, c: nc}); }
+            }
+          }
+        }
+      }
+      return adj;
+    }
+
+    function formatPuzzleData(piecesCells, size) {
+      let minR = size, maxR = -1, minC = size, maxC = -1;
+      piecesCells.flat().forEach(cell => {
+        if(cell.r < minR) minR = cell.r;
+        if(cell.r > maxR) maxR = cell.r;
+        if(cell.c < minC) minC = cell.c;
+        if(cell.c > maxC) maxC = cell.c;
+      });
+
+      let targetRows = maxR - minR + 1;
+      let targetCols = maxC - minC + 1;
+      let targetPattern = Array.from({length: targetRows}, () => Array(targetCols).fill(0));
+      let piecesData = [];
+      let colors = [...PALETTE].sort(() => Math.random() - 0.5);
+
+      piecesCells.forEach((cells, idx) => {
+        let pMinR = size, pMaxR = -1, pMinC = size, pMaxC = -1;
+        cells.forEach(c => {
+          if(c.r < pMinR) pMinR = c.r;
+          if(c.r > pMaxR) pMaxR = c.r;
+          if(c.c < pMinC) pMinC = c.c;
+          if(c.c > pMaxC) pMaxC = c.c;
+        });
+
+        let pRows = pMaxR - pMinR + 1;
+        let pCols = pMaxC - pMinC + 1;
+        let originalShape = Array.from({length: pRows}, () => Array(pCols).fill(0));
+
+        cells.forEach(c => {
+          originalShape[c.r - pMinR][c.c - pMinC] = 1;
+          targetPattern[c.r - minR][c.c - minC] = 1;
+        });
+
+        let shape = JSON.parse(JSON.stringify(originalShape));
+        let rotCount = Math.floor(Math.random() * 4);
+        for(let i=0; i<rotCount; i++) shape = rotateMatrix(shape);
+
+        piecesData.push({
+          id: `p${idx}`,
+          color: colors[idx % colors.length],
+          shape: shape,
+          correctShape: originalShape,
+          correctRow: pMinR - minR,
+          correctCol: pMinC - minC
+        });
+      });
+
+      return {
+        target: targetPattern,
+        rows: targetRows,
+        cols: targetCols,
+        totalCells: piecesCells.flat().length,
+        pieces: piecesData
+      };
+    }
+
+    function rotateMatrix(matrix) {
+      const rows = matrix.length;
+      const cols = matrix[0].length;
+      let newMatrix = Array.from({length: cols}, () => Array(rows).fill(0));
+      for(let r=0; r<rows; r++) {
+        for(let c=0; c<cols; c++) { newMatrix[c][rows - 1 - r] = matrix[r][c]; }
+      }
+      return newMatrix;
+    }
+
+    function initBoard() {
+      const boardEl = document.getElementById('board');
+      boardEl.innerHTML = '';
+      
+      const rows = puzzleData.rows;
+      const cols = puzzleData.cols;
+      
+      boardEl.style.gridTemplateColumns = `repeat(${cols}, var(--cell-size))`;
+      boardEl.style.gridTemplateRows = `repeat(${rows}, var(--cell-size))`;
+      
+      boardState = Array.from({length: rows}, () => Array(cols).fill(null));
+
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          const cell = document.createElement('div');
+          cell.classList.add('cell');
+          if (puzzleData.target[r][c] === 1) cell.classList.add('target-cell');
+          boardEl.appendChild(cell);
+        }
+      }
+    }
+
+    function initPieces() {
+      const container = document.getElementById('pieces-container');
+      container.innerHTML = '';
+      pieces = JSON.parse(JSON.stringify(puzzleData.pieces));
+
+      const wrapperEl = document.getElementById('board-wrapper');
+      const startY = wrapperEl.offsetTop + wrapperEl.offsetHeight;
+      
+      let currentX = 20;
+      let currentY = startY;
+      let rowMaxHeight = 0;
+
+      const areaWidth = document.getElementById('game-area').clientWidth;
+
+      pieces.forEach((p) => {
+        p.el = document.createElement('div');
+        p.el.classList.add('piece');
+        p.el.dataset.id = p.id;
+        p.el.ondragstart = () => false; 
+
+        renderPiece(p);
+        
+        const maxDim = Math.max(p.shape.length, p.shape[0].length);
+        const requiredSpace = maxDim * CELL_SIZE;
+
+        if (currentX > 20 && currentX + requiredSpace > areaWidth - 20) {
+          currentX = 20;
+          currentY += rowMaxHeight + 20; 
+          rowMaxHeight = 0;
+        }
+
+        setPiecePosition(p, currentX, currentY);
+        p.startX = currentX; p.startY = currentY;
+
+        container.appendChild(p.el);
+        setupDragAndDrop(p);
+
+        currentX += requiredSpace + 20; 
+        if (requiredSpace > rowMaxHeight) { rowMaxHeight = requiredSpace; }
+      });
+
+      const gameAreaHeight = currentY + rowMaxHeight + 100;
+      document.getElementById('game-area').style.minHeight = gameAreaHeight + 'px';
+    }
+
+    function renderPiece(piece) {
+      piece.el.innerHTML = '';
+      const rows = piece.shape.length;
+      const cols = piece.shape[0].length;
+      
+      piece.el.style.width = `${cols * CELL_SIZE}px`;
+      piece.el.style.height = `${rows * CELL_SIZE}px`;
+
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          if (piece.shape[r][c] === 1) {
+            const block = document.createElement('div');
+            block.classList.add('block');
+            block.style.backgroundColor = piece.color;
+            block.style.left = `${c * CELL_SIZE}px`;
+            block.style.top = `${r * CELL_SIZE}px`;
+            piece.el.appendChild(block);
+          }
+        }
+      }
+    }
+
+    function setPiecePosition(piece, x, y) {
+      piece.x = x; piece.y = y;
+      piece.el.style.left = `${x}px`;
+      piece.el.style.top = `${y}px`;
+    }
+
+    function setupDragAndDrop(piece) {
+      let isDragging = false; let hasMoved = false;
+      let startMouseX, startMouseY, startPieceX, startPieceY;
+
+      piece.el.addEventListener('pointerdown', (e) => {
+        e.preventDefault();
+        isDragging = true; hasMoved = false;
+        startMouseX = e.clientX; startMouseY = e.clientY;
+        startPieceX = piece.x; startPieceY = piece.y;
+        
+        piece.el.style.zIndex = 100;
+        removePieceFromBoard(piece.id);
+        piece.el.setPointerCapture(e.pointerId);
+      });
+
+      piece.el.addEventListener('pointermove', (e) => {
+        if (!isDragging) return;
+        const dx = e.clientX - startMouseX;
+        const dy = e.clientY - startMouseY;
+        if (Math.abs(dx) > 3 || Math.abs(dy) > 3) hasMoved = true;
+        setPiecePosition(piece, startPieceX + dx, startPieceY + dy);
+      });
+
+      const onPointerUp = (e) => {
+        if (!isDragging) return;
+        isDragging = false;
+        piece.el.releasePointerCapture(e.pointerId);
+        piece.el.style.zIndex = 10;
+
+        if (!hasMoved) {
+          piece.shape = rotateMatrix(piece.shape);
+          renderPiece(piece);
+        } else {
+          trySnapToBoard(piece);
+        }
+      };
+
+      piece.el.addEventListener('pointerup', onPointerUp);
+      piece.el.addEventListener('pointercancel', onPointerUp);
+    }
+
+    function removePieceFromBoard(pieceId) {
+      for (let r = 0; r < puzzleData.rows; r++) {
+        for (let c = 0; c < puzzleData.cols; c++) {
+          if (boardState[r][c] === pieceId) boardState[r][c] = null;
+        }
+      }
+    }
+
+    function trySnapToBoard(piece) {
+      const boardEl = document.getElementById('board');
+      const boardRect = boardEl.getBoundingClientRect();
+      const pieceRect = piece.el.getBoundingClientRect();
+      const containerRect = document.getElementById('pieces-container').getBoundingClientRect();
+
+      const relX = pieceRect.left - boardRect.left;
+      const relY = pieceRect.top - boardRect.top;
+
+      const col = Math.round(relX / CELL_SIZE);
+      const row = Math.round(relY / CELL_SIZE);
+
+      if (canPlacePiece(piece, row, col)) {
+        const boardX = boardRect.left - containerRect.left;
+        const boardY = boardRect.top - containerRect.top;
+        setPiecePosition(piece, boardX + col * CELL_SIZE, boardY + row * CELL_SIZE);
+        placePieceOnBoard(piece, row, col);
+        checkWin();
+      } else {
+        setPiecePosition(piece, piece.startX, piece.startY);
+      }
+    }
+
+    function canPlacePiece(piece, startRow, startCol) {
+      const rows = piece.shape.length;
+      const cols = piece.shape[0].length;
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          if (piece.shape[r][c] === 1) {
+            const boardR = startRow + r; const boardC = startCol + c;
+            if (boardR < 0 || boardR >= puzzleData.rows || boardC < 0 || boardC >= puzzleData.cols) return false;
+            if (boardState[boardR][boardC] !== null) return false;
+            if (puzzleData.target[boardR][boardC] === 0) return false;
+          }
+        }
+      }
+      return true;
+    }
+
+    function placePieceOnBoard(piece, startRow, startCol) {
+      const rows = piece.shape.length;
+      const cols = piece.shape[0].length;
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          if (piece.shape[r][c] === 1) { boardState[startRow + r][startCol + c] = piece.id; }
+        }
+      }
+    }
+
+    function checkWin() {
+      let matchCount = 0;
+      for (let r = 0; r < puzzleData.rows; r++) {
+        for (let c = 0; c < puzzleData.cols; c++) {
+          if (puzzleData.target[r][c] === 1 && boardState[r][c] !== null) matchCount++;
+        }
+      }
+      if (matchCount === puzzleData.totalCells) {
+        processResult();
+      }
+    }
+
+    function showConfirm() {
+      document.getElementById('confirm-overlay').style.display = 'flex';
+    }
+    function closeConfirm() {
+      document.getElementById('confirm-overlay').style.display = 'none';
+    }
+
+    function executeGiveUp() {
+      closeConfirm();
+      const rows = puzzleData.rows;
+      const cols = puzzleData.cols;
+      boardState = Array.from({length: rows}, () => Array(cols).fill(null));
+
+      const boardEl = document.getElementById('board');
+      const boardRect = boardEl.getBoundingClientRect();
+      const containerRect = document.getElementById('pieces-container').getBoundingClientRect();
+      
+      const boardX = boardRect.left - containerRect.left;
+      const boardY = boardRect.top - containerRect.top;
+
+      pieces.forEach(p => {
+        p.shape = p.correctShape;
+        renderPiece(p);
+        p.el.style.transition = 'all 0.4s ease-in-out';
+        p.el.style.pointerEvents = 'none'; 
+        setPiecePosition(p, boardX + p.correctCol * CELL_SIZE, boardY + p.correctRow * CELL_SIZE);
+        placePieceOnBoard(p, p.correctRow, p.correctCol);
+        setTimeout(() => { p.el.style.transition = ''; }, 400);
+      });
+      
+      const penalty = currentLevel * 50;
+      userData.totalScore = Math.max(0, userData.totalScore - penalty);
+      userData.combo = 0;
+      saveData();
+      updateHeaderInfo();
+
+      document.getElementById('btn-giveup-action').style.display = 'none';
+      document.getElementById('btn-next-action').style.display = 'inline-block';
+
+      showToast(`スコア -${penalty} / コンボリセット`);
+    }
+
+    function processResult() {
+      const detailsEl = document.getElementById('result-details');
+      const titleEl = document.getElementById('result-title');
+      
+      const baseScore = currentLevel * 100;
+      const comboBonus = userData.combo * (20 * currentLevel);
+      const earned = baseScore + comboBonus;
+      
+      userData.totalScore += earned;
+      userData.levelScores[currentLevel] += earned;
+      userData.combo += 1;
+      
+      titleEl.innerText = 'CLEAR!!';
+      titleEl.style.color = '#FF9800';
+      
+      let comboHtml = comboBonus > 0 ? `<br><span style="color:#FF9800;">コンボボーナス: +${comboBonus}</span>` : '';
+      detailsEl.innerHTML = `
+        <span style="color:#4CAF50;">スコア: +${baseScore}</span>
+        ${comboHtml}<br>
+        <span style="font-size:14px; font-weight:normal;">${userData.combo} コンボ<ruby>達成<rt>たっせい</rt></ruby>！</span><br><br>
+        <ruby>現在<rt>げんざい</rt></ruby>の<ruby>合計<rt>ごうけい</rt></ruby>スコア: ${userData.totalScore}
+      `;
+
+      saveData();
+      document.getElementById('clear-overlay').style.display = 'flex';
+    }
+  </script>
+</body>
+</html>
+
