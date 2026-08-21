@@ -158,6 +158,19 @@
       pointer-events: none;
     }
 
+    #pieces-scroll {
+      width: 100%;
+      position: relative;
+      overflow-x: auto;
+      overflow-y: hidden;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior-x: contain;
+      touch-action: pan-x;
+    }
+    #pieces-scroll-inner {
+      height: 1px;
+    }
+
     #pieces-container {
       position: absolute;
       top: 0; left: 0; width: 100%; height: 100%;
@@ -174,6 +187,9 @@
     .piece:active {
       cursor: grabbing;
       filter: drop-shadow(0 8px 12px rgba(0,0,0,0.5));
+    }
+    .piece.dragging {
+      filter: none !important;
     }
 
     .block {
@@ -306,6 +322,9 @@
     <div id="game-area">
       <div id="board-wrapper">
         <div id="board"></div>
+      </div>
+      <div id="pieces-scroll">
+        <div id="pieces-scroll-inner"></div>
       </div>
       <div id="pieces-container"></div>
     </div>
@@ -528,7 +547,7 @@
           let nc = cell.c + d[1];
           if (nr >= 0 && nr < size && nc >= 0 && nc < size) {
             if (board[nr][nc] === -1) {
-              let key = `nr,{nc}`;
+              let key = `{nc}`;
               if (!seen.has(key)) { seen.add(key); adj.push({r: nr, c: nc}); }
             }
           }
@@ -627,47 +646,74 @@
 
     function initPieces() {
       const container = document.getElementById('pieces-container');
+      const scrollEl = document.getElementById('pieces-scroll');
+      const scrollInner = document.getElementById('pieces-scroll-inner');
       container.innerHTML = '';
+      scrollEl.scrollLeft = 0;
       pieces = JSON.parse(JSON.stringify(puzzleData.pieces));
 
-      const wrapperEl = document.getElementById('board-wrapper');
-      const startY = wrapperEl.offsetTop + wrapperEl.offsetHeight;
-      
+      const startY = scrollEl.offsetTop + 10;
       let currentX = 20;
-      let currentY = startY;
       let rowMaxHeight = 0;
-
-      const areaWidth = document.getElementById('game-area').clientWidth;
 
       pieces.forEach((p) => {
         p.el = document.createElement('div');
         p.el.classList.add('piece');
         p.el.dataset.id = p.id;
-        p.el.ondragstart = () => false; 
+        p.el.ondragstart = () => false;
 
         renderPiece(p);
-        
+
         const maxDim = Math.max(p.shape.length, p.shape[0].length);
         const requiredSpace = maxDim * CELL_SIZE;
-
-        if (currentX > 20 && currentX + requiredSpace > areaWidth - 20) {
-          currentX = 20;
-          currentY += rowMaxHeight + 20; 
-          rowMaxHeight = 0;
-        }
-
-        setPiecePosition(p, currentX, currentY);
-        p.startX = currentX; p.startY = currentY;
+        p.trayX = currentX;
+        p.trayY = startY;
+        p.isPlaced = false;
+        p.isDragging = false;
 
         container.appendChild(p.el);
         setupDragAndDrop(p);
 
-        currentX += requiredSpace + 20; 
-        if (requiredSpace > rowMaxHeight) { rowMaxHeight = requiredSpace; }
+        currentX += requiredSpace + 20;
+        if (requiredSpace > rowMaxHeight) rowMaxHeight = requiredSpace;
       });
 
-      const gameAreaHeight = currentY + rowMaxHeight + 100;
+      const trayHeight = rowMaxHeight + 34;
+      scrollEl.style.height = `${trayHeight}px`;
+      scrollInner.style.width = `${Math.max(scrollEl.clientWidth, currentX + 20)}px`;
+      scrollInner.style.height = `${Math.max(1, trayHeight - 16)}px`;
+      scrollEl.onscroll = updateTrayPositions;
+      updateTrayPositions();
+
+      const gameAreaHeight = scrollEl.offsetTop + trayHeight + 20;
       document.getElementById('game-area').style.minHeight = gameAreaHeight + 'px';
+    }
+
+    function updateTrayPositions() {
+      const scrollEl = document.getElementById('pieces-scroll');
+      if (!scrollEl) return;
+      const leftEdge = scrollEl.offsetLeft;
+      const rightEdge = leftEdge + scrollEl.clientWidth;
+
+      pieces.forEach((p) => {
+        if (!p.el || p.isPlaced || p.isDragging) return;
+        const x = leftEdge + p.trayX - scrollEl.scrollLeft;
+        const y = p.trayY;
+        setPiecePosition(p, x, y);
+        p.startX = x;
+        p.startY = y;
+
+        const pieceWidth = p.el.offsetWidth;
+        const leftClip = Math.min(pieceWidth, Math.max(0, leftEdge - x));
+        const rightClip = Math.min(pieceWidth, Math.max(0, x + pieceWidth - rightEdge));
+        p.el.style.clipPath = `inset(0 ${rightClip}px 0 ${leftClip}px)`;
+      });
+    }
+
+    function returnPieceToTray(piece) {
+      piece.isPlaced = false;
+      piece.isDragging = false;
+      updateTrayPositions();
     }
 
     function renderPiece(piece) {
@@ -701,55 +747,18 @@
     function setupDragAndDrop(piece) {
       let isDragging = false; let hasMoved = false;
       let startMouseX, startMouseY, startPieceX, startPieceY;
-      let startScrollY = 0;
-      let currentPointerX = 0, currentPointerY = 0;
-      let autoScrollFrame = null;
+      let wasPlaced = false;
       const useMobileTransform = window.matchMedia('(hover: none) and (pointer: coarse)').matches;
-      const AUTO_SCROLL_ZONE = 100;
-      const AUTO_SCROLL_MAX_SPEED = 16;
-
-      const updateDragPosition = () => {
-        const dx = currentPointerX - startMouseX;
-        const scrollDy = useMobileTransform ? window.scrollY - startScrollY : 0;
-        const dy = currentPointerY - startMouseY + scrollDy;
-        if (Math.abs(dx) > 3 || Math.abs(dy) > 3) hasMoved = true;
-        if (useMobileTransform) {
-          piece.x = startPieceX + dx;
-          piece.y = startPieceY + dy;
-          piece.el.style.transform = `translate3d(${dx}px, ${dy}px, 0)`;
-        } else {
-          setPiecePosition(piece, startPieceX + dx, startPieceY + dy);
-        }
-      };
-
-      const autoScroll = () => {
-        if (!isDragging || !useMobileTransform) {
-          autoScrollFrame = null;
-          return;
-        }
-        let scrollAmount = 0;
-        if (currentPointerY < AUTO_SCROLL_ZONE) {
-          const ratio = Math.min(1, Math.max(0, (AUTO_SCROLL_ZONE - currentPointerY) / AUTO_SCROLL_ZONE));
-          scrollAmount = -Math.ceil(AUTO_SCROLL_MAX_SPEED * ratio);
-        } else if (currentPointerY > window.innerHeight - AUTO_SCROLL_ZONE) {
-          const ratio = Math.min(1, Math.max(0, (currentPointerY - (window.innerHeight - AUTO_SCROLL_ZONE)) / AUTO_SCROLL_ZONE));
-          scrollAmount = Math.ceil(AUTO_SCROLL_MAX_SPEED * ratio);
-        }
-        if (scrollAmount !== 0) {
-          const beforeScrollY = window.scrollY;
-          window.scrollBy(0, scrollAmount);
-          if (window.scrollY !== beforeScrollY) updateDragPosition();
-        }
-        autoScrollFrame = requestAnimationFrame(autoScroll);
-      };
 
       piece.el.addEventListener('pointerdown', (e) => {
         e.preventDefault();
         isDragging = true; hasMoved = false;
+        wasPlaced = !!piece.isPlaced;
+        piece.isDragging = true;
         startMouseX = e.clientX; startMouseY = e.clientY;
-        currentPointerX = e.clientX; currentPointerY = e.clientY;
         startPieceX = piece.x; startPieceY = piece.y;
-        startScrollY = window.scrollY;
+        piece.el.style.clipPath = 'none';
+        piece.el.classList.add('dragging');
         if (useMobileTransform) { piece.el.style.willChange = 'transform'; piece.el.style.transform = 'translate3d(0, 0, 0)'; }
         piece.el.style.zIndex = 100;
         removePieceFromBoard(piece.id);
@@ -758,29 +767,42 @@
 
       piece.el.addEventListener('pointermove', (e) => {
         if (!isDragging) return;
-        currentPointerX = e.clientX; currentPointerY = e.clientY;
-        updateDragPosition();
-        if (useMobileTransform && hasMoved && autoScrollFrame === null) {
-          autoScrollFrame = requestAnimationFrame(autoScroll);
+        const dx = e.clientX - startMouseX;
+        const dy = e.clientY - startMouseY;
+        if (Math.abs(dx) > 3 || Math.abs(dy) > 3) hasMoved = true;
+        if (useMobileTransform) {
+          piece.x = startPieceX + dx;
+          piece.y = startPieceY + dy;
+          piece.el.style.transform = `translate3d(${dx}px, ${dy}px, 0)`;
+        } else {
+          setPiecePosition(piece, startPieceX + dx, startPieceY + dy);
         }
       });
 
       const onPointerUp = (e) => {
         if (!isDragging) return;
         isDragging = false;
-        if (autoScrollFrame !== null) {
-          cancelAnimationFrame(autoScrollFrame);
-          autoScrollFrame = null;
-        }
         piece.el.releasePointerCapture(e.pointerId);
         piece.el.style.zIndex = 10;
-        if (useMobileTransform && hasMoved) { piece.el.style.transform = ''; piece.el.style.willChange = ''; setPiecePosition(piece, piece.x, piece.y); }
+        if (useMobileTransform && hasMoved) {
+          piece.el.style.transform = '';
+          piece.el.style.willChange = '';
+          setPiecePosition(piece, piece.x, piece.y);
+        }
+
         if (!hasMoved) {
+          piece.isDragging = false;
+          piece.isPlaced = wasPlaced;
           piece.shape = rotateMatrix(piece.shape);
           renderPiece(piece);
+          if (!piece.isPlaced) updateTrayPositions();
         } else {
           trySnapToBoard(piece);
         }
+
+        requestAnimationFrame(() => {
+          piece.el.classList.remove('dragging');
+        });
       };
 
       piece.el.addEventListener('pointerup', onPointerUp);
@@ -807,14 +829,17 @@
       const col = Math.round(relX / CELL_SIZE);
       const row = Math.round(relY / CELL_SIZE);
 
+      piece.isDragging = false;
       if (canPlacePiece(piece, row, col)) {
         const boardX = boardRect.left - containerRect.left;
         const boardY = boardRect.top - containerRect.top;
+        piece.isPlaced = true;
+        piece.el.style.clipPath = 'none';
         setPiecePosition(piece, boardX + col * CELL_SIZE, boardY + row * CELL_SIZE);
         placePieceOnBoard(piece, row, col);
         checkWin();
       } else {
-        setPiecePosition(piece, piece.startX, piece.startY);
+        returnPieceToTray(piece);
       }
     }
 
@@ -881,6 +906,9 @@
         renderPiece(p);
         p.el.style.transition = 'all 0.4s ease-in-out';
         p.el.style.pointerEvents = 'none'; 
+        p.isPlaced = true;
+        p.isDragging = false;
+        p.el.style.clipPath = 'none';
         setPiecePosition(p, boardX + p.correctCol * CELL_SIZE, boardY + p.correctRow * CELL_SIZE);
         placePieceOnBoard(p, p.correctRow, p.correctCol);
         setTimeout(() => { p.el.style.transition = ''; }, 400);
