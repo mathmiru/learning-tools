@@ -176,7 +176,7 @@
       width: 38px;
       height: 54px;
       z-index: 80;
-      pointer-events: none;
+      pointer-events: auto; cursor: pointer; touch-action: manipulation;
       display: none;
       align-items: center;
       justify-content: center;
@@ -710,7 +710,7 @@
       scrollEl.style.height = `${trayHeight}px`;
       scrollInner.style.width = `${Math.max(scrollEl.clientWidth, currentX + 20)}px`;
       scrollInner.style.height = `${Math.max(1, trayHeight - 16)}px`;
-      scrollEl.onscroll = () => { updateTrayPositions(); updateScrollCues(); };
+      scrollEl.onscroll = () => { updateTrayPositions(); updateScrollCues(); }; document.getElementById('scroll-cue-left').onclick = () => scrollEl.scrollBy({ left: -scrollEl.clientWidth * 0.45, behavior: 'smooth' }); document.getElementById('scroll-cue-right').onclick = () => scrollEl.scrollBy({ left: scrollEl.clientWidth * 0.45, behavior: 'smooth' });
       updateTrayPositions();
       updateScrollCues();
 
