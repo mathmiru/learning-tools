@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>げんこうようし マスター</title>
+<style>
+  body {
+    font-family: "Hiragino Maru Gothic ProN", "Meiryo", sans-serif;
+    background-color: #f0f8ff;
+    color: #333;
+    margin: 0;
+    padding: 20px 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    box-sizing: border-box;
+    overflow-x: hidden; /* 意図しない横揺れを防止 */
+  }
+
+  /* タイトル画面 */
+  #title-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 80vh;
+    text-align: center;
+    animation: fadeIn 0.8s ease-in-out;
+    width: 100%;
+    max-width: 600px;
+  }
+  #title-screen h1 {
+    font-size: min(2.5rem, 8vw);
+    color: #d2691e;
+    margin-bottom: 10px;
+    text-shadow: 2px 2px 0px #fff;
+  }
+  .rules {
+    background: #fff;
+    border: 3px dashed #87ceeb;
+    padding: 15px 20px;
+    border-radius: 15px;
+    text-align: left;
+    margin: 20px 0 30px 0;
+    font-size: min(1.05rem, 4vw);
+    line-height: 1.6;
+    color: #444;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    width: 100%;
+    box-sizing: border-box;
+  }
+  .rules p { margin: 8px 0; }
+
+  /* ゲーム画面 */
+  #game-screen {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    max-width: 900px;
+  }
+  
+  #story-area {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: #fff;
+    border: 2px solid #ffcc00;
+    border-radius: 12px;
+    padding: 10px;
+    width: 100%;
+    max-width: 700px;
+    margin-bottom: 15px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    box-sizing: border-box;
+  }
+  .character-box {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 2px;
+  }
+  .character { font-size: 1.8rem; margin: 0; }
+  #message { font-size: min(1rem, 4vw); font-weight: bold; margin: 0; line-height: 1.4; color: #333; text-align: center; }
+  
+  #lives-container { font-size: 1.2rem; letter-spacing: 3px; margin-top: 5px; }
+
+  /* げんこうようし */
+  #genkouyoushi-container {
+    display: flex;
+    flex-direction: row-reverse;
+    background-color: #fdfdf5;
+    padding: 10px;
+    border: 2px solid #2e8b57;
+    box-shadow: 2px 2px 15px rgba(0,0,0,0.2);
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+  .line {
+    display: flex;
+    flex-direction: column;
+    border-left: 1px solid #2e8b57;
+  }
+  .line:last-child { border-left: none; }
+  
+  /* スマホ画面に合わせて最大幅を42px、それ以下は画面幅の8.5%に縮小 */
+  .cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: min(42px, 8.5vw); 
+    height: min(42px, 8.5vw); 
+    border-bottom: 1px dashed #2e8b57;
+    font-family: "Noto Serif JP", "Mincho", serif;
+    font-size: min(1.4rem, 5vw);
+    cursor: pointer;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent; /* スマホタップ時の青い枠を消す */
+    transition: background-color 0.2s;
+    writing-mode: vertical-rl; 
+  }
+  .line .cell:last-child { border-bottom: none; }
+  .cell:hover { background-color: #ffe4e1; }
+  
+  .cell.multi-char {
+    position: relative;
+  }
+  .cell.multi-char span {
+    position: absolute;
+  }
+
+  /* フォントサイズを相対値(em)にすることで縮小時もレイアウトを維持 */
+  .cell.char-kuten span:nth-child(1) {
+    top: 10%; left: 50%; transform: translateX(-50%); font-size: 0.9em;
+  }
+  .cell.char-kuten span:nth-child(2) {
+    bottom: 0%; right: 0%; font-size: 0.7em;
+  }
+
+  .cell.kuten-kakko span:nth-child(1) {
+    top: 5%; right: 5%; font-size: 0.7em;
+  }
+  .cell.kuten-kakko span:nth-child(2) {
+    top: 25%; left: 55%; transform: translateX(-50%); font-size: 0.9em;
+  }
+
+  /* モーダル・ボタン類 */
+  #modal, #collection-modal, #reset-confirm-modal {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.6);
+    z-index: 100;
+  }
+  .modal-content {
+    background: #fff;
+    width: 90%;
+    max-width: 480px;
+    margin: 5vh auto;
+    padding: 20px;
+    border-radius: 12px;
+    text-align: center;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    max-height: 85vh;
+    max-height: 85dvh; /* スマホのブラウザバー対応 */
+    overflow-y: auto;
+    box-sizing: border-box;
+  }
+  .choice-btn {
+    display: block; width: 100%; padding: 15px; margin: 12px 0;
+    font-size: min(1.1rem, 4.5vw); background-color: #87ceeb; border: none;
+    border-radius: 8px; cursor: pointer; font-weight: bold; color: #fff;
+    box-sizing: border-box;
+  }
+  .choice-btn:hover { background-color: #00bfff; }
+  
+  .action-btn {
+    background-color: #ff8c00; color: white;
+    font-size: min(1.2rem, 4.5vw); font-weight: bold; padding: 12px 20px;
+    border: none; border-radius: 8px; cursor: pointer; margin-top: 15px;
+    box-shadow: 0 4px 0 #cc7000;
+    transition: transform 0.1s, box-shadow 0.1s;
+    width: 100%;
+    max-width: 300px;
+    box-sizing: border-box;
+  }
+  .action-btn:active { transform: translateY(4px); box-shadow: 0 0 0 #cc7000; }
+  .action-btn.retry { background-color: #dc143c; box-shadow: 0 4px 0 #8b0000; }
+  .action-btn.retry:active { box-shadow: 0 0 0 #8b0000; }
+  
+  #certificate {
+    display: none; background: #fff; border: 8px double #ffd700;
+    padding: 20px; text-align: center; margin-top: 20px;
+    border-radius: 10px;
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 500px;
+  }
+
+  /* まるばつアニメーション */
+  #result-mark {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 10rem;
+    z-index: 1000;
+    pointer-events: none;
+    opacity: 0;
+  }
+  .show-circle {
+    text-shadow: 0 0 20px #fff;
+    animation: popIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  }
+  .show-cross {
+    text-shadow: 0 0 20px #fff;
+    animation: popIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  }
+
+  /* バッジケース */
+  .badge-case {
+    background: #2b2b2b;
+    border: 4px solid #d2691e;
+    border-radius: 12px;
+    padding: 8px;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 6px;
+    margin: 15px 0;
+    box-sizing: border-box;
+  }
+  .badge-slot {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    background: #1a1a1a;
+    border: 2px inset #444;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    font-size: min(1.8rem, 6vw); /* スマホで縮小 */
+    user-select: none;
+    box-sizing: border-box;
+  }
+  .badge-slot.empty { background: #181818; }
+  .badge-slot.empty::after { content: "・"; color: #444; font-size: 1.2rem; }
+  .badge-slot.has-item {
+    background: radial-gradient(circle, #444 0%, #111 100%);
+    box-shadow: inset 0 0 5px rgba(255,255,255,0.2);
+  }
+  .badge-count {
+    position: absolute;
+    bottom: 0px;
+    right: 2px;
+    font-size: 0.75rem;
+    font-weight: bold;
+    color: #ffd700;
+    text-shadow: 1px 1px 2px #000;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes popIn {
+    0% { opacity: 0; transform: translate(-50%, -50%) scale(0.3); }
+    40% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
+    70% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    100% { opacity: 0; transform: translate(-50%, -50%) scale(1); }
+  }
+</style>
+</head>
+<body>
+
+  <div id="title-screen">
+    <h1>📝 げんこうようし マスター</h1>
+    <div class="rules">
+      <p style="font-weight: bold; color: #2e8b57; text-align: center;">【 あそびかた 】</p>
+      <p>① まちがっている マスを さがして タップしよう！</p>
+      <p>② どうやって なおすか えらんでね。</p>
+      <p>③ まちがえると ハートが １つ へるよ。</p>
+      <p>④ 10もん クリアで バッジゲット！<br>  ハートが おおいほど、レアバッジや まだ もっていない バッジが でやすいよ！</p>
+    </div>
+    <button class="action-btn" onclick="startGame()">ゲームスタート！</button>
+    <button class="action-btn" style="background-color: #2e8b57; font-size: min(1rem, 4vw); padding: 10px; box-shadow: 0 4px 0 #1e6b3f;" onclick="showCollection()">バッジケースをみる</button>
+    <button class="action-btn" style="background-color: #dc143c; font-size: min(1rem, 4vw); padding: 10px; box-shadow: 0 4px 0 #8b0000; margin-top: 10px;" onclick="confirmResetBadges()">バッジをリセット</button>
+  </div>
+
+  <div id="game-screen">
+    <div id="story-area">
+      <div class="character-box">
+        <div class="character">🦝</div>
+        <div id="message">あやしい ますを さわって、なおしてね！</div>
+      </div>
+      <div id="lives-container">❤️❤️❤️</div>
+    </div>
+
+    <div id="genkouyoushi-container"></div>
+
+    <button id="next-btn" class="action-btn" style="display: none;" onclick="nextStage()">つぎの もんだいへ</button>
+    <button id="retry-btn" class="action-btn retry" style="display: none;" onclick="location.reload()">さいしょから やりなおす</button>
+  </div>
+
+  <div id="certificate">
+    <h2 style="color: #d2691e; font-size: min(1.5rem, 5vw);">💮 げんこうようし マスター 💮</h2>
+    <p style="font-size: min(1rem, 4vw);">10もん クリア おめでとう！<br>ルールを ばっちり おぼえられたね！<br>すばらしいです！</p>
+    
+    <div style="margin: 15px 0; padding: 15px; background: #fffacd; border-radius: 10px;">
+      <p style="margin:0; font-weight:bold; color:#d2691e; font-size: min(1rem, 3.5vw);">✨ あたらしく バッジを ゲットしたよ！ ✨</p>
+      <div id="earned-badge" style="font-size: 3rem; margin: 10px 0;"></div>
+      <p id="earned-rarity" style="margin:0; font-weight:bold; font-size: min(1rem, 3.5vw);"></p>
+    </div>
+
+    <button class="choice-btn" style="margin-top:15px;" onclick="location.reload()">もういちど あそぶ</button>
+  </div>
+
+  <div id="modal">
+    <div class="modal-content">
+      <p style="font-size:min(1.1rem, 4.5vw); font-weight:bold;">どうやって なおす？</p>
+      <div id="choices-container"></div>
+      <button style="margin-top:10px; padding:8px 20px; font-size: min(0.9rem, 4vw);" onclick="closeModal()">やめる</button>
+    </div>
+  </div>
+
+  <div id="collection-modal">
+    <div class="modal-content">
+      <h2 style="color:#d2691e; margin-top:0; font-size: min(1.5rem, 6vw);">🏆 バッジケース 🏆</h2>
+      <div id="badge-case-container" class="badge-case"></div>
+      <button class="choice-btn" style="background-color: #a9a9a9;" onclick="closeCollection()">とじる</button>
+    </div>
+  </div>
+
+  <div id="reset-confirm-modal">
+    <div class="modal-content">
+      <p style="font-size:min(1.1rem, 4.5vw); font-weight:bold; color: #dc143c; line-height: 1.5;">これまで あつめた バッジが すべて きえてしまいます。<br>ほんとうに リセットしますか？</p>
+      <button class="choice-btn" style="background-color: #dc143c;" onclick="resetBadges()">ほんとうに リセットする</button>
+      <button class="choice-btn" style="background-color: #a9a9a9;" onclick="closeResetConfirm()">やめる</button>
+    </div>
+  </div>
+
+  <div id="result-mark"></div>
+
+<script>
+// 問題データ
+const questionDatabase = [
+  // A. 最初の一マスあけ (6問)
+  { lines: [["き", "の", "う", "は", "た", "い", "い", "く", "で", "と"], ["び", "ば", "こ", "を", "し", "た", "。", " ", " ", " "]], mistakeLine: 0, mistakeCell: 0, choices: ["1ます あける", "2ます あける", "ぎょうを かえる"], correctIdx: 0, fixedLines: [[" ", "き", "の", "う", "は", "た", "い", "い", "く", "で"], ["と", "び", "ば", "こ", "を", "し", "た", "。", " ", " "]], explanation: "おはなしの さいしょは、かならず 1ます あけよう。" },
+  { lines: [["お", "み", "せ", "に", "お", "つ", "か", "い", "に", "い"], ["き", "ま", "し", "た", "。", " ", " ", " ", " ", " "]], mistakeLine: 0, mistakeCell: 0, choices: ["ぎょうを かえる", "1ます あける", "2ます あける"], correctIdx: 1, fixedLines: [[" ", "お", "み", "せ", "に", "お", "つ", "か", "い", "に"], ["い", "き", "ま", "し", "た", "。", " ", " ", " ", " "]], explanation: "おはなしの さいしょは、かならず 1ます あけよう。" },
+  { lines: [["ぼ", "く", "の", "す", "き", "な", "た", "べ", "も", "の"], ["は", "、", "り", "ん", "ご", "で", "す", "。", " ", " "]], mistakeLine: 0, mistakeCell: 0, choices: ["1ます あける", "2ます あける", "ぎょうを かえる"], correctIdx: 0, fixedLines: [[" ", "ぼ", "く", "の", "す", "き", "な", "た", "べ", "も"], ["の", "は", "、", "り", "ん", "ご", "で", "す", "。", " "]], explanation: "おはなしの さいしょは、かならず 1ます あけよう。" },
+  { lines: [["こ", "ん", "し", "ゅ", "う", "の", "に", "ち", "よ", "う"], ["び", "に", "う", "み", "へ", "い", "く", "。", " ", " "]], mistakeLine: 0, mistakeCell: 0, choices: ["1ます あける", "ぎょうを かえる", "2ます あける"], correctIdx: 0, fixedLines: [[" ", "こ", "ん", "し", "ゅ", "う", "の", "に", "ち", "よ"], ["う", "び", "に", "う", "み", "へ", "い", "く", "。", " "]], explanation: "おはなしの さいしょは、かならず 1ます あけよう。" },
+  { lines: [["あ", "さ", "お", "き", "て", "か", "お", "を", "あ", "ら"], ["い", "ま", "し", "た", "。", " ", " ", " ", " ", " "]], mistakeLine: 0, mistakeCell: 0, choices: ["2ます あける", "1ます あける", "ぎょうを かえる"], correctIdx: 1, fixedLines: [[" ", "あ", "さ", "お", "き", "て", "か", "お", "を", "あ"], ["ら", "い", "ま", "し", "た", "。", " ", " ", " ", " "]], explanation: "おはなしの さいしょは、かならず 1ます あけよう。" },
+  { lines: [["と", "し", "ょ", "か", "ん", "で", "ほ", "ん", "を", "か"], ["り", "ま", "し", "た", "。", " ", " ", " ", " ", " "]], mistakeLine: 0, mistakeCell: 0, choices: ["1ます あける", "2ます あける", "ぎょうを かえる"], correctIdx: 0, fixedLines: [[" ", "と", "し", "ょ", "か", "ん", "で", "ほ", "ん", "を"], ["か", "り", "ま", "し", "た", "。", " ", " ", " ", " "]], explanation: "おはなしの さいしょは、かならず 1ます あけよう。" },
+
+  // B. 「。」が行頭にこない (6問)
+  { lines: [[" ", "あ", "し", "た", "は", "が", "っ", "こ", "う", "の"], ["え", "ん", "そ", "く", "に", "で", "か", "け", "ま", "す"], ["。", "た", "の", "し", "み", "で", "す", "。", " ", " "]], mistakeLine: 2, mistakeCell: 0, choices: ["つぎの ますに ずらす", "まえの ぎょうの したに いれる", "ぎょうを かえる"], correctIdx: 1, fixedLines: [[" ", "あ", "し", "た", "は", "が", "っ", "こ", "う", "の"], ["え", "ん", "そ", "く", "に", "で", "か", "け", "ま", "す。"], ["た", "の", "し", "み", "で", "す", "。", " ", " ", " "]], explanation: "「。」は ぎょうの うえには かけないよ。まえの ぎょうに いれよう。" },
+  { lines: [[" ", "き", "ょ", "う", "は", "と", "て", "も", "た", "の"], ["し", "か", "っ", "た", "と", "お", "も", "い", "ま", "す"], ["。", " ", " ", " ", " ", " ", " ", " ", " ", " "]], mistakeLine: 2, mistakeCell: 0, choices: ["つぎの ますに ずらす", "まえの ぎょうの したに いれる", "ぎょうを かえる"], correctIdx: 1, fixedLines: [[" ", "き", "ょ", "う", "は", "と", "て", "も", "た", "の"], ["し", "か", "っ", "た", "と", "お", "も", "い", "ま", "す。"], [" ", " ", " ", " ", " ", " ", " ", " ", " ", " "]], explanation: "「。」は ぎょうの うえには かけないよ。まえの ぎょうに いれよう。" },
+  { lines: [[" ", "き", "ょ", "う", "は", "こ", "う", "え", "ん", "で"], ["た", "く", "さ", "ん", "あ", "そ", "び", "ま", "し", "た"], ["。", " ", " ", " ", " ", " ", " ", " ", " ", " "]], mistakeLine: 2, mistakeCell: 0, choices: ["まえの ぎょうの したに いれる", "つぎの ますに ずらす", "ぎょうを かえる"], correctIdx: 0, fixedLines: [[" ", "き", "ょ", "う", "は", "こ", "う", "え", "ん", "で"], ["た", "く", "さ", "ん", "あ", "そ", "び", "ま", "し", "た。"], [" ", " ", " ", " ", " ", " ", " ", " ", " ", " "]], explanation: "「。」は ぎょうの うえには かけないよ。まえの ぎょうに いれよう。" },
+  { lines: [[" ", "こ", "の", "ほ", "ん", "は", "と", "て", "も", "お"], ["も", "し", "ろ", "い", "と", "お", "も", "い", "ま", "す"], ["。", " ", " ", " ", " ", " ", " ", " ", " ", " "]], mistakeLine: 2, mistakeCell: 0, choices: ["つぎの ますに ずらす", "まえの ぎょうの したに いれる", "ぎょうを かえる"], correctIdx: 1, fixedLines: [[" ", "こ", "の", "ほ", "ん", "は", "と", "て", "も", "お"], ["も", "し", "ろ", "い", "と", "お", "も", "い", "ま", "す。"], [" ", " ", " ", " ", " ", " ", " ", " ", " ", " "]], explanation: "「。」は ぎょうの うえには かけないよ。まえの ぎょうに いれよう。" },
+  { lines: [[" ", "あ", "に", "と", "い", "っ", "し", "ょ", "に", "こ"], ["う", "え", "ん", "へ", "で", "か", "け", "ま", "し", "た"], ["。", " ", " ", " ", " ", " ", " ", " ", " ", " "]], mistakeLine: 2, mistakeCell: 0, choices: ["まえの ぎょうの したに いれる", "ぎょうを かえる", "つぎの ますに ずらす"], correctIdx: 0, fixedLines: [[" ", "あ", "に", "と", "い", "っ", "し", "ょ", "に", "こ"], ["う", "え", "ん", "へ", "で", "か", "け", "ま", "し", "た。"], [" ", " ", " ", " ", " ", " ", " ", " ", " ", " "]], explanation: "「。」は ぎょうの うえには かけないよ。まえの ぎょうに いれよう。" },
+  { lines: [[" ", "ゆ", "う", "が", "た", "に", "な", "っ", "て", "あ"], ["め", "が", "ふ", "り", "は", "じ", "め", "ま", "し", "た"], ["。", " ", " ", " ", " ", " ", " ", " ", " ", " "]], mistakeLine: 2, mistakeCell: 0, choices: ["つぎの ますに ずらす", "まえの ぎょうの したに いれる", "ぎょうを かえる"], correctIdx: 1, fixedLines: [[" ", "ゆ", "う", "が", "た", "に", "な", "っ", "て", "あ"], ["め", "が", "ふ", "り", "は", "じ", "め", "ま", "し", "た。"], [" ", " ", " ", " ", " ", " ", " ", " ", " ", " "]], explanation: "「。」は ぎょうの うえには かけないよ。まえの ぎょうに いれよう。" },
+
+  // C. 「、」が行頭にこない (6問)
+  { lines: [[" ", "き", "の", "う", "は", "え", "ん", "そ", "く", "で"], ["、", "お", "べ", "ん", "と", "う", "を", "た", "べ", "ま"], ["し", "た", "。", " ", " ", " ", " ", " ", " ", " "]], mistakeLine: 1, mistakeCell: 0, choices: ["まえの ぎょうの したに いれる", "つぎの ますに ずらす", "ぎょうを かえる"], correctIdx: 0, fixedLines: [[" ", "き", "の", "う", "は", "え", "ん", "そ", "く", "で、"], ["お", "べ", "ん", "と", "う", "を", "た", "べ", "ま", "し"], ["た", "。", " ", " ", " ", " ", " ", " ", " ", " "]], explanation: "「、」も ぎょうの うえには かけないよ。まえの ぎょうに いれよう。" },
+  { lines: [[" ", "ぼ", "く", "の", "す", "き", "な", "も", "の", "は"], ["、", "り", "ん", "ご", "で", "す", "。", " ", " ", " "]], mistakeLine: 1, mistakeCell: 0, choices: ["つぎの ますに ずらす", "まえの ぎょうの したに いれる", "ぎょうを かえる"], correctIdx: 1, fixedLines: [[" ", "ぼ", "く", "の", "す", "き", "な", "も", "の", "は、"], ["り", "ん", "ご", "で", "す", "。", " ", " ", " ", " "]], explanation: "「、」も ぎょうの うえには かけないよ。まえの ぎょうに いれよう。" },
+  { lines: [[" ", "あ", "さ", "ご", "は", "ん", "に", "ぱ", "ん", "と"], ["、", "た", "ま", "ご", "や", "き", "を", "た", "べ", "ま"], ["し", "た", "。", " ", " ", " ", " ", " ", " ", " "]], mistakeLine: 1, mistakeCell: 0, choices: ["まえの ぎょうの したに いれる", "つぎの ますに ずらす", "ぎょうを かえる"], correctIdx: 0, fixedLines: [[" ", "あ", "さ", "ご", "は", "ん", "に", "ぱ", "ん", "と、"], ["た", "ま", "ご", "や", "き", "を", "た", "べ", "ま", "し"], ["た", "。", " ", " ", " ", " ", " ", " ", " ", " "]], explanation: "「、」も ぎょうの うえには かけないよ。まえの ぎょうに いれよう。" },
+  { lines: [[" ", "う", "み", "へ", "い", "っ", "て", "あ", "そ", "び"], ["、", "す", "な", "あ", "そ", "び", "も", "し", "ま", "し"], ["た", "。", " ", " ", " ", " ", " ", " ", " ", " "]], mistakeLine: 1, mistakeCell: 0, choices: ["つぎの ますに ずらす", "まえの ぎょうの したに いれる", "ぎょうを かえる"], correctIdx: 1, fixedLines: [[" ", "う", "み", "へ", "い", "っ", "て", "あ", "そ", "び、"], ["す", "な", "あ", "そ", "び", "も", "し", "ま", "し", "た。"], [" ", " ", " ", " ", " ", " ", " ", " ", " ", " "]], explanation: "「、」も ぎょうの うえには かけないよ。まえの ぎょうに いれよう。" },
+  { lines: [[" ", "い", "ぬ", "と", "さ", "ん", "ぽ", "を", "し", "て"], ["、", "ほ", "ん", "を", "よ", "む", "の", "が", "す", "き"], ["で", "す", "。", " ", " ", " ", " ", " ", " ", " "]], mistakeLine: 1, mistakeCell: 0, choices: ["まえの ぎょうの したに いれる", "つぎの ますに ずらす", "ぎょうを かえる"], correctIdx: 0, fixedLines: [[" ", "い", "ぬ", "と", "さ", "ん", "ぽ", "を", "し", "て、"], ["ほ", "ん", "を", "よ", "む", "の", "が", "す", "き", "で"], ["す", "。", " ", " ", " ", " ", " ", " ", " ", " "]], explanation: "「、」も ぎょうの うえには かけないよ。まえの ぎょうに いれよう。" },
+  { lines: [[" ", "が", "っ", "こ", "う", "が", "お", "わ", "っ", "て"], ["、", "と", "も", "だ", "ち", "と", "あ", "そ", "び", "ま"], ["し", "た", "。", " ", " ", " ", " ", " ", " ", " "]], mistakeLine: 1, mistakeCell: 0, choices: ["つぎの ますに ずらす", "まえの ぎょうの したに いれる", "ぎょうを かえる"], correctIdx: 1, fixedLines: [[" ", "が", "っ", "こ", "う", "が", "お", "わ", "っ", "て、"], ["と", "も", "だ", "ち", "と", "あ", "そ", "び", "ま", "し"], ["た", "。", " ", " ", " ", " ", " ", " ", " ", " "]], explanation: "「、」も ぎょうの うえには かけないよ。まえの ぎょうに いれよう。" },
+
+  // D. 小さい文字は1マス (6問)
+  { lines: [[" ", "あ", "さ", "が", "お", "の", "た", "ね", "を", "か"], ["い", "に", "い", "き", "ま", "し", "た", "。", "やっ", "た"], ["あ", "。", " ", " ", " ", " ", " ", " ", " ", " "]], mistakeLine: 1, mistakeCell: 8, choices: ["「っ」を おおきく する", "「っ」も 1ます つかう", "まえの ますに いれる"], correctIdx: 1, fixedLines: [[" ", "あ", "さ", "が", "お", "の", "た", "ね", "を", "か"], ["い", "に", "い", "き", "ま", "し", "た", "。", "や", "っ"], ["た", "あ", "。", " ", " ", " ", " ", " ", " ", " "]], explanation: "ちいさい「っ」も、げんこうようしでは 1ます つかうよ。" },
+  { lines: [[" ", "お", "も", "ちゃ", "の", "く", "る", "ま", "で", "あ"], ["そ", "び", "ま", "し", "た", "。", " ", " ", " ", " "]], mistakeLine: 0, mistakeCell: 3, choices: ["「ゃ」も 1ます つかう", "「ゃ」を おおきく する", "まえの ますに いれる"], correctIdx: 0, fixedLines: [[" ", "お", "も", "ち", "ゃ", "の", "く", "る", "ま", "で"], ["あ", "そ", "び", "ま", "し", "た", "。", " ", " ", " "]], explanation: "「ゃ」「ゅ」「ょ」も、しっかり 1ます つかって かこう。" },
+  { lines: [[" ", "と", "しょ", "か", "ん", "で", "ほ", "ん", "を", "か"], ["り", "ま", "し", "た", "。", " ", " ", " ", " ", " "]], mistakeLine: 0, mistakeCell: 2, choices: ["「ょ」も 1ます つかう", "「ょ」を おおきく する", "まえの ますに いれる"], correctIdx: 0, fixedLines: [[" ", "と", "し", "ょ", "か", "ん", "で", "ほ", "ん", "を"], ["か", "り", "ま", "し", "た", "。", " ", " ", " ", " "]], explanation: "「ょ」などの ちいさい もじも 1ます つかって かこう。" },
+  { lines: [[" ", "お", "お", "き", "な", "がっ", "こ", "う", "へ", "い"], ["き", "ま", "す", "。", " ", " ", " ", " ", " ", " "]], mistakeLine: 0, mistakeCell: 5, choices: ["「っ」を おおきく する", "「っ」も 1ます つかう", "まえの ますに いれる"], correctIdx: 1, fixedLines: [[" ", "お", "お", "き", "な", "が", "っ", "こ", "う", "へ"], ["い", "き", "ま", "す", "。", " ", " ", " ", " ", " "]], explanation: "ちいさい「っ」も 1ます つかって かこう。" },
+  { lines: [[" ", "ぼ", "く", "は", "じゅ", "う", "ど", "う", "が", "す"], ["き", "で", "す", "。", " ", " ", " ", " ", " ", " "]], mistakeLine: 0, mistakeCell: 4, choices: ["「ゅ」も 1ます つかう", "「ゅ」を おおきく する", "まえの ますに いれる"], correctIdx: 0, fixedLines: [[" ", "ぼ", "く", "は", "じ", "ゅ", "う", "ど", "う", "が"], ["す", "き", "で", "す", "。", " ", " ", " ", " ", " "]], explanation: "ちいさい「ゅ」も 1ます つかって かこう。" },
+  { lines: [[" ", "お", "い", "し", "い", "じゅ", "ー", "す", "を", "の"], ["み", "ま", "し", "た", "。", " ", " ", " ", " ", " "]], mistakeLine: 0, mistakeCell: 5, choices: ["「ゅ」も 1ます つかう", "「ゅ」を おおきく する", "まえの ますに いれる"], correctIdx: 0, fixedLines: [[" ", "お", "い", "し", "い", "じ", "ゅ", "ー", "す", "を"], ["の", "み", "ま", "し", "た", "。", " ", " ", " ", " "]], explanation: "ちいさい「ゅ」も 1ます つかって かこう。" },
+
+  // E. 会話の始まりは改行 (6問)
+  { lines: [[" ", "せ", "ん", "せ", "い", "が", "い", "い", "ま"], ["し", "た", "。", "「", "お", "は", "よ", "う", "。」", " "]], mistakeLine: 1, mistakeCell: 3, choices: ["ぎょうを かえて かく", "1ます あける", "まえの ますに いれる"], correctIdx: 0, fixedLines: [[" ", "せ", "ん", "せ", "い", "が", "い", "い", "ま"], ["し", "た", "。", " ", " ", " ", " ", " ", " ", " "], ["「", "お", "は", "よ", "う", "。」", " ", " ", " ", " "]], explanation: "かぎかっこ「 」は ぎょうを かえて かきはじめよう。" },
+  { lines: [[" ", "ぼ", "く", "は", "お", "お", "ご", "え", "で", "い"], ["い", "ま", "し", "た", "。", "「", "は", "い", "。」", " "]], mistakeLine: 1, mistakeCell: 5, choices: ["1ます あける", "ぎょうを かえて かく", "つぎの ますに ずらす"], correctIdx: 1, fixedLines: [[" ", "ぼ", "く", "は", "お", "お", "ご", "え", "で", "い"], ["い", "ま", "し", "た", "。", " ", " ", " ", " ", " "], ["「", "は", "い", "。」", " ", " ", " ", " ", " ", " "]], explanation: "かぎかっこ「 」は ぎょうを かえて かきはじめよう。" },
+  { lines: [[" ", "お", "か", "あ", "さ", "ん", "が", "い", "い", "ま"], ["し", "た", "。", "「", "ご", "は", "ん", "よ", "。」", " "]], mistakeLine: 1, mistakeCell: 3, choices: ["ぎょうを かえて かく", "1ます あける", "つぎの ますに ずらす"], correctIdx: 0, fixedLines: [[" ", "お", "か", "あ", "さ", "ん", "が", "い", "い", "ま"], ["し", "た", "。", " ", " ", " ", " ", " ", " ", " "], ["「", "ご", "は", "ん", "よ", "。」", " ", " ", " ", " "]], explanation: "かぎかっこ「 」は ぎょうを かえて かきはじめよう。" },
+  { lines: [[" ", "と", "も", "だ", "ち", "が", "き", "き", "ま", "し"], ["た", "。", "「", "あ", "そ", "ぼ", "う", "。」", " ", " "]], mistakeLine: 1, mistakeCell: 2, choices: ["1ます あける", "ぎょうを かえて かく", "まえの ますに いれる"], correctIdx: 1, fixedLines: [[" ", "と", "も", "だ", "ち", "が", "き", "き", "ま", "し"], ["た", "。", " ", " ", " ", " ", " ", " ", " ", " "], ["「", "あ", "そ", "ぼ", "う", "。」", " ", " ", " ", " "]], explanation: "かぎかっこ「 」は ぎょうを かえて かきはじめよう。" },
+  { lines: [[" ", "い", "も", "う", "と", "が", "わ", "ら", "っ", "て"], ["い", "い", "ま", "し", "た", "。", "「", "た", "の", "し"], ["い", "。」", " ", " ", " ", " ", " ", " ", " ", " "]], mistakeLine: 1, mistakeCell: 6, choices: ["ぎょうを かえて かく", "1ます あける", "つぎの ますに ずらす"], correctIdx: 0, fixedLines: [[" ", "い", "も", "う", "と", "が", "わ", "ら", "っ", "て"], ["い", "い", "ま", "し", "た", "。", " ", " ", " ", " "], ["「", "た", "の", "し", "い", "。」", " ", " ", " ", " "]], explanation: "かぎかっこ「 」は ぎょうを かえて かきはじめよう。" },
+  { lines: [[" ", "お", "と", "う", "さ", "ん", "が", "て", "を", "ふ"], ["り", "ま", "し", "た", "。", "「", "ま", "た", "ね", "。」"]], mistakeLine: 1, mistakeCell: 5, choices: ["1ます あける", "ぎょうを かえて かく", "まえの ますに いれる"], correctIdx: 1, fixedLines: [[" ", "お", "と", "う", "さ", "ん", "が", "て", "を", "ふ"], ["り", "ま", "し", "た", "。", " ", " ", " ", " ", " "], ["「", "ま", "た", "ね", "。」", " ", " ", " ", " ", " "]], explanation: "かぎかっこ「 」は ぎょうを かえて かきはじめよう。" },
+
+  // F. 会話の終わり。と」はおなじマス (6問)
+  { lines: [["「", "き", "ょ", "う", "は", "た", "の", "し", "か", "っ"], ["た", "ね", "。", "」", " ", " ", " ", " ", " ", " "]], mistakeLine: 1, mistakeCell: [2, 3], choices: ["ぎょうを かえる", "。と 」 を おなじ ますに いれる", "まえの ますに いれる"], correctIdx: 1, fixedLines: [["「", "き", "ょ", "う", "は", "た", "の", "し", "か", "っ"], ["た", "ね", "。」", " ", " ", " ", " ", " ", " ", " "]], explanation: "かいわの おわりの 。と 」 は いっしょの ますに いれよう。" },
+  { lines: [["「", "ま", "た", "あ", "し", "た", "あ", "そ", "ぼ", "う"], ["ね", "。", "」", " ", " ", " ", " ", " ", " ", " "]], mistakeLine: 1, mistakeCell: [1, 2], choices: ["。と 」 を おなじ ますに いれる", "ぎょうを かえる", "つぎの ますに ずらす"], correctIdx: 0, fixedLines: [["「", "ま", "た", "あ", "し", "た", "あ", "そ", "ぼ", "う"], ["ね", "。」", " ", " ", " ", " ", " ", " ", " ", " "]], explanation: "かいわの おわりの 。と 」 は いっしょの ますに いれよう。" },
+  { lines: [["「", "お", "い", "し", "か", "っ", "た", "で", "す", "。"], ["ご", "ち", "そ", "う", "さ", "ま", "。", "」", " ", " "]], mistakeLine: 1, mistakeCell: [6, 7], choices: ["。と 」 を おなじ ますに いれる", "つぎの ますに ずらす", "ぎょうを かえる"], correctIdx: 0, fixedLines: [["「", "お", "い", "し", "か", "っ", "た", "で", "す", "。"], ["ご", "ち", "そ", "う", "さ", "ま", "。」", " ", " ", " "]], explanation: "かいわの おわりの 。と 」 は いっしょの ますに いれよう。" },
+  { lines: [["「", "も", "う", "お", "そ", "い", "か", "ら", "、", "お"], ["や", "す", "み", "な", "さ", "い", "。", "」", " ", " "]], mistakeLine: 1, mistakeCell: [6, 7], choices: ["。と 」 を おなじ ますに いれる", "まえの ますに いれる", "ぎょうを かえる"], correctIdx: 0, fixedLines: [["「", "も", "う", "お", "そ", "い", "か", "ら", "、", "お"], ["や", "す", "み", "な", "さ", "い", "。」", " ", " ", " "]], explanation: "かいわの おわりの 。と 」 は いっしょの ますに いれよう。" },
+  { lines: [["「", "み", "ん", "な", "で", "い", "っ", "し", "ょ", "に"], ["が", "ん", "ば", "ろ", "う", "。", "」", " ", " ", " "]], mistakeLine: 1, mistakeCell: [5, 6], choices: ["。と 」 を おなじ ますに いれる", "ぎょうを かえる", "つぎの ますに ずらす"], correctIdx: 0, fixedLines: [["「", "み", "ん", "な", "で", "い", "っ", "し", "ょ", "に"], ["が", "ん", "ば", "ろ", "う", "。」", " ", " ", " ", " "]], explanation: "かいわの おわりの 。と 」 は いっしょの ますに いれよう。" },
+  { lines: [["「", "て", "つ", "だ", "っ", "て", "く", "れ", "て", "、"], ["あ", "り", "が", "と", "う", "。", "」", " ", " ", " "]], mistakeLine: 1, mistakeCell: [5, 6], choices: ["ぎょうを かえる", "。と 」 を おなじ ますに いれる", "まえの ますに いれる"], correctIdx: 1, fixedLines: [["「", "て", "つ", "だ", "っ", "て", "く", "れ", "て", "、"], ["あ", "り", "が", "と", "う", "。」", " ", " ", " ", " "]], explanation: "かいわの おわりの 。と 」 は いっしょの ますに いれよう。" },
+
+  // G. 会話のあとの文は改行 (6問)
+  { lines: [[" ", "い", "ぬ", "が", "し", "っ", "ぽ", "を", "ふ", "っ"], ["て", "、", " ", " ", " ", " ", " ", " ", " ", " "], ["「", "わ", "ん", "わ", "ん", "。」", "と", "な", "い", "て"], ["い", "ま", "す", "。", " ", " ", " ", " ", " ", " "]], mistakeLine: 2, mistakeCell: 6, choices: ["ぎょうを かえて かく", "1ます あける", "つぎの ますに ずらす"], correctIdx: 0, fixedLines: [[" ", "い", "ぬ", "が", "し", "っ", "ぽ", "を", "ふ", "っ"], ["て", "、", " ", " ", " ", " ", " ", " ", " ", " "], ["「", "わ", "ん", "わ", "ん", "。」", " ", " ", " ", " "], ["と", "な", "い", "て", "い", "ま", "す", "。", " ", " "]], explanation: "かいわの あとに つづく ぶんも、ぎょうを かえて かきはじめよう。" },
+  { lines: [["「", "お", "は", "よ", "う", "。」", "と", "あ", "い", "さ"], ["つ", "を", "し", "ま", "し", "た", "。", " ", " ", " "]], mistakeLine: 0, mistakeCell: 6, choices: ["1ます あける", "ぎょうを かえて かく", "まえの ますに いれる"], correctIdx: 1, fixedLines: [["「", "お", "は", "よ", "う", "。」", " ", " ", " ", " "], ["と", "あ", "い", "さ", "つ", "を", "し", "ま", "し", "た。"], [" ", " ", " ", " ", " ", " ", " ", " ", " ", " "]], explanation: "かいわの あとに つづく ぶんも、ぎょうを かえて かきはじめよう。" },
+  { lines: [["「", "や", "っ", "た", "あ", "。」", "と", "お", "お", "よ"], ["ろ", "こ", "び", "し", "ま", "し", "た", "。", " ", " "]], mistakeLine: 0, mistakeCell: 6, choices: ["ぎょうを かえて かく", "1ます あける", "つぎの ますに ずらす"], correctIdx: 0, fixedLines: [["「", "や", "っ", "た", "あ", "。」", " ", " ", " ", " "], ["と", "お", "お", "よ", "ろ", "こ", "び", "し", "ま", "し"], ["た", "。", " ", " ", " ", " ", " ", " ", " ", " "]], explanation: "かいわの あとに つづく ぶんも、ぎょうを かえて かきはじめよう。" },
+  { lines: [["「", "さ", "よ", "う", "な", "ら", "。」", "と", "い", "っ"], ["て", "か", "え", "り", "ま", "し", "た", "。", " ", " "]], mistakeLine: 0, mistakeCell: 7, choices: ["1ます あける", "ぎょうを かえて かく", "まえの ますに いれる"], correctIdx: 1, fixedLines: [["「", "さ", "よ", "う", "な", "ら", "。」", " ", " ", " "], ["と", "い", "っ", "て", "か", "え", "り", "ま", "し", "た。"], [" ", " ", " ", " ", " ", " ", " ", " ", " ", " "]], explanation: "かいわの あとに つづく ぶんも、ぎょうを かえて かきはじめよう。" },
+  { lines: [["「", "ご", "め", "ん", "ね", "。」", "と", "あ", "た", "ま"], ["を", "さ", "げ", "ま", "し", "た", "。", " ", " ", " "]], mistakeLine: 0, mistakeCell: 6, choices: ["ぎょうを かえて かく", "1ます あける", "つぎの ますに ずらす"], correctIdx: 0, fixedLines: [["「", "ご", "め", "ん", "ね", "。」", " ", " ", " ", " "], ["と", "あ", "た", "ま", "を", "さ", "げ", "ま", "し", "た。"], [" ", " ", " ", " ", " ", " ", " ", " ", " ", " "]], explanation: "かいわの あとに つづく ぶんも、ぎょうを かえて かきはじめよう。" },
+  { lines: [["「", "だ", "い", "じ", "ょ", "う", "ぶ", "。」", "と", "き"], ["い", "て", "く", "れ", "ま", "し", "た", "。", " ", " "]], mistakeLine: 0, mistakeCell: 8, choices: ["1ます あける", "ぎょうを かえて かく", "まえの ますに いれる"], correctIdx: 1, fixedLines: [["「", "だ", "い", "じ", "ょ", "う", "ぶ", "。」", " ", " "], ["と", "き", "い", "て", "く", "れ", "ま", "し", "た", "。"]], explanation: "かいわの あとに つづく ぶんも、ぎょうを かえて かきはじめよう。" }
+];
+
+const ALL_BADGES = [
+  "🐶","🐱","🐭","🐹","🐰","🦊","🐻","🐼","🐨","🐯",
+  "🚗","🚕","🚙","🚌","🚓","🚑","🚒","🚜","🚲","🛴",
+  "⚽️","🏀","🏈","⚾️","🎾","🏐","🏉","🎱","🪀","🪁",
+  "🍔","🍣","🍰","🎸","🎺","🚀","🛸","⛵️","🎡","🎢",
+  "💎","🔮","⚔️","🛡️","🧬",
+  "🐉","🦄","🌋","🏆","👑"
+];
+
+let gameStages = [];
+let currentStage = 0;
+const totalStages = 10; 
+let isStageCleared = false;
+let maxLives = 3;
+let currentLives = 3;
+let isGameOver = false;
+
+function shuffle(array) {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
+}
+
+function startGame() {
+  document.getElementById("title-screen").style.display = "none";
+  document.getElementById("game-screen").style.display = "flex";
+  initGame();
+}
+
+function initGame() {
+  let selectedQuestions = [...questionDatabase];
+  selectedQuestions = shuffle(selectedQuestions);
+  gameStages = selectedQuestions.slice(0, totalStages);
+  renderStage();
+}
+
+function updateLivesDisplay() {
+  const container = document.getElementById("lives-container");
+  container.innerHTML = "❤️".repeat(currentLives) + "🖤".repeat(maxLives - currentLives);
+}
+
+function renderStage() {
+  isStageCleared = false;
+  document.getElementById("next-btn").style.display = "none";
+  document.getElementById("message").innerHTML = "あやしい ますを さわって、なおしてね！";
+  document.getElementById("message").style.color = "#333";
+  updateLivesDisplay();
+  drawGrid(gameStages[currentStage].lines);
+}
+
+function drawGrid(linesData) {
+  const container = document.getElementById("genkouyoushi-container");
+  container.innerHTML = "";
+  
+  linesData.forEach((line, lineIndex) => {
+    const lineDiv = document.createElement("div");
+    lineDiv.className = "line";
+    
+    line.forEach((char, cellIndex) => {
+      const cellDiv = document.createElement("div");
+      cellDiv.className = "cell";
+      
+      if(char.length > 1 && char !== " ") {
+        cellDiv.classList.add("multi-char");
+        
+        if (char === "。」" || char === "、」") {
+           cellDiv.classList.add("kuten-kakko");
+        } else {
+           cellDiv.classList.add("char-kuten");
+        }
+        cellDiv.innerHTML = `<span>${char[0]}</span><span>${char[1]}</span>`;
+      } else {
+        cellDiv.innerText = char;
+      }
+
+      cellDiv.onclick = () => handleCellClick(lineIndex, cellIndex);
+      lineDiv.appendChild(cellDiv);
+    });
+    container.appendChild(lineDiv);
+  });
+}
+
+function showResultAnimation(isCorrect) {
+  const mark = document.getElementById("result-mark");
+  mark.innerText = isCorrect ? "⭕️" : "❌";
+  mark.className = isCorrect ? "show-circle" : "show-cross";
+  
+  setTimeout(() => {
+    mark.className = "";
+  }, 1000);
+}
+
+function handleCellClick(lineIdx, cellIdx) {
+  if(isStageCleared || isGameOver) return;
+  const stageData = gameStages[currentStage];
+  
+  const isCorrectCell = Array.isArray(stageData.mistakeCell) 
+    ? stageData.mistakeCell.includes(cellIdx) 
+    : stageData.mistakeCell === cellIdx;
+  
+  if (lineIdx === stageData.mistakeLine && isCorrectCell) {
+    showChoices();
+  } else {
+    currentLives--;
+    updateLivesDisplay();
+    showResultAnimation(false);
+    showExplanation(false, "cell");
+  }
+}
+
+function showChoices() {
+  const stageData = gameStages[currentStage];
+  const container = document.getElementById("choices-container");
+  container.innerHTML = "";
+  
+  stageData.choices.forEach((choice, index) => {
+    const btn = document.createElement("button");
+    btn.className = "choice-btn";
+    btn.innerText = choice;
+    btn.onclick = () => checkAnswer(index);
+    container.appendChild(btn);
+  });
+  
+  document.getElementById("modal").style.display = "block";
+}
+
+function closeModal() {
+  document.getElementById("modal").style.display = "none";
+}
+
+function checkAnswer(choiceIdx) {
+  const stageData = gameStages[currentStage];
+  closeModal();
+  
+  if (choiceIdx === stageData.correctIdx) {
+    showResultAnimation(true);
+    showExplanation(true);
+  } else {
+    currentLives--;
+    updateLivesDisplay();
+    showResultAnimation(false);
+    showExplanation(false, "choice");
+  }
+}
+
+function showExplanation(isCorrect, errorType = "") {
+  isStageCleared = true; 
+  const stageData = gameStages[currentStage];
+  const msgEl = document.getElementById("message");
+  
+  const correctChoiceText = stageData.choices[stageData.correctIdx];
+  const reasonText = stageData.explanation;
+  
+  if (isCorrect) {
+    msgEl.innerHTML = `<span style="color: #2e8b57;">せいかい！</span><br>${reasonText}`;
+  } else {
+    let errorMsg = "";
+    if (errorType === "cell") {
+      errorMsg = "ざんねん！なおすのは ほかの ます だよ。";
+    } else {
+      errorMsg = "ざんねん！なおしかたが ちがうよ。";
+    }
+    msgEl.innerHTML = `<span style="color: #e65100;">${errorMsg}</span><br>せいかいは<strong>「${correctChoiceText}」</strong>だよ！<br>${reasonText}`;
+  }
+  
+  drawGrid(stageData.fixedLines);
+  
+  if (currentLives <= 0) {
+    isGameOver = true;
+    document.getElementById("next-btn").style.display = "none";
+    const retryBtn = document.getElementById("retry-btn");
+    retryBtn.style.display = "block";
+    retryBtn.innerText = "ゲームオーバー！ さいしょから やりなおす";
+  } else {
+    document.getElementById("next-btn").style.display = "block";
+  }
+}
+
+function getBadgeCounts() {
+  return JSON.parse(localStorage.getItem("genkouyoushi_badge_counts")) || {};
+}
+
+function addBadgeToCollection(index) {
+  const counts = getBadgeCounts();
+  counts[index] = (counts[index] || 0) + 1;
+  localStorage.setItem("genkouyoushi_badge_counts", JSON.stringify(counts));
+  return counts[index];
+}
+
+function drawBadgeByLives(lives) {
+  const counts = getBadgeCounts();
+
+  let probNormal = 0.70;
+  let probRare = 0.25;
+  let probSuperRare = 0.05;
+
+  if (lives === 2) {
+    probNormal = 0.55;
+    probRare = 0.33;
+    probSuperRare = 0.12;
+  } else if (lives === 3) {
+    probNormal = 0.60;
+    probRare = 0.30;
+    probSuperRare = 0.10;
+  }
+
+  const rand = Math.random();
+  let selectedRarity = "normal";
+  let minIdx = 0, maxIdx = 29;
+
+  if (rand < probSuperRare) {
+    selectedRarity = "superRare";
+    minIdx = 45; maxIdx = 49;
+  } else if (rand < probSuperRare + probRare) {
+    selectedRarity = "rare";
+    minIdx = 30; maxIdx = 44;
+  }
+
+  const targetIndices = [];
+  for (let i = minIdx; i <= maxIdx; i++) {
+    targetIndices.push(i);
+  }
+
+  const unowned = targetIndices.filter(i => !counts[i]);
+  let finalIndex;
+
+  const unownedBonusProb = lives === 3 ? 0.85 : (lives === 2 ? 0.65 : 0.40);
+
+  if (unowned.length > 0 && Math.random() < unownedBonusProb) {
+    finalIndex = unowned[Math.floor(Math.random() * unowned.length)];
+  } else {
+    finalIndex = targetIndices[Math.floor(Math.random() * targetIndices.length)];
+  }
+
+  let rarityName = "ノーマル";
+  if (selectedRarity === "superRare") rarityName = "スーパーレア！";
+  else if (selectedRarity === "rare") rarityName = "レア！";
+
+  return {
+    index: finalIndex,
+    badge: ALL_BADGES[finalIndex],
+    rarity: rarityName
+  };
+}
+
+function showCollection() {
+  const counts = getBadgeCounts();
+  const container = document.getElementById("badge-case-container");
+  container.innerHTML = "";
+
+  for (let i = 0; i < 50; i++) {
+    const slot = document.createElement("div");
+    const count = counts[i] || 0;
+
+    if (count > 0) {
+      slot.className = "badge-slot has-item";
+      slot.innerText = ALL_BADGES[i];
+      if (count > 1) {
+        const countSpan = document.createElement("span");
+        countSpan.className = "badge-count";
+        countSpan.innerText = count;
+        slot.appendChild(countSpan);
+      }
+    } else {
+      slot.className = "badge-slot empty";
+    }
+    container.appendChild(slot);
+  }
+
+  document.getElementById("collection-modal").style.display = "block";
+}
+
+function confirmResetBadges() {
+  document.getElementById("reset-confirm-modal").style.display = "block";
+}
+
+function closeResetConfirm() {
+  document.getElementById("reset-confirm-modal").style.display = "none";
+}
+
+function resetBadges() {
+  localStorage.removeItem("genkouyoushi_badge_counts");
+  closeResetConfirm();
+}
+
+function closeCollection() {
+  document.getElementById("collection-modal").style.display = "none";
+}
+
+function nextStage() {
+  currentStage++;
+  if (currentStage < totalStages) {
+    renderStage();
+  } else {
+    document.getElementById("genkouyoushi-container").style.display = "none";
+    document.getElementById("story-area").style.display = "none";
+    document.getElementById("next-btn").style.display = "none";
+    
+    const drawn = drawBadgeByLives(currentLives);
+    const totalCount = addBadgeToCollection(drawn.index);
+    
+    document.getElementById("earned-badge").innerText = drawn.badge;
+    const rarityText = document.getElementById("earned-rarity");
+    
+    let countMsg = totalCount > 1 ? `（${totalCount}こめ）` : "（あたらしく ゲット！）";
+    rarityText.innerText = `レアリティ： ${drawn.rarity} ${countMsg}`;
+    
+    if (drawn.rarity === "スーパーレア！") {
+      rarityText.style.color = "#ff00ff";
+    } else if (drawn.rarity === "レア！") {
+      rarityText.style.color = "#0000ff";
+    } else {
+      rarityText.style.color = "#2e8b57";
+    }
+
+    document.getElementById("certificate").style.display = "block";
+  }
+}
+</script>
+</body>
+</html>
+
